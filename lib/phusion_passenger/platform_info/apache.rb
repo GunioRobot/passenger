@@ -215,7 +215,8 @@ module PlatformInfo
 				architectures = ["-arch i386 -arch ppc -arch x86_64 -arch ppc64"]
 			else
 				architectures = []
-				output.scan(/for architecture (.*?)\)/).each do |(arch)|
+				output.scan(/for architecture (.*?)\)/).each do |arch|
+					arch = arch.first # an Array was passed
 					architectures << "-arch #{arch}" unless arch =~ /ppc/
 				end
 			end
