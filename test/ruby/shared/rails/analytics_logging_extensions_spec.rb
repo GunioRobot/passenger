@@ -19,13 +19,13 @@ shared_examples_for "analytics logging extensions for Rails" do
 			"node_name" => "localhost"
 		}
 	end
-	
+
 	after :each do
 		@connection.close if @connection && @connection.closed?
 		Process.kill('KILL', @agent_pid)
 		Process.waitpid(@agent_pid)
 	end
-	
+
 	def send_request_to_app(app, env)
 		if app.server_sockets[:main][1] == "unix"
 			@connection = UNIXSocket.new(app.server_sockets[:main][0])
@@ -53,7 +53,7 @@ shared_examples_for "analytics logging extensions for Rails" do
 		channel.write_scalar(data)
 		return @connection.read
 	end
-	
+
 	def read_log(name_suffix)
 		filename = Dir["#{Utils.passenger_tmpdir}/1/*/*/#{name_suffix}"].first
 		if filename
@@ -62,11 +62,11 @@ shared_examples_for "analytics logging extensions for Rails" do
 			return ""
 		end
 	end
-	
+
 	def base64(data)
 		return [data].pack('m').gsub("\n", "")
 	end
-	
+
 	it "doesn't install analytics logging extensions if analytics logging is turned off" do
 		@options.delete("analytics")
 		app = spawn_some_application(@options) do |stub|
@@ -87,7 +87,7 @@ shared_examples_for "analytics logging extensions for Rails" do
 			File.exist?(filename) && File.read(filename) == "NilClass"
 		end
 	end
-	
+
 	it "logs the controller and action name" do
 		app = spawn_some_application(@options) do |stub|
 			File.write("#{stub.app_root}/app/controllers/foo_controller.rb", %Q{
@@ -105,7 +105,7 @@ shared_examples_for "analytics logging extensions for Rails" do
 			log.include?("Controller action: FooController#index\n")
 		end
 	end
-	
+
 	it "logs uncaught exceptions in controller actions" do
 		app = spawn_some_application(@options) do |stub|
 			File.write("#{stub.app_root}/app/controllers/crash_controller.rb", %Q{
@@ -127,7 +127,7 @@ shared_examples_for "analytics logging extensions for Rails" do
 				log.include?("Controller action: CrashController#index")
 		end
 	end
-	
+
 	it "logs ActionController benchmarks" do
 		app = spawn_some_application(@options) do |stub|
 			File.write("#{stub.app_root}/app/controllers/foo_controller.rb", %Q{
@@ -150,7 +150,7 @@ shared_examples_for "analytics logging extensions for Rails" do
 				log.include?('END: BENCHMARK: hello')
 		end
 	end
-	
+
 	it "logs ActionView benchmarks" do
 		app = spawn_some_application(@options) do |stub|
 			File.write("#{stub.app_root}/app/controllers/foo_controller.rb", %Q{
@@ -171,7 +171,7 @@ shared_examples_for "analytics logging extensions for Rails" do
 				log.include?('END: BENCHMARK: hello')
 		end
 	end
-	
+
 	it "logs successful SQL queries" do
 		app = spawn_some_application(@options) do |stub|
 			File.write("#{stub.app_root}/config/database.yml",
@@ -198,7 +198,7 @@ shared_examples_for "analytics logging extensions for Rails" do
 				log =~ /END: DB BENCHMARK: .* \(.*\)$/
 		end
 	end
-	
+
 	it "logs failed SQL queries" do
 		app = spawn_some_application(@options) do |stub|
 			File.write("#{stub.app_root}/config/database.yml",
@@ -234,7 +234,7 @@ shared_examples_for "analytics logging extensions for Rails" do
 			end
 		end
 	end
-	
+
 	it "logs controller processing time of successful actions" do
 		app = spawn_some_application(@options) do |stub|
 			File.write("#{stub.app_root}/app/controllers/foo_controller.rb", %Q{
@@ -253,7 +253,7 @@ shared_examples_for "analytics logging extensions for Rails" do
 				log.include?("END: framework request processing")
 		end
 	end
-	
+
 	it "logs controller processing time of failed actions" do
 		app = spawn_some_application(@options) do |stub|
 			File.write("#{stub.app_root}/app/controllers/foo_controller.rb", %Q{
@@ -272,7 +272,7 @@ shared_examples_for "analytics logging extensions for Rails" do
 				log.include?("FAIL: framework request processing")
 		end
 	end
-	
+
 	it "logs view rendering time of successful actions" do
 		app = spawn_some_application(@options) do |stub|
 			File.write("#{stub.app_root}/app/controllers/foo_controller.rb", %Q{
@@ -295,7 +295,7 @@ shared_examples_for "analytics logging extensions for Rails" do
 				log =~ /View rendering time: \d+$/
 		end
 	end
-	
+
 	it "logs view rendering time of failed actions" do
 		app = spawn_some_application(@options) do |stub|
 			File.write("#{stub.app_root}/app/controllers/foo_controller.rb", %Q{
@@ -317,7 +317,7 @@ shared_examples_for "analytics logging extensions for Rails" do
 				log.include?("FAIL: view rendering")
 		end
 	end
-	
+
 	it "logs cache hits" do
 		if rails_version >= '2.1'
 			app = spawn_some_application(@options) do |stub|
@@ -345,7 +345,7 @@ shared_examples_for "analytics logging extensions for Rails" do
 			end
 		end
 	end
-	
+
 	it "logs cache misses" do
 		if rails_version >= '2.1'
 			app = spawn_some_application(@options) do |stub|

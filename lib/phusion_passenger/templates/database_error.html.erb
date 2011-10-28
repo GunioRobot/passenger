@@ -37,11 +37,11 @@
 		</div>
 	</li>
 	</ul>
-	
+
 	<dl>
 	<dt>Error message:</dt>
 	<dd><%=h @error.child_exception.message %></dd>
-	
+
 	<dt>Exception class:</dt>
 	<dd>
 		<% if @error.child_exception.respond_to?(:real_class_name) %>
@@ -50,12 +50,12 @@
 			<%=h @error.child_exception.class %>
 		<% end %>
 	</dd>
-	
+
 	<dt>Application root:</dt>
 	<dd>
 		<tt class="filename"><%=h @app_root %></tt>
 	</dd>
-	
+
 	<dt>Backtrace:</dt>
 	<dd>
 		<%= backtrace_html_for(@error.child_exception) %>

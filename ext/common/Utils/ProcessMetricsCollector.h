@@ -86,18 +86,18 @@ struct ProcessMetrics {
 	size_t  vmsize;
 	pid_t   processGroupId;
 	string  command;
-	
+
 	ProcessMetrics() {
 		pid = (pid_t) -1;
 		pss = -1;
 		privateDirty = -1;
 		swap = -1;
 	}
-	
+
 	bool isValid() const {
 		return pid != (pid_t) -1;
 	}
-	
+
 	/**
 	 * Returns an estimate of the "real" memory usage of a process in KB.
 	 * We don't use the PSS here because that would mean if another
@@ -134,34 +134,34 @@ public:
 	size_t totalMemory(ssize_t &shared) const {
 		const_iterator it, end = this->end();
 		bool pssAndPrivateDirtyAvailable = true;
-		
+
 		for (it = begin(); it != end && pssAndPrivateDirtyAvailable; it++) {
 			const ProcessMetrics &metric = it->second;
 			pssAndPrivateDirtyAvailable = pssAndPrivateDirtyAvailable &&
 				metric.pss != -1 && metric.privateDirty != -1;
 		}
-		
+
 		if (pssAndPrivateDirtyAvailable) {
 			size_t total = 0;
 			size_t priv = 0;
-			
+
 			for (it = begin(); it != end; it++) {
 				const ProcessMetrics &metric = it->second;
 				total += metric.pss;
 				priv += metric.privateDirty;
 			}
-			
+
 			shared = total - priv;
 			return total;
 		} else {
 			size_t total = 0;
-			
+
 			for (it = begin(); it != end; it++) {
 				const ProcessMetrics &metric = it->second;
 				total += metric.realMemory();
-			
+
 			}
-			
+
 			shared = -1;
 			return total;
 		}
@@ -175,11 +175,11 @@ public:
 class ProcessMetricsCollector {
 public:
 	struct ParseException {};
-	
+
 private:
 	bool canMeasureRealMemory;
 	string psOutput;
-	
+
 	/**
 	 * Scan the given data for the first word that appears on the first line.
 	 * Leading whitespaces (but not newlines) are ignored. If a word is found
@@ -196,19 +196,19 @@ private:
 		if (**data == '\n' || **data == '\0') {
 			throw ParseException();
 		}
-		
+
 		// Find end of word and extract the word.
 		const char *endOfWord = *data;
 		while (*endOfWord != ' ' && *endOfWord != '\n' && *endOfWord != '\0') {
 			endOfWord++;
 		}
 		StaticString result(*data, endOfWord - *data);
-		
+
 		// Move data pointer to the end of this word.
 		*data = endOfWord;
 		return result;
 	}
-	
+
 	static long long readNextWordAsLongLong(const char **data) {
 		StaticString word = readNextWord(data);
 		char nullTerminatedWord[word.size() + 1];
@@ -220,7 +220,7 @@ private:
 			return atoll(nullTerminatedWord);
 		}
 	}
-	
+
 	static int readNextWordAsInt(const char **data) {
 		StaticString word = readNextWord(data);
 		char nullTerminatedWord[word.size() + 1];
@@ -232,13 +232,13 @@ private:
 			return atoi(nullTerminatedWord);
 		}
 	}
-	
+
 	string runCommandAndCaptureOutput(const char **command) const {
 		pid_t pid;
 		int e, p[2];
-		
+
 		syscalls::pipe(p);
-		
+
 		this_thread::disable_syscall_interruption dsi;
 		pid = syscalls::fork();
 		if (pid == 0) {
@@ -250,7 +250,7 @@ private:
 				prio = 20;
 			}
 			setpriority(PRIO_PROCESS, getpid(), prio);
-			
+
 			dup2(p[1], 1);
 			close(p[0]);
 			close(p[1]);
@@ -264,12 +264,12 @@ private:
 		} else {
 			bool done = false;
 			string result;
-			
+
 			syscalls::close(p[1]);
 			while (!done) {
 				char buf[1024 * 4];
 				ssize_t ret;
-				
+
 				try {
 					this_thread::restore_syscall_interruption rsi(dsi);
 					ret = syscalls::read(p[0], buf, sizeof(buf));
@@ -291,7 +291,7 @@ private:
 			}
 			syscalls::close(p[0]);
 			syscalls::waitpid(pid, NULL, 0);
-			
+
 			if (result.empty()) {
 				throw RuntimeException("The 'ps' command failed");
 			} else {
@@ -299,7 +299,7 @@ private:
 			}
 		}
 	}
-	
+
 	string readRestOfLine(const char *data) const {
 		// Skip leading whitespaces.
 		while (*data == ' ') {
@@ -309,7 +309,7 @@ private:
 		if (*data == '\n' || *data == '\0') {
 			return "";
 		}
-		
+
 		// Look for newline character. From there, scan back until we've
 		// found a non-whitespace character.
 		const char *endOfLine = strchr(data, '\n');
@@ -319,10 +319,10 @@ private:
 		while (*(endOfLine - 1) == ' ') {
 			endOfLine--;
 		}
-		
+
 		return string(data, endOfLine - data);
 	}
-	
+
 	ProcessMetricMap parsePsOutput(const string &output) const {
 		ProcessMetricMap result;
 		// Ignore first line, it contains the column names.
@@ -334,11 +334,11 @@ private:
 				start = NULL;
 			}
 		}
-		
+
 		// Parse each line.
 		while (start != NULL) {
 			ProcessMetrics metrics;
-			
+
 			metrics.pid  = (pid_t) readNextWordAsLongLong(&start);
 			metrics.ppid = (pid_t) readNextWordAsLongLong(&start);
 			metrics.cpu  = readNextWordAsInt(&start);
@@ -347,7 +347,7 @@ private:
 			metrics.processGroupId = (pid_t) readNextWordAsLongLong(&start);
 			metrics.command = readRestOfLine(start);
 			result[metrics.pid] = metrics;
-			
+
 			start = strchr(start, '\n');
 			if (start != NULL) {
 				// Skip to beginning of next line.
@@ -359,7 +359,7 @@ private:
 		}
 		return result;
 	}
-	
+
 public:
 	ProcessMetricsCollector() {
 		#ifdef __APPLE__
@@ -368,12 +368,12 @@ public:
 			canMeasureRealMemory = fileExists("/proc/self/smaps");
 		#endif
 	}
-	
+
 	/** Mock 'ps' output, used by unit tests. */
 	void setPsOutput(const string &data) {
 		this->psOutput = data;
 	}
-	
+
 	/**
 	 * Collect metrics for the given process IDs. Nonexistant PIDs are not
 	 * included in the result.
@@ -389,10 +389,10 @@ public:
 		if (pids.empty()) {
 			return ProcessMetricMap();
 		}
-		
+
 		ConstIterator it;
 		string pidsArg;
-		
+
 		for (it = pids.begin(); it != pids.end(); it++) {
 			pidsArg.append(toString(*it));
 			pidsArg.append(",");
@@ -400,7 +400,7 @@ public:
 		if (!pidsArg.empty() && pidsArg[pidsArg.size() - 1] == ',') {
 			pidsArg.resize(pidsArg.size() - 1);
 		}
-		
+
 		const char *command[] = {
 			"ps", "-o",
 			#if defined(sun) || defined(__sun)
@@ -410,7 +410,7 @@ public:
 			#endif
 			"-p", pidsArg.c_str(), NULL
 		};
-		
+
 		string psOutput = this->psOutput;
 		if (psOutput.empty()) {
 			psOutput = runCommandAndCaptureOutput(command);
@@ -428,11 +428,11 @@ public:
 		}
 		return result;
 	}
-	
+
 	ProcessMetricMap collect(const vector<pid_t> &pids) const {
 		return collect< vector<pid_t>, vector<pid_t>::const_iterator >(pids);
 	}
-	
+
 	/**
 	 * Attempt to measure various parts of a process's memory usage that may
 	 * contribute to insight as to what its "real" memory usage might be.
@@ -442,7 +442,7 @@ public:
 	 *   sharing it.
 	 * - The private dirty RSS.
 	 * - Amount of memory in swap.
-	 * 
+	 *
 	 * At this time only OS X and recent Linux versions (>= 2.6.25) support
 	 * measuring the proportional set size. Usually root privileges are required.
 	 *
@@ -454,35 +454,35 @@ public:
 		#ifdef __APPLE__
 			kern_return_t ret;
 			mach_port_t task;
-			
+
 			swap = -1;
-			
+
 			ret = task_for_pid(mach_task_self(), pid, &task);
 			if (ret != KERN_SUCCESS) {
 				pss = -1;
 				privateDirty = -1;
 				return;
 			}
-			
+
 			mach_vm_address_t addr = 0;
 			int pagesize = getpagesize();
-			
+
 			// In bytes.
 			pss = 0;
 			privateDirty = 0;
-			
+
 			while (true) {
 				mach_vm_address_t size;
 				vm_region_top_info_data_t info;
 				mach_msg_type_number_t count = VM_REGION_TOP_INFO_COUNT;
 				mach_port_t object_name;
-				
+
 				ret = mach_vm_region(task, &addr, &size, VM_REGION_TOP_INFO,
 					(vm_region_info_t) &info, &count, &object_name);
 				if (ret != KERN_SUCCESS) {
 					break;
 				}
-				
+
 				if (info.share_mode == SM_PRIVATE) {
 					// shared_pages_resident here means that region
 					// has shared memory only "shared" between 1 process.
@@ -496,12 +496,12 @@ public:
 				} else if (info.share_mode == SM_SHARED) {
 					pss += info.shared_pages_resident * pagesize / info.ref_count;
 				}
-				
+
 				addr += size;
 			}
-			
+
 			mach_port_deallocate(mach_task_self(), task);
-			
+
 			// Convert result back to KB.
 			pss /= 1024;
 			privateDirty /= 1024;
@@ -509,7 +509,7 @@ public:
 			string smapsFilename = "/proc/";
 			smapsFilename.append(toString(pid));
 			smapsFilename.append("/smaps");
-			
+
 			FILE *f = syscalls::fopen(smapsFilename.c_str(), "r");
 			if (f == NULL) {
 				error:
@@ -518,21 +518,21 @@ public:
 				swap = -1;
 				return;
 			}
-			
+
 			ScopeGuard fileGuard(boost::bind(syscalls::fclose, f));
 			bool hasPss = false;
 			bool hasPrivateDirty = false;
 			bool hasSwap = false;
-			
+
 			// In KB.
 			pss = 0;
 			privateDirty = 0;
 			swap = 0;
-			
+
 			while (!feof(f)) {
 				char line[1024 * 4];
 				const char *buf;
-				
+
 				buf = fgets(line, sizeof(line), f);
 				if (buf == NULL) {
 					if (ferror(f)) {
@@ -571,7 +571,7 @@ public:
 					goto error;
 				}
 			}
-			
+
 			if (!hasPss) {
 				pss = -1;
 			}

@@ -386,7 +386,7 @@ namespace boost
         // -1.23456789e-123456
         // ^                   sign
         //  ^                  leading digit
-        //   ^                 decimal point 
+        //   ^                 decimal point
         //    ^^^^^^^^         lcast_precision<Source>::value
         //            ^        "e"
         //             ^       exponent sign
@@ -604,7 +604,7 @@ namespace boost
 // GCC 2.9x lacks std::char_traits<>::eof().
 // We use BOOST_NO_STD_WSTRING to filter out STLport and libstdc++-v3
 // configurations, which do provide std::char_traits<>::eof().
-    
+
                            EOF;
 #else
                            traits_type::eof();
@@ -1028,13 +1028,13 @@ namespace boost
         {
             BOOST_STATIC_CONSTANT(bool, value = true);
         };
- 
+
         template<>
         struct lcast_streambuf_for_source<double>
         {
             BOOST_STATIC_CONSTANT(bool, value = true);
         };
-  
+
         template<>
         struct lcast_streambuf_for_source<long double>
         {
@@ -1181,10 +1181,10 @@ namespace boost
     template<typename Target, typename Source>
     Target lexical_cast(Source arg)
     {
-        typedef typename detail::widest_char< 
-            BOOST_DEDUCED_TYPENAME detail::stream_char<Target>::type 
-          , BOOST_DEDUCED_TYPENAME detail::stream_char<Source>::type 
-        >::type char_type; 
+        typedef typename detail::widest_char<
+            BOOST_DEDUCED_TYPENAME detail::stream_char<Target>::type
+          , BOOST_DEDUCED_TYPENAME detail::stream_char<Source>::type
+        >::type char_type;
 
         typedef std::char_traits<char_type> traits;
         detail::lexical_stream<Target, Source, traits> interpreter;

@@ -31,10 +31,10 @@ module ClassicRails
 class RequestHandler < AbstractRequestHandler
 	CONTENT_LENGTH      = 'CONTENT_LENGTH'      # :nodoc:
 	HTTP_CONTENT_LENGTH = 'HTTP_CONTENT_LENGTH' # :nodoc:
-	
+
 	NINJA_PATCHING_LOCK = Mutex.new             # :nodoc:
 	@@ninja_patched_action_controller = false
-	
+
 	def initialize(owner_pipe, options = {})
 		super(owner_pipe, options)
 		NINJA_PATCHING_LOCK.synchronize do
@@ -52,7 +52,7 @@ protected
 			::ActionController::CgiRequest::DEFAULT_SESSION_OPTIONS,
 			cgi.stdoutput)
 	end
-	
+
 private
 	def ninja_patch_action_controller
 		if !@@ninja_patched_action_controller && defined?(::ActionController::Base) \
@@ -60,7 +60,7 @@ private
 			@@ninja_patched_action_controller = true
 			::ActionController::Base.class_eval do
 				alias passenger_orig_perform_action perform_action
-				
+
 				def perform_action(*whatever)
 					headers[X_POWERED_BY] = @passenger_header
 					passenger_orig_perform_action(*whatever)

@@ -29,10 +29,10 @@ module PhusionPassenger
 class AppProcess
 	# The root directory of this application process.
 	attr_reader :app_root
-	
+
 	# This process's PID.
 	attr_reader :pid
-	
+
 	# A hash containing all server sockets that this application process listens on.
 	# The hash is in the form of:
 	#
@@ -47,7 +47,7 @@ class AppProcess
 	# There's guaranteed to be at least one server socket, namely one with the
 	# name +:main+.
 	attr_reader :server_sockets
-	
+
 	# The owner pipe of the application instance (an IO object). Please see
 	# RequestHandler for a description of the owner pipe.
 	attr_reader :owner_pipe
@@ -62,14 +62,14 @@ class AppProcess
 			# Typo's vendor directory contains an empty 'rails' directory.
 			return :vendor
 		end
-		
+
 		environment_rb = File.read("#{app_root}/config/environment.rb")
 		environment_rb =~ /^[^#]*RAILS_GEM_VERSION\s*=\s*["']([!~<>=]*\s*[\d.]+)["']/
 		gem_version_spec = $1
 		if gem_version_spec.nil?
 			return nil
 		end
-		
+
 		search_results = Gem.cache.search(Gem::Dependency.new('rails', gem_version_spec), true)
 		found_version = search_results.map do |x|
 			x.version.version
@@ -84,7 +84,7 @@ class AppProcess
 				x.version.version
 			end.sort.last
 		end
-		
+
 		if found_version.nil?
 			raise VersionNotFound.new("There is no Ruby on Rails version " <<
 				"installed that matches version \"#{gem_version_spec}\"",
@@ -93,7 +93,7 @@ class AppProcess
 			return found_version
 		end
 	end
-	
+
 	# Construct an AppProcess by reading information from the given MessageChannel.
 	# The other side of the channel must be writing AppProcess information using
 	# AppProcess#write_to_channel.
@@ -104,7 +104,7 @@ class AppProcess
 		if app_root.nil?
 			raise IOError, "Connection closed"
 		end
-		
+
 		server_sockets = {}
 		n_server_sockets.to_i.times do
 			message = channel.read
@@ -114,12 +114,12 @@ class AppProcess
 			name = message.shift
 			server_sockets[name.to_sym] = message
 		end
-		
+
 		owner_pipe = channel.recv_io
-		
+
 		return new(app_root, pid.to_i, owner_pipe, server_sockets)
 	end
-	
+
 	# Write this AppProcess's information over the given MessageChannel.
 	# The other side must read the information using AppProces.read_from_channel.
 	#
@@ -131,14 +131,14 @@ class AppProcess
 		end
 		channel.send_io(@owner_pipe)
 	end
-	
+
 	# Creates a new AppProcess instance. The parameters correspond with the attributes
 	# of the same names. No exceptions will be thrown.
 	def initialize(app_root, pid, owner_pipe, server_sockets)
 		@app_root   = app_root
 		@pid        = pid
 		@owner_pipe = owner_pipe
-		
+
 		# We copy the values like this so one can directly pass
 		# AbstractRequestHandler#server_sockets as arguments
 		# without having AppProcess store references to the socket
@@ -148,7 +148,7 @@ class AppProcess
 			@server_sockets[name] = [value[0], value[1]]
 		end
 	end
-	
+
 	# Close the connection with the application process. If there are no other
 	# processes that have connections to this application process, then it will
 	# shutdown as soon as possible.

@@ -46,13 +46,13 @@ namespace boost
         return detail::thread_move_t<T>(t);
     }
 #endif
-    
+
     template<typename T>
     detail::thread_move_t<T> move(detail::thread_move_t<T> t)
     {
         return t;
     }
-    
+
 }
 
 #include <boost/config/abi_suffix.hpp>

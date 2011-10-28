@@ -45,17 +45,17 @@ module PlatformInfo
 		end
 	end
 	memoize :gnu_make, true
-	
+
 	def self.compiler_supports_visibility_flag?
 		return try_compile(:c, '', '-fvisibility=hidden')
 	end
 	memoize :compiler_supports_visibility_flag?, true
-	
+
 	def self.compiler_supports_wno_attributes_flag?
 		return try_compile(:c, '', '-Wno-attributes')
 	end
 	memoize :compiler_supports_wno_attributes_flag?, true
-	
+
 	# Returns whether compiling C++ with -fvisibility=hidden might result
 	# in tons of useless warnings, like this:
 	# http://code.google.com/p/phusion-passenger/issues/detail?id=526
@@ -70,18 +70,18 @@ module PlatformInfo
 		end
 	end
 	memoize :compiler_visibility_flag_generates_warnings?, true
-	
+
 	def self.has_math_library?
 		return try_link(:c, "int main() { return 0; }\n", '-lmath')
 	end
 	memoize :has_math_library?, true
-	
+
 	# Compiler flags that should be used for compiling every C/C++ program,
 	# for portability reasons. These flags should be specified as last
 	# when invoking the compiler.
 	def self.portability_cflags
 		flags = ["-D_REENTRANT -I/usr/local/include"]
-		
+
 		# Google SparseHash flags.
 		# Figure out header for hash function object and its namespace.
 		# Based on stl_hash.m4 and stl_hash_fun.m4 in the Google SparseHash sources.
@@ -120,7 +120,7 @@ module PlatformInfo
 				break
 			end
 		end
-		
+
 		if RUBY_PLATFORM =~ /solaris/
 			flags << '-pthreads'
 			flags << '-D_XOPEN_SOURCE=500 -D_XPG4_2 -D__EXTENSIONS__ -D__SOLARIS__ -D_FILE_OFFSET_BITS=64'
@@ -137,14 +137,14 @@ module PlatformInfo
 			# http://groups.google.com/group/phusion-passenger/browse_thread/thread/aad4bd9d8d200561
 			flags << '-DBOOST_SP_USE_PTHREADS'
 		end
-		
+
 		flags << '-DHAS_SFENCE' if supports_sfence_instruction?
 		flags << '-DHAS_LFENCE' if supports_lfence_instruction?
-		
+
 		return flags.compact.join(" ").strip
 	end
 	memoize :portability_cflags, true
-	
+
 	# Linker flags that should be used for linking every C/C++ program,
 	# for portability reasons. These flags should be specified as last
 	# when invoking the linker.
@@ -158,7 +158,7 @@ module PlatformInfo
 		return result
 	end
 	memoize :portability_ldflags
-	
+
 	# C compiler flags that should be passed in order to enable debugging information.
 	def self.debugging_cflags
 		if RUBY_PLATFORM =~ /openbsd/
@@ -170,7 +170,7 @@ module PlatformInfo
 			return '-g'
 		end
 	end
-	
+
 	def self.export_dynamic_flags
 		if RUBY_PLATFORM =~ /linux/
 			return '-rdynamic'

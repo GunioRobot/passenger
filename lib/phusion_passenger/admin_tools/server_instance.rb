@@ -35,14 +35,14 @@ module AdminTools
 class ServerInstance
 	# If you change the structure version then don't forget to change
 	# ext/common/ServerInstanceDir.h too.
-	
+
 	DIR_STRUCTURE_MAJOR_VERSION = 1
 	DIR_STRUCTURE_MINOR_VERSION = 0
 	GENERATION_STRUCTURE_MAJOR_VERSION = 1
 	GENERATION_STRUCTURE_MINOR_VERSION = 0
-	
+
 	STALE_TIME_THRESHOLD = 60
-	
+
 	class StaleDirectoryError < StandardError
 	end
 	class CorruptedDirectoryError < StandardError
@@ -51,17 +51,17 @@ class ServerInstance
 	end
 	class UnsupportedGenerationStructureVersionError < StandardError
 	end
-	
+
 	class RoleDeniedError < StandardError
 	end
-	
+
 	class Stats
 		attr_accessor :max, :count, :active, :global_queue_size
 	end
-	
+
 	class Group
 		attr_reader :app_root, :name, :environment, :processes
-		
+
 		def initialize(app_root, name, environment)
 			@app_root = app_root
 			@name = name
@@ -69,7 +69,7 @@ class ServerInstance
 			@processes = []
 		end
 	end
-	
+
 	class Process
 		attr_reader :group
 		attr_accessor :pid, :gupid, :sessions, :processed, :uptime, :server_sockets,
@@ -78,12 +78,12 @@ class ServerInstance
 		INT_PROPERTIES = [:pid, :sessions, :processed, :cpu, :rss, :real_memory,
 				:vmsize, :process_group_id]
 		BOOL_PROPERTIES = [:has_metrics]
-		
+
 		def initialize(group)
 			@group = group
 			@server_sockets = {}
 		end
-		
+
 		def connect(socket_name = :main)
 			socket_info = @server_sockets[socket_name]
 			if !socket_info
@@ -96,7 +96,7 @@ class ServerInstance
 				return TCPSocket.new(host, port.to_i)
 			end
 		end
-		
+
 		def has_metrics?
 			return @has_metrics
 		end
@@ -105,18 +105,18 @@ class ServerInstance
 	attr_reader :path
 	attr_reader :generation_path
 	attr_reader :pid
-	
+
 	def self.list(options = {})
 		options = {
 			:clean_stale_or_corrupted => true
 		}.merge(options)
 		instances = []
-		
+
 		Dir["#{AdminTools.tmpdir}/passenger.*"].each do |dir|
 			next if File.basename(dir) !~ /passenger\.#{DIR_STRUCTURE_MAJOR_VERSION}\.(\d+)\.(\d+)\Z/
 			minor = $1
 			next if minor.to_i > DIR_STRUCTURE_MINOR_VERSION
-			
+
 			begin
 				instances << ServerInstance.new(dir)
 			rescue StaleDirectoryError, CorruptedDirectoryError
@@ -132,15 +132,15 @@ class ServerInstance
 		end
 		return instances
 	end
-	
+
 	def self.for_pid(pid, options = {})
 		return list(options).find { |c| c.pid == pid }
 	end
-	
+
 	def initialize(path)
 		raise ArgumentError, "Path may not be nil." if path.nil?
 		@path = path
-		
+
 		if File.exist?("#{path}/control_process.pid")
 			data = File.read("#{path}/control_process.pid").strip
 			@pid = data.to_i
@@ -148,7 +148,7 @@ class ServerInstance
 			path =~ /passenger\.\d+\.\d+\.(\d+)\Z/
 			@pid = $1.to_i
 		end
-		
+
 		generations = Dir["#{path}/generation-*"]
 		if generations.empty?
 			raise GenerationsAbsentError, "There are no generation subdirectories in this instance directory."
@@ -162,7 +162,7 @@ class ServerInstance
 			end
 		end
 		@generation_path = "#{path}/generation-#{highest_generation_number}"
-		
+
 		if !File.exist?("#{@generation_path}/structure_version.txt")
 			raise CorruptedDirectoryError, "The generation directory doesn't contain a structure version specification file."
 		end
@@ -176,14 +176,14 @@ class ServerInstance
 		if major != GENERATION_STRUCTURE_MAJOR_VERSION || minor > GENERATION_STRUCTURE_MINOR_VERSION
 			raise UnsupportedGenerationStructureVersionError, "Unsupported generation directory structure version."
 		end
-		
+
 		if @pid == 0
 			raise CorruptedDirectoryError, "Instance directory contains corrupted control_process.pid file."
 		elsif !AdminTools.process_is_alive?(@pid)
 			raise StaleDirectoryError, "There is no instance with PID #{@pid}."
 		end
 	end
-	
+
 	# Raises:
 	# - +ArgumentError+: Unsupported role
 	# - +RoleDeniedError+: The user that the current process is as is not authorized to utilize the given role.
@@ -208,7 +208,7 @@ class ServerInstance
 		else
 			username = role_or_username
 		end
-		
+
 		@client = MessageClient.new(username, password, "unix:#{@generation_path}/socket")
 		begin
 			yield self
@@ -216,11 +216,11 @@ class ServerInstance
 			@client.close
 		end
 	end
-	
+
 	def web_server_description
 		return File.read("#{@generation_path}/web_server.txt")
 	end
-	
+
 	def web_server_config_files
 		config_files = File.read("#{@generation_path}/config_files.txt").split("\n")
 		config_files.map! do |filename|
@@ -231,29 +231,29 @@ class ServerInstance
 		end
 		return config_files
 	end
-	
+
 	def helper_server_pid
 		return File.read("#{@generation_path}/helper_server.pid").strip.to_i
 	end
-	
+
 	def analytics_log_dir
 		return File.read("#{@generation_path}/analytics_log_dir.txt")
 	rescue Errno::ENOENT
 		return nil
 	end
-	
+
 	def status
 		return @client.status
 	end
-	
+
 	def backtraces
 		return @client.backtraces
 	end
-	
+
 	def xml
 		return @client.xml
 	end
-	
+
 	def stats
 		doc = REXML::Document.new(xml)
 		stats = Stats.new
@@ -263,14 +263,14 @@ class ServerInstance
 		stats.global_queue_size = doc.elements["info/global_queue_size"].text.to_i
 		return stats
 	end
-	
+
 	def global_queue_size
 		return stats.global_queue_size
 	end
-	
+
 	def groups
 		doc = REXML::Document.new(xml)
-		
+
 		groups = []
 		doc.elements.each("info/groups/group") do |group_xml|
 			group = Group.new(group_xml.elements["app_root"].text,
@@ -308,22 +308,22 @@ class ServerInstance
 		end
 		return groups
 	end
-	
+
 	def processes
 		return groups.map do |group|
 			group.processes
 		end.flatten
 	end
-	
+
 private
 	def self.log_cleaning_action(dir)
 		puts "*** Cleaning stale folder #{dir}"
 	end
-	
+
 	def self.current_time
 		Time.now
 	end
-	
+
 	class << self;
 		private :log_cleaning_action
 		private :current_time

@@ -106,7 +106,7 @@ private:
 		ClientCommunicationError(const string &briefMessage, int errorCode = -1) {
 			if (errorCode != -1) {
 				stringstream str;
-				
+
 				str << strerror(errorCode) << " (" << errorCode << ")";
 				systemMessage = str.str();
 			}
@@ -155,7 +155,7 @@ private:
 			return systemMessage;
 		}
 	};
-	
+
 	/**
 	 * A StringListCreator which fetches its items from the client.
 	 * Used as an optimization for ApplicationPool::Server::processGet():
@@ -172,7 +172,7 @@ private:
 			: channel(theChannel),
 			  options(theOptions)
 		{ }
-		
+
 		/**
 		 * @throws ClientCommunicationError
 		 */
@@ -180,9 +180,9 @@ private:
 			if (result) {
 				return result;
 			}
-			
+
 			string data;
-			
+
 			/* If an I/O error occurred while communicating with the client,
 			 * then throw a ClientCommunicationException, which will bubble
 			 * all the way up to the MessageServer client thread main loop,
@@ -204,7 +204,7 @@ private:
 					"Unable to read a reply from the client for the 'getEnvironmentVariables' request",
 					e.code());
 			}
-			
+
 			if (!data.empty()) {
 				SimpleStringListCreator list(data);
 				result = list.getItems();
@@ -214,7 +214,7 @@ private:
 			return result;
 		}
 	};
-	
+
 	struct SpecificContext: public MessageServer::ClientContext {
 		/**
 		 * Maps session ID to sessions created by ApplicationPool::get(). Session IDs
@@ -222,28 +222,28 @@ private:
 		 * client to tell us which of the multiple sessions it wants to close, later on.
 		 */
 		map<int, SessionPtr> sessions;
-		
+
 		/** Last used session ID. */
 		int lastSessionID;
-		
+
 		SpecificContext() {
 			lastSessionID = 0;
 		}
 	};
-	
+
 	typedef MessageServer::CommonClientContext CommonClientContext;
-	
-	
+
+
 	/** The application pool that's being exposed through the socket. */
 	ApplicationPool::Ptr pool;
-	
+
 	AnalyticsLoggerPtr analyticsLogger;
-	
-	
+
+
 	/*********************************************
 	 * Message handler methods
 	 *********************************************/
-	
+
 	void processGet(CommonClientContext &commonContext, SpecificContext *specificContext, const vector<string> &args) {
 		/* Historical note:
 		 *
@@ -268,13 +268,13 @@ private:
 		 * created directly in the web server (implemented by the code below),
 		 * and the bug is no longer triggered.
 		 */
-		
+
 		TRACE_POINT();
 		SessionPtr session;
 		bool failed = false;
-		
+
 		commonContext.requireRights(Account::GET);
-		
+
 		try {
 			PoolOptions options(args, 1, analyticsLogger);
 			options.environmentVariables = ptr(new EnvironmentVariablesFetcher(
@@ -286,7 +286,7 @@ private:
 		} catch (const SpawnException &e) {
 			UPDATE_TRACE_POINT();
 			this_thread::disable_syscall_interruption dsi;
-			
+
 			if (e.hasErrorPage()) {
 				P_TRACE(3, "Client " << commonContext.name() << ": SpawnException "
 					"occured (with error page)");
@@ -334,12 +334,12 @@ private:
 			}
 		}
 	}
-	
+
 	void processClose(CommonClientContext &commonContext, SpecificContext *specificContext, const vector<string> &args) {
 		TRACE_POINT();
 		specificContext->sessions.erase(atoi(args[1]));
 	}
-	
+
 	void processDetach(CommonClientContext &commonContext, SpecificContext *specificContext, const vector<string> &args) {
 		TRACE_POINT();
 		commonContext.requireRights(Account::DETACH);
@@ -349,61 +349,61 @@ private:
 			commonContext.channel.write("false", NULL);
 		}
 	}
-	
+
 	void processClear(CommonClientContext &commonContext, SpecificContext *specificContext, const vector<string> &args) {
 		TRACE_POINT();
 		commonContext.requireRights(Account::CLEAR);
 		pool->clear();
 	}
-	
+
 	void processSetMaxIdleTime(CommonClientContext &commonContext, SpecificContext *specificContext, const vector<string> &args) {
 		TRACE_POINT();
 		commonContext.requireRights(Account::SET_PARAMETERS);
 		pool->setMaxIdleTime(atoi(args[1]));
 	}
-	
+
 	void processSetMax(CommonClientContext &commonContext, SpecificContext *specificContext, const vector<string> &args) {
 		TRACE_POINT();
 		commonContext.requireRights(Account::SET_PARAMETERS);
 		pool->setMax(atoi(args[1]));
 	}
-	
+
 	void processGetActive(CommonClientContext &commonContext, SpecificContext *specificContext, const vector<string> &args) {
 		TRACE_POINT();
 		commonContext.requireRights(Account::GET_PARAMETERS);
 		commonContext.channel.write(toString(pool->getActive()).c_str(), NULL);
 	}
-	
+
 	void processGetCount(CommonClientContext &commonContext, SpecificContext *specificContext, const vector<string> &args) {
 		TRACE_POINT();
 		commonContext.requireRights(Account::GET_PARAMETERS);
 		commonContext.channel.write(toString(pool->getCount()).c_str(), NULL);
 	}
-	
+
 	void processGetGlobalQueueSize(CommonClientContext &commonContext, SpecificContext *specificContext, const vector<string> &args) {
 		TRACE_POINT();
 		commonContext.requireRights(Account::GET_PARAMETERS);
 		commonContext.channel.write(toString(pool->getGlobalQueueSize()).c_str(), NULL);
 	}
-	
+
 	void processSetMaxPerApp(CommonClientContext &commonContext, SpecificContext *specificContext, unsigned int maxPerApp) {
 		TRACE_POINT();
 		commonContext.requireRights(Account::SET_PARAMETERS);
 		pool->setMaxPerApp(maxPerApp);
 	}
-	
+
 	void processGetSpawnServerPid(CommonClientContext &commonContext, SpecificContext *specificContext, const vector<string> &args) {
 		TRACE_POINT();
 		commonContext.requireRights(Account::GET_PARAMETERS);
 		commonContext.channel.write(toString(pool->getSpawnServerPid()).c_str(), NULL);
 	}
-	
+
 	void processInspect(CommonClientContext &commonContext, SpecificContext *specificContext, const vector<string> &args) {
 		TRACE_POINT();
 		commonContext.requireRights(Account::INSPECT_BASIC_INFO);
 		commonContext.channel.writeScalar(pool->inspect());
 	}
-	
+
 	void processToXml(CommonClientContext &commonContext, SpecificContext *specificContext, const vector<string> &args) {
 		TRACE_POINT();
 		commonContext.requireRights(Account::INSPECT_BASIC_INFO);
@@ -412,7 +412,7 @@ private:
 			args[1] == "true";
 		commonContext.channel.writeScalar(pool->toXml(includeSensitiveInfo));
 	}
-	
+
 public:
 	/**
 	 * Creates a new ApplicationPool::Server object.
@@ -423,11 +423,11 @@ public:
 		this->pool = pool;
 		this->analyticsLogger = analyticsLogger;
 	}
-	
+
 	virtual MessageServer::ClientContextPtr newClient(CommonClientContext &commonContext) {
 		return ptr(new SpecificContext());
 	}
-	
+
 	virtual bool processMessage(CommonClientContext &commonContext,
 	                            MessageServer::ClientContextPtr &_specificContext,
 	                            const vector<string> &args)

@@ -60,9 +60,9 @@ private:
 			bool done;
 		#endif
 	};
-	
+
 	typedef boost::shared_ptr<thread_data> thread_data_ptr;
-	
+
 	thread_data_ptr data;
 
 	void initialize_data(const std::string &thread_name) {
@@ -70,7 +70,7 @@ private:
 		if (thread_name.empty()) {
 			boost::mutex::scoped_lock l(_next_thread_number_mutex);
 			std::stringstream str;
-			
+
 			str << "Thread #" << _next_thread_number;
 			_next_thread_number++;
 			data->name = str.str();
@@ -82,22 +82,22 @@ private:
 			data->done = false;
 		#endif
 	}
-	
+
 	static void thread_main(boost::function<void ()> func, thread_data_ptr data) {
 		#ifdef OXT_BACKTRACE_IS_ENABLED
 			initialize_backtrace_support_for_this_thread i(data->name);
 			data->registration = i.registration;
 		#endif
-		
+
 		#ifdef OXT_BACKTRACE_IS_ENABLED
 			// Put finalization code in a struct destructor,
 			// for exception safety.
 			struct finalization_routines {
 				thread_data_ptr &data;
-				
+
 				finalization_routines(thread_data_ptr &data_)
 					: data(data_) {}
-				
+
 				~finalization_routines() {
 					boost::mutex::scoped_lock l(data->registration_lock);
 					data->registration = NULL;
@@ -106,10 +106,10 @@ private:
 			};
 			finalization_routines f(data);
 		#endif
-		
+
 		func();
 	}
-	
+
 public:
 	/**
 	 * Create a new thread.
@@ -131,13 +131,13 @@ public:
 	 */
 	explicit thread(boost::function<void ()> func, const std::string &name = "", unsigned int stack_size = 0) {
 		initialize_data(name);
-		
+
 		set_thread_main_function(boost::bind(thread_main, func, data));
-		
+
 		unsigned long min_stack_size;
 		bool stack_min_size_defined;
 		bool round_stack_size;
-		
+
 		#ifdef PTHREAD_STACK_MIN
 			// PTHREAD_STACK_MIN may not be a constant macro so we need
 			// to evaluate it dynamically.
@@ -154,7 +154,7 @@ public:
 		} else {
 			round_stack_size = true;
 		}
-		
+
 		if (round_stack_size) {
 			// Round stack size up to page boundary.
 			long page_size;
@@ -173,17 +173,17 @@ public:
 				stack_size = stack_size - (stack_size % page_size) + page_size;
 			}
 		}
-		
+
 		start_thread(stack_size);
 	}
-	
+
 	/**
 	 * Return this thread's name. The name was set during construction.
 	 */
 	std::string name() const throw() {
 		return data->name;
 	}
-	
+
 	/**
 	 * Return the current backtrace of the thread of execution, as a string.
 	 */
@@ -204,7 +204,7 @@ public:
 			return "    (backtrace support disabled during compile time)";
 		#endif
 	}
-	
+
 	/**
 	 * Return the backtraces of all oxt::thread threads, as well as that of the
 	 * main thread, in a nicely formatted string.
@@ -214,11 +214,11 @@ public:
 			boost::mutex::scoped_lock l(_thread_registration_mutex);
 			list<thread_registration *>::const_iterator it;
 			std::stringstream result;
-			
+
 			for (it = _registered_threads.begin(); it != _registered_threads.end(); it++) {
 				thread_registration *r = *it;
 				result << "Thread '" << r->name << "':" << endl;
-				
+
 				spin_lock::scoped_lock l(*r->backtrace_lock);
 				result << _format_backtrace(r->backtrace) << endl;
 			}
@@ -227,7 +227,7 @@ public:
 			return "(backtrace support disabled during compile time)";
 		#endif
 	}
-	
+
 	/**
 	 * Interrupt the thread. This method behaves just like
 	 * boost::thread::interrupt(), but if <em>interruptSyscalls</em> is true
@@ -242,7 +242,7 @@ public:
 	 */
 	void interrupt(bool interruptSyscalls = true) {
 		int ret;
-		
+
 		boost::thread::interrupt();
 		if (interruptSyscalls) {
 			do {
@@ -251,7 +251,7 @@ public:
 			} while (ret == EINTR);
 		}
 	}
-	
+
 	/**
 	 * Keep interrupting the thread until it's done, then join it.
 	 *
@@ -267,7 +267,7 @@ public:
 			done = timed_join(boost::posix_time::millisec(10));
 		}
 	}
-	
+
 	/**
 	 * Keep interrupting the thread until it's done, then join it.
 	 * This method will keep trying for at most <em>timeout</em> milliseconds.
@@ -293,7 +293,7 @@ public:
 		}
 		return joined;
 	}
-	
+
 	/**
 	 * Interrupt and join multiple threads in a way that's more efficient than calling
 	 * interrupt_and_join() on each thread individually. It iterates over all threads,
@@ -315,11 +315,11 @@ public:
 		std::list<oxt::thread *>::iterator it, current;
 		oxt::thread *thread;
 		unsigned int i;
-		
+
 		for (i = 0; i < size; i++) {
 			remaining_threads.push_back(threads[i]);
 		}
-		
+
 		while (!remaining_threads.empty()) {
 			for (it = remaining_threads.begin(); it != remaining_threads.end(); it++) {
 				thread = *it;
@@ -350,7 +350,7 @@ private:
 public:
 	interruptable_lock_guard(TimedLockable &m): mutex(m) {
 		bool locked = false;
-		
+
 		while (!locked) {
 			locked = m.timed_lock(boost::posix_time::milliseconds(20));
 			if (!locked) {
@@ -358,7 +358,7 @@ public:
 			}
 		}
 	}
-	
+
 	~interruptable_lock_guard() {
 		mutex.unlock();
 	}

@@ -96,27 +96,27 @@ class AgentWatcher {
 private:
 	/** The watcher thread. */
 	oxt::thread *thr;
-	
+
 	void threadMain() {
 		try {
 			pid_t pid, ret;
 			int status;
-			
+
 			while (!this_thread::interruption_requested()) {
 				lock.lock();
 				pid = this->pid;
 				lock.unlock();
-				
+
 				// Process can be started before the watcher thread is launched.
 				if (pid == 0) {
 					pid = start();
 				}
 				ret = syscalls::waitpid(pid, &status, 0);
-				
+
 				lock.lock();
 				this->pid = 0;
 				lock.unlock();
-				
+
 				this_thread::disable_interruption di;
 				this_thread::disable_syscall_interruption dsi;
 				if (ret == -1) {
@@ -157,33 +157,33 @@ private:
 			errorEvent->notify();
 		}
 	}
-	
+
 protected:
 	/** PID of the process we're watching. 0 if no process is started at this time. */
 	pid_t pid;
-	
+
 	/** If the watcher thread threw an uncaught exception then its information will
 	 * be stored here so that the main thread can check whether a watcher encountered
 	 * an error. These are empty strings if everything is OK.
 	 */
 	string threadExceptionMessage;
 	string threadExceptionBacktrace;
-	
+
 	/** The agent process's feedback fd. */
 	FileDescriptor feedbackFd;
-	
+
 	/**
 	 * Lock for protecting the exchange of data between the main thread and
 	 * the watcher thread.
 	 */
 	mutable boost::mutex lock;
-	
+
 	/**
 	 * Returns the filename of the agent process's executable. This method may be
 	 * called in a forked child process and may therefore not allocate memory.
 	 */
 	virtual string getExeFilename() const = 0;
-	
+
 	/**
 	 * This method is to exec() the agent with the right arguments.
 	 * It is called from within a forked child process, so don't do any dynamic
@@ -196,22 +196,22 @@ protected:
 			"3",  // feedback fd
 			(char *) 0);
 	}
-	
+
 	/**
 	 * This method is to send startup arguments to the agent process through
 	 * the given file descriptor, which is the agent process's feedback fd.
 	 * May throw arbitrary exceptions.
 	 */
 	virtual void sendStartupArguments(pid_t pid, FileDescriptor &fd) = 0;
-	
+
 	/**
 	 * This method is to process the startup info that the agent process has
 	 * sent back. May throw arbitrary exceptions.
 	 */
 	virtual bool processStartupInfo(pid_t pid, FileDescriptor &fd, const vector<string> &args) = 0;
-	
+
 	/**
-	 * Kill a process with SIGKILL, and attempt to kill its children too. 
+	 * Kill a process with SIGKILL, and attempt to kill its children too.
 	 * Then wait until it has quit.
 	 */
 	static void killAndWait(pid_t pid) {
@@ -224,7 +224,7 @@ protected:
 		}
 		syscalls::waitpid(pid, NULL, 0);
 	}
-	
+
 	/**
 	 * Behaves like <tt>waitpid(pid, status, WNOHANG)</tt>, but waits at most
 	 * <em>timeout</em> miliseconds for the process to exit.
@@ -232,7 +232,7 @@ protected:
 	static int timedWaitPid(pid_t pid, int *status, unsigned long long timeout) {
 		Timer timer;
 		int ret;
-		
+
 		do {
 			ret = syscalls::waitpid(pid, status, WNOHANG);
 			if (ret > 0 || ret == -1) {
@@ -243,17 +243,17 @@ protected:
 		} while (timer.elapsed() < timeout);
 		return 0; // timed out
 	}
-	
+
 public:
 	AgentWatcher() {
 		thr = NULL;
 		pid = 0;
 	}
-	
+
 	virtual ~AgentWatcher() {
 		delete thr;
 	}
-	
+
 	/**
 	 * Send the started agent process's startup information over the given channel,
 	 * to the starter process. May throw arbitrary exceptions.
@@ -261,10 +261,10 @@ public:
 	 * @pre start() has been called and succeeded.
 	 */
 	virtual void sendStartupInfo(MessageChannel &channel) = 0;
-	
+
 	/** Returns the name of the agent that this class is watching. */
 	virtual const char *name() const = 0;
-	
+
 	/**
 	 * Starts the agent process. May throw arbitrary exceptions.
 	 */
@@ -275,17 +275,17 @@ public:
 		SocketPair fds;
 		int e, ret;
 		pid_t pid;
-		
+
 		/* Create feedback fd for this agent process. We'll send some startup
 		 * arguments to this agent process through this fd, and we'll receive
 		 * startup information through it as well.
 		 */
 		fds = createUnixSocketPair();
-		
+
 		pid = syscalls::fork();
 		if (pid == 0) {
 			// Child
-			
+
 			/* Make sure file descriptor FEEDBACK_FD refers to the newly created
 			 * feedback fd (fds[1]) and close all other file descriptors.
 			 * In this child process we don't care about the original FEEDBACK_FD
@@ -295,7 +295,7 @@ public:
 			 * is started with FEEDBACK_FD already assigned.
 			 */
 			syscalls::close(fds[0]);
-			
+
 			if (syscalls::dup2(fds[1], FEEDBACK_FD) == -1) {
 				/* Something went wrong, report error through feedback fd. */
 				e = errno;
@@ -312,13 +312,13 @@ public:
 					_exit(1);
 				}
 			}
-			
+
 			closeAllFileDescriptors(FEEDBACK_FD);
-			
+
 			/* Become the process group leader so that the watchdog can kill the
 			 * agent as well as all its descendant processes. */
 			setpgid(getpid(), getpid());
-			
+
 			try {
 				execProgram();
 			} catch (...) {
@@ -344,12 +344,12 @@ public:
 			// Parent
 			FileDescriptor feedbackFd = fds[0];
 			vector<string> args;
-			
+
 			fds[1].close();
 			this_thread::restore_interruption ri(di);
 			this_thread::restore_syscall_interruption rsi(dsi);
 			ScopeGuard failGuard(boost::bind(killAndWait, pid));
-			
+
 			/* Send startup arguments. Ignore EPIPE and ECONNRESET here
 			 * because the child process might have sent an feedback message
 			 * without reading startup arguments.
@@ -363,7 +363,7 @@ public:
 						ex.code());
 				}
 			}
-			
+
 			// Now read its feedback.
 			try {
 				ret = MessageChannel(feedbackFd).read(args);
@@ -380,7 +380,7 @@ public:
 				this_thread::disable_interruption di2;
 				this_thread::disable_syscall_interruption dsi2;
 				int status;
-				
+
 				/* The feedback fd was prematurely closed for an unknown reason.
 				 * Did the agent process crash?
 				 *
@@ -415,7 +415,7 @@ public:
 						"with exit code " + toString(WEXITSTATUS(status)));
 				}
 			}
-			
+
 			if (args[0] == "system error before exec") {
 				throw SystemException(string("Unable to start the ") + name() +
 					": " + args[1], atoi(args[2]));
@@ -437,7 +437,7 @@ public:
 					" sent an unknown startup info message '" +
 					args[0] + "'");
 			}
-			
+
 			lock_guard<boost::mutex> l(lock);
 			this->feedbackFd = feedbackFd;
 			this->pid = pid;
@@ -445,7 +445,7 @@ public:
 			return pid;
 		}
 	}
-	
+
 	/**
 	 * Start watching the agent process.
 	 *
@@ -463,26 +463,26 @@ public:
 		if (thr != NULL) {
 			throw RuntimeException("Already started watching.");
 		}
-		
+
 		/* Don't make the stack any smaller, getpwnam() on OS
 		 * X needs a lot of stack space.
 		 */
 		thr = new oxt::thread(boost::bind(&AgentWatcher::threadMain, this),
 			name(), 64 * 1024);
 	}
-	
+
 	static void stopWatching(vector<AgentWatcher *> &watchers) {
 		vector<AgentWatcher *>::const_iterator it;
 		oxt::thread *threads[watchers.size()];
 		unsigned int i = 0;
-		
+
 		for (it = watchers.begin(); it != watchers.end(); it++, i++) {
 			threads[i] = (*it)->thr;
 		}
-		
+
 		oxt::thread::interrupt_and_join_multiple(threads, watchers.size());
 	}
-	
+
 	/**
 	 * Force the agent process to shut down. Returns true if it was shut down,
 	 * or false if it wasn't started.
@@ -497,7 +497,7 @@ public:
 			return true;
 		}
 	}
-	
+
 	/**
 	 * If the watcher thread has encountered an error, then the error message
 	 * will be stored here. If the error message is empty then it means
@@ -507,7 +507,7 @@ public:
 		lock_guard<boost::mutex> l(lock);
 		return threadExceptionMessage;
 	}
-	
+
 	/**
 	 * The error backtrace, if applicable.
 	 */
@@ -515,7 +515,7 @@ public:
 		lock_guard<boost::mutex> l(lock);
 		return threadExceptionBacktrace;
 	}
-	
+
 	/**
 	 * Returns the agent process feedback fd, or -1 if the agent process
 	 * hasn't been started yet. Can be used to check whether this agent process
@@ -535,19 +535,19 @@ protected:
 	string helperAgentFilename;
 	string requestSocketPassword;
 	string messageSocketPassword;
-	
+
 	virtual const char *name() const {
 		return "Phusion Passenger helper agent";
 	}
-	
+
 	virtual string getExeFilename() const {
 		return helperAgentFilename;
 	}
-	
+
 	virtual void execProgram() const {
 		execl(helperAgentFilename.c_str(), "PassengerHelperAgent", (char *) 0);
 	}
-	
+
 	virtual void sendStartupArguments(pid_t pid, FileDescriptor &fd) {
 		VariantMap options = agentsOptions;
 		options.set("request_socket_password", Base64::encode(requestSocketPassword)).
@@ -556,7 +556,7 @@ protected:
 			set("logging_agent_password", loggingAgentPassword);
 		options.writeToFd(fd);
 	}
-	
+
 	virtual bool processStartupInfo(pid_t pid, FileDescriptor &fd, const vector<string> &args) {
 		if (args[0] == "initialized") {
 			requestSocketFilename = args[1];
@@ -566,7 +566,7 @@ protected:
 			return false;
 		}
 	}
-	
+
 public:
 	HelperAgentWatcher(const ResourceLocator &resourceLocator) {
 		if (agentsOptions.get("web_server_type") == "apache") {
@@ -577,7 +577,7 @@ public:
 		requestSocketPassword = randomGenerator->generateByteString(REQUEST_SOCKET_PASSWORD_SIZE);
 		messageSocketPassword = randomGenerator->generateByteString(MESSAGE_SERVER_MAX_PASSWORD_SIZE);
 	}
-	
+
 	virtual void sendStartupInfo(MessageChannel &channel) {
 		channel.write("HelperAgent info",
 			requestSocketFilename.c_str(),
@@ -593,26 +593,26 @@ class LoggingAgentWatcher: public AgentWatcher {
 protected:
 	string agentFilename;
 	string socketAddress;
-	
+
 	virtual const char *name() const {
 		return "Phusion Passenger logging agent";
 	}
-	
+
 	virtual string getExeFilename() const {
 		return agentFilename;
 	}
-	
+
 	virtual void execProgram() const {
 		execl(agentFilename.c_str(), "PassengerLoggingAgent", (char *) 0);
 	}
-	
+
 	virtual void sendStartupArguments(pid_t pid, FileDescriptor &fd) {
 		VariantMap options = agentsOptions;
 		options.set("logging_agent_address", loggingAgentAddress);
 		options.set("logging_agent_password", loggingAgentPassword);
 		options.writeToFd(fd);
 	}
-	
+
 	virtual bool processStartupInfo(pid_t pid, FileDescriptor &fd, const vector<string> &args) {
 		if (args[0] == "initialized") {
 			return true;
@@ -620,12 +620,12 @@ protected:
 			return false;
 		}
 	}
-	
+
 public:
 	LoggingAgentWatcher(const ResourceLocator &resourceLocator) {
 		agentFilename = resourceLocator.getAgentsDir() + "/PassengerLoggingAgent";
 	}
-	
+
 	virtual void sendStartupInfo(MessageChannel &channel) {
 		channel.write("LoggingServer info",
 			loggingAgentAddress.c_str(),
@@ -643,14 +643,14 @@ public:
 class ServerInstanceDirToucher {
 private:
 	oxt::thread *thr;
-	
+
 	static void
 	threadMain() {
 		while (!this_thread::interruption_requested()) {
 			syscalls::sleep(60 * 60 * 6);
-			
+
 			begin_touch:
-			
+
 			this_thread::disable_interruption di;
 			this_thread::disable_syscall_interruption dsi;
 			// Fork a process which touches everything in the server instance dir.
@@ -658,9 +658,9 @@ private:
 			if (pid == 0) {
 				// Child
 				int prio, ret, e;
-				
+
 				closeAllFileDescriptors(2);
-				
+
 				// Make process nicer.
 				do {
 					prio = getpriority(PRIO_PROCESS, getpid());
@@ -676,7 +676,7 @@ private:
 				} else {
 					perror("getpriority");
 				}
-				
+
 				do {
 					ret = chdir(serverInstanceDir->getPath().c_str());
 				} while (ret == -1 && errno == EINTR);
@@ -688,7 +688,7 @@ private:
 					fflush(stderr);
 					_exit(1);
 				}
-				
+
 				execlp("/bin/sh", "/bin/sh", "-c", "find . | xargs touch", (char *) 0);
 				e = errno;
 				fprintf(stderr, "Cannot execute 'find . | xargs touch': %s (%d)\n",
@@ -713,7 +713,7 @@ public:
 	ServerInstanceDirToucher() {
 		thr = new oxt::thread(threadMain, "Server instance dir toucher", 96 * 1024);
 	}
-	
+
 	~ServerInstanceDirToucher() {
 		thr->interrupt_and_join();
 		delete thr;
@@ -755,34 +755,34 @@ waitForStarterProcessOrWatchers(vector<AgentWatcher *> &watchers) {
 	fd_set fds;
 	int max, ret;
 	char x;
-	
+
 	FD_ZERO(&fds);
 	FD_SET(FEEDBACK_FD, &fds);
 	FD_SET(errorEvent->fd(), &fds);
-	
+
 	if (FEEDBACK_FD > errorEvent->fd()) {
 		max = FEEDBACK_FD;
 	} else {
 		max = errorEvent->fd();
 	}
-	
+
 	ret = syscalls::select(max + 1, &fds, NULL, NULL, NULL);
 	if (ret == -1) {
 		int e = errno;
 		P_ERROR("select() failed: " << strerror(e));
 		return false;
 	}
-	
+
 	if (FD_ISSET(errorEvent->fd(), &fds)) {
 		vector<AgentWatcher *>::const_iterator it;
 		string message, backtrace, watcherName;
-		
+
 		for (it = watchers.begin(); it != watchers.end() && message.empty(); it++) {
 			message   = (*it)->getErrorMessage();
 			backtrace = (*it)->getErrorBacktrace();
 			watcherName = (*it)->name();
 		}
-		
+
 		if (!message.empty() && backtrace.empty()) {
 			P_ERROR("Error in " << watcherName << " watcher:\n  " << message);
 		} else if (!message.empty() && !backtrace.empty()) {
@@ -802,7 +802,7 @@ cleanupAgentsInBackground(vector<AgentWatcher *> &watchers) {
 	this_thread::disable_syscall_interruption dsi;
 	pid_t pid;
 	int e;
-	
+
 	pid = fork();
 	if (pid == 0) {
 		// Child
@@ -811,9 +811,9 @@ cleanupAgentsInBackground(vector<AgentWatcher *> &watchers) {
 		fd_set fds, fds2;
 		int max, agentProcessesDone;
 		unsigned long long deadline = 30000; // miliseconds
-		
+
 		// Wait until all agent processes have exited.
-		
+
 		max = 0;
 		FD_ZERO(&fds);
 		for (it = watchers.begin(); it != watchers.end(); it++) {
@@ -822,7 +822,7 @@ cleanupAgentsInBackground(vector<AgentWatcher *> &watchers) {
 				max = (*it)->getFeedbackFd();
 			}
 		}
-		
+
 		timer.start();
 		agentProcessesDone = 0;
 		while (agentProcessesDone != -1
@@ -830,7 +830,7 @@ cleanupAgentsInBackground(vector<AgentWatcher *> &watchers) {
 		    && timer.elapsed() < deadline)
 		{
 			struct timeval timeout;
-			
+
 			#ifdef FD_COPY
 				FD_COPY(&fds, &fds2);
 			#else
@@ -839,7 +839,7 @@ cleanupAgentsInBackground(vector<AgentWatcher *> &watchers) {
 					FD_SET((*it)->getFeedbackFd(), &fds2);
 				}
 			#endif
-			
+
 			timeout.tv_sec = 0;
 			timeout.tv_usec = 10000;
 			agentProcessesDone = syscalls::select(max + 1, &fds2, NULL, NULL, &timeout);
@@ -847,7 +847,7 @@ cleanupAgentsInBackground(vector<AgentWatcher *> &watchers) {
 				usleep(10000);
 			}
 		}
-		
+
 		if (agentProcessesDone == -1 || timer.elapsed() >= deadline) {
 			// An error occurred or we've waited long enough. Kill all the
 			// processes.
@@ -859,21 +859,21 @@ cleanupAgentsInBackground(vector<AgentWatcher *> &watchers) {
 		} else {
 			P_DEBUG("All Phusion Passenger agent processes have exited.");
 		}
-		
+
 		// Now clean up the server instance directory.
 		delete generation.get();
 		delete serverInstanceDir.get();
-		
+
 		_exit(0);
-		
+
 	} else if (pid == -1) {
 		// Error
 		e = errno;
 		throw SystemException("fork() failed", errno);
-		
+
 	} else {
 		// Parent
-		
+
 		// Let child process handle cleanup.
 		serverInstanceDir->detach();
 		generation->detach();
@@ -883,7 +883,7 @@ cleanupAgentsInBackground(vector<AgentWatcher *> &watchers) {
 static void
 forceAllAgentsShutdown(vector<AgentWatcher *> &watchers) {
 	vector<AgentWatcher *>::iterator it;
-	
+
 	for (it = watchers.begin(); it != watchers.end(); it++) {
 		(*it)->forceShutdown();
 	}
@@ -892,7 +892,7 @@ forceAllAgentsShutdown(vector<AgentWatcher *> &watchers) {
 int
 main(int argc, char *argv[]) {
 	disableOomKiller();
-	
+
 	agentsOptions = initializeAgent(argc, argv, "PassengerWatchdog");
 	logLevel      = agentsOptions.getInt("log_level");
 	webServerPid  = agentsOptions.getPid("web_server_pid");
@@ -908,18 +908,18 @@ main(int argc, char *argv[]) {
 	maxInstancesPerApp = agentsOptions.getInt("max_instances_per_app");
 	poolIdleTime       = agentsOptions.getInt("pool_idle_time");
 	serializedPrestartURLs  = agentsOptions.get("prestart_urls");
-	
+
 	try {
 		randomGenerator = new RandomGenerator();
 		errorEvent = new EventFd();
-		
+
 		MessageChannel feedbackChannel(FEEDBACK_FD);
 		serverInstanceDir.reset(new ServerInstanceDir(webServerPid, tempDir));
 		generation = serverInstanceDir->newGeneration(userSwitching, defaultUser,
 			defaultGroup, webServerWorkerUid, webServerWorkerGid);
 		agentsOptions.set("server_instance_dir", serverInstanceDir->getPath());
 		agentsOptions.setInt("generation_number", generation->getNumber());
-		
+
 		ServerInstanceDirToucher serverInstanceDirToucher;
 		ResourceLocator resourceLocator(passengerRoot);
 		if (agentsOptions.get("analytics_server", false).empty()) {
@@ -930,17 +930,17 @@ main(int argc, char *argv[]) {
 			// Using remote logging agent.
 			loggingAgentAddress = agentsOptions.get("analytics_server");
 		}
-		
+
 		HelperAgentWatcher helperAgentWatcher(resourceLocator);
 		LoggingAgentWatcher loggingAgentWatcher(resourceLocator);
-		
+
 		vector<AgentWatcher *> watchers;
 		vector<AgentWatcher *>::iterator it;
 		watchers.push_back(&helperAgentWatcher);
 		if (agentsOptions.get("analytics_server", false).empty()) {
 			watchers.push_back(&loggingAgentWatcher);
 		}
-		
+
 		for (it = watchers.begin(); it != watchers.end(); it++) {
 			try {
 				(*it)->start();
@@ -963,18 +963,18 @@ main(int argc, char *argv[]) {
 			}
 			// Allow other exceptions to propagate and crash the watchdog.
 		}
-		
+
 		feedbackChannel.write("Basic startup info",
 			serverInstanceDir->getPath().c_str(),
 			toString(generation->getNumber()).c_str(),
 			NULL);
-		
+
 		for (it = watchers.begin(); it != watchers.end(); it++) {
 			(*it)->sendStartupInfo(feedbackChannel);
 		}
-		
+
 		feedbackChannel.write("All agents started", NULL);
-		
+
 		this_thread::disable_interruption di;
 		this_thread::disable_syscall_interruption dsi;
 		bool exitGracefully = waitForStarterProcessOrWatchers(watchers);

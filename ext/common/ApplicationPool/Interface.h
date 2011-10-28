@@ -53,10 +53,10 @@ using namespace boost;
  * a call to Application::get(). For example:
  * @code
  *   ApplicationPool pool = some_function_which_creates_an_application_pool();
- *   
+ *
  *   // Connect to the application and get the newly opened session.
  *   Application::SessionPtr session(pool->get("/home/webapps/foo"));
- *   
+ *
  *   // Send the request headers and request body data.
  *   session->sendHeaders(...);
  *   session->sendBodyBlock(...);
@@ -100,7 +100,7 @@ using namespace boost;
 class Interface {
 public:
 	virtual ~Interface() {};
-	
+
 	/**
 	 * Checks whether this ApplicationPool object is still connected to the
 	 * ApplicationPool server.
@@ -113,7 +113,7 @@ public:
 	virtual bool connected() const {
 		return true;
 	}
-	
+
 	/**
 	 * Open a new session with the application specified by <tt>PoolOptions.appRoot</tt>.
 	 * See the class description for ApplicationPool, as well as Application::connect(),
@@ -141,7 +141,7 @@ public:
 	 *       they're 2 different applications, and thus will spawn 2 application instances.
 	 */
 	virtual SessionPtr get(const PoolOptions &options) = 0;
-	
+
 	/**
 	 * Convenience shortcut for calling get() with default spawn options.
 	 *
@@ -154,7 +154,7 @@ public:
 	virtual SessionPtr get(const string &appRoot) {
 		return get(PoolOptions(appRoot));
 	}
-	
+
 	/**
 	 * Detach the process with the given identifier from this pool.
 	 *
@@ -168,7 +168,7 @@ public:
 	 * @throws boost::thread_interrupted
 	 */
 	virtual bool detach(const string &identifier) = 0;
-	
+
 	/**
 	 * Clear all application instances that are currently in the pool.
 	 *
@@ -180,7 +180,7 @@ public:
 	 * @throws boost::thread_interrupted
 	 */
 	virtual void clear() = 0;
-	
+
 	/**
 	 * Set the maximum idle time for application instances. Application instances
 	 * that haven't received any requests in <tt>seconds</tt> seconds will be shut
@@ -193,7 +193,7 @@ public:
 	 * @throws boost::thread_interrupted
 	 */
 	virtual void setMaxIdleTime(unsigned int seconds) = 0;
-	
+
 	/**
 	 * Set a hard limit on the number of application instances that this ApplicationPool
 	 * may spawn. The exact behavior depends on the used algorithm, and is not specified by
@@ -206,7 +206,7 @@ public:
 	 * @throws boost::thread_interrupted
 	 */
 	virtual void setMax(unsigned int max) = 0;
-	
+
 	/**
 	 * Get the number of active applications in the pool.
 	 *
@@ -219,7 +219,7 @@ public:
 	 * @throws boost::thread_interrupted
 	 */
 	virtual unsigned int getActive() const = 0;
-	
+
 	/**
 	 * Get the number of active applications in the pool.
 	 *
@@ -232,7 +232,7 @@ public:
 	 * @throws boost::thread_interrupted
 	 */
 	virtual unsigned int getCount() const = 0;
-	
+
 	/**
 	 * Returns the number of clients waiting on the global queue.
 	 *
@@ -245,10 +245,10 @@ public:
 	 * @throws boost::thread_interrupted
 	 */
 	virtual unsigned int getGlobalQueueSize() const = 0;
-	
+
 	/**
 	 * Set a hard limit on the number of application instances that a single application
-	 * may spawn in this ApplicationPool. The exact behavior depends on the used algorithm, 
+	 * may spawn in this ApplicationPool. The exact behavior depends on the used algorithm,
 	 * and is not specified by these API docs.
 	 *
 	 * It is allowed to set a limit lower than the current number of spawned applications.
@@ -258,7 +258,7 @@ public:
 	 * @throws boost::thread_interrupted
 	 */
 	virtual void setMaxPerApp(unsigned int max) = 0;
-	
+
 	/**
 	 * Get the process ID of the spawn server that is used.
 	 *
@@ -270,13 +270,13 @@ public:
 	 * @throws boost::thread_interrupted
 	 */
 	virtual pid_t getSpawnServerPid() const = 0;
-	
+
 	/**
 	 * Returns a human-readable description of the internal state
 	 * of the application pool.
 	 */
 	virtual string inspect() const = 0;
-	
+
 	/**
 	 * Returns an XML description of the internal state of the
 	 * application pool.

@@ -11,10 +11,10 @@ shared_examples_for "a spawner that does not preload app code" do
 			end
 			::File.append(history_file, "end of environment.rb\n");
 		}
-		
+
 		spawn_some_application
 		spawn_some_application
-		
+
 		history_file = "#{PhusionPassenger::Utils.passenger_tmpdir}/history.txt"
 		eventually do
 			contents = File.read(history_file)

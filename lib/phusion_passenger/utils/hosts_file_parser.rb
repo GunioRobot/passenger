@@ -32,7 +32,7 @@ class HostsFileParser
 			system("dscacheutil -flushcache")
 		end
 	end
-	
+
 	def initialize(filename_or_io = "/etc/hosts")
 		if filename_or_io.respond_to?(:readline)
 			read_and_parse(filename_or_io)
@@ -42,15 +42,15 @@ class HostsFileParser
 			end
 		end
 	end
-	
+
 	def ip_count
 		return @ips.size
 	end
-	
+
 	def host_count
 		return @host_names.size
 	end
-	
+
 	def resolve(host_name)
 		if host_name.downcase == "localhost"
 			return "127.0.0.1"
@@ -58,12 +58,12 @@ class HostsFileParser
 			return @host_names[host_name.downcase]
 		end
 	end
-	
+
 	def resolves_to_localhost?(hostname)
 		ip = resolve(hostname)
 		return ip == "127.0.0.1" || ip == "::1" || ip == "0.0.0.0"
 	end
-	
+
 	def add_group_data(marker, data)
 		begin_index = find_line(0, "###### BEGIN #{marker} ######")
 		end_index = find_line(begin_index + 1, "###### END #{marker} ######") if begin_index
@@ -75,7 +75,7 @@ class HostsFileParser
 			@lines << "###### END #{marker} ######"
 		end
 	end
-	
+
 	def write(io)
 		@lines.each do |line|
 			io.puts(line)
@@ -104,7 +104,7 @@ private
 		@ips        = ips
 		@host_names = all_host_names
 	end
-	
+
 	def parse_line(line)
 		return nil if line =~ /^[\s\t]*#/
 		line = line.strip
@@ -112,7 +112,7 @@ private
 		ip, *host_names = line.split(/[ \t]+/)
 		return [ip, host_names]
 	end
-	
+
 	def find_line(start_index, content)
 		i = start_index
 		while i < @lines.size

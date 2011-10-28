@@ -1,6 +1,6 @@
-//  (C) Copyright John Maddock 2006. 
-//  Use, modification and distribution are subject to the 
-//  Boost Software License, Version 1.0. (See accompanying file 
+//  (C) Copyright John Maddock 2006.
+//  Use, modification and distribution are subject to the
+//  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org for most recent version.
@@ -18,7 +18,7 @@
 //
 #if !defined(__MINGW32__) && !defined(_MSC_VER) && !defined(linux) && !defined(__linux) && !defined(__linux__)
 # define BOOST_HAS_THREADS
-#endif 
+#endif
 
 //
 // gcc has "long long"
@@ -42,7 +42,7 @@
 #  define BOOST_NO_DEFAULTED_FUNCTIONS
 #  define BOOST_NO_DELETED_FUNCTIONS
 #  define BOOST_NO_INITIALIZER_LISTS
-#  define BOOST_NO_SCOPED_ENUMS  
+#  define BOOST_NO_SCOPED_ENUMS
 #  define BOOST_NO_SFINAE_EXPR
 #  define BOOST_NO_SCOPED_ENUMS
 #  define BOOST_NO_EXPLICIT_CONVERSION_OPERATORS

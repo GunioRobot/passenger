@@ -13,18 +13,18 @@ namespace tut {
 	struct ProcessMetricsCollectorTest {
 		ProcessMetricsCollector collector;
 		pid_t child;
-		
+
 		ProcessMetricsCollectorTest() {
 			child = -1;
 		}
-		
+
 		~ProcessMetricsCollectorTest() {
 			if (child != -1) {
 				kill(child, SIGKILL);
 				waitpid(child, NULL, 0);
 			}
 		}
-		
+
 		pid_t spawnChild(int memory) {
 			string memoryStr = toString(memory);
 			pid_t pid = fork();
@@ -33,7 +33,7 @@ namespace tut {
 					"support/allocate_memory",
 					memoryStr.c_str(),
 					(char *) 0);
-				
+
 				int e = errno;
 				fprintf(stderr, "Cannot execute support/allocate_memory: %s\n",
 					strerror(e));
@@ -44,9 +44,9 @@ namespace tut {
 			}
 		}
 	};
-	
+
 	DEFINE_TEST_GROUP(ProcessMetricsCollectorTest);
-	
+
 	TEST_METHOD(1) {
 		// It collects the metrics for the given PIDs.
 		collector.setPsOutput(
@@ -58,16 +58,16 @@ namespace tut {
 		pids.push_back(1);
 		pids.push_back(34678);
 		ProcessMetricMap result = collector.collect(pids);
-		
+
 		ensure_equals(result.size(), 2u);
-		
+
 		ensure_equals(result[1].pid, (pid_t) 1);
 		ensure_equals(result[1].ppid, (pid_t) 0);
 		ensure_equals(result[1].cpu, 0u);
 		ensure_equals(result[1].rss, 1276u);
 		ensure_equals(result[1].processGroupId, (pid_t) 1);
 		ensure_equals(result[1].command, "/sbin/launchd");
-		
+
 		ensure_equals(result[34678].pid, (pid_t) 34678);
 		ensure_equals(result[34678].ppid, (pid_t) 1265);
 		ensure_equals(result[34678].cpu, 95u);
@@ -75,7 +75,7 @@ namespace tut {
 		ensure_equals(result[34678].processGroupId, (pid_t) 34677);
 		ensure_equals(result[34678].command, "/bin/bash -li");
 	}
-	
+
 	TEST_METHOD(2) {
 		// It does not collect the metrics for PIDs that don't exist.
 		collector.setPsOutput(
@@ -86,12 +86,12 @@ namespace tut {
 		pids.push_back(1);
 		pids.push_back(34678);
 		ProcessMetricMap result = collector.collect(pids);
-		
+
 		ensure_equals(result.size(), 1u);
 		ensure(result.find(1) != result.end());
 		ensure(result.find(34678) == result.end());
 	}
-	
+
 	TEST_METHOD(3) {
 		// Measuring real memory usage works.
 		ssize_t pss, privateDirty, swap;

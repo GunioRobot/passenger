@@ -1,6 +1,6 @@
 #ifndef BOOST_PTHREAD_MUTEX_SCOPED_LOCK_HPP
 #define BOOST_PTHREAD_MUTEX_SCOPED_LOCK_HPP
-//  (C) Copyright 2007-8 Anthony Williams 
+//  (C) Copyright 2007-8 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -28,7 +28,7 @@ namespace boost
             {
                 BOOST_VERIFY(!pthread_mutex_unlock(m));
             }
-            
+
         };
 
         class pthread_mutex_scoped_unlock
@@ -44,7 +44,7 @@ namespace boost
             {
                 BOOST_VERIFY(!pthread_mutex_lock(m));
             }
-            
+
         };
     }
 }

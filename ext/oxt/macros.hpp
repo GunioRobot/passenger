@@ -41,7 +41,7 @@
 	 * empty stub.
 	 */
 	#define OXT_LIKELY(expr) __builtin_expect((expr), 1)
-	
+
 	/**
 	 * Indicate that the given expression is likely to be false.
 	 * This allows the CPU to better perform branch prediction.

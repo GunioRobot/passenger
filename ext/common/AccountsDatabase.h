@@ -49,38 +49,38 @@ private:
 	mutable boost::mutex lock;
 	map<string, AccountPtr> accounts;
 	unsigned int uniqueNumber;
-	
+
 public:
 	static AccountsDatabasePtr createDefault(const ServerInstanceDir::GenerationPtr &generation,
 	                                         bool userSwitching, const string &defaultUser,
 	                                         const string &defaultGroup);
-	
+
 	AccountsDatabase() {
 		uniqueNumber = 0;
 	}
-	
+
 	unsigned int size() const {
 		lock_guard<boost::mutex> l(lock);
 		return accounts.size();
 	}
-	
+
 	vector<string> listUsernames() const {
 		map<string, AccountPtr>::const_iterator it;
 		vector<string> result;
-		
+
 		for (it = accounts.begin(); it != accounts.end(); it++) {
 			result.push_back(it->second->getUsername());
 		}
 		return result;
 	}
-	
+
 	AccountPtr add(const string &username, const string &passwordOrHash, bool hashGiven, int rights = Account::ALL) {
 		AccountPtr account(new Account(username, passwordOrHash, hashGiven, rights));
 		lock_guard<boost::mutex> l(lock);
 		accounts[username] = account;
 		return account;
 	}
-	
+
 	const AccountPtr get(const string &username) const {
 		lock_guard<boost::mutex> l(lock);
 		map<string, AccountPtr>::const_iterator it = accounts.find(username);
@@ -90,7 +90,7 @@ public:
 			return it->second;
 		}
 	}
-	
+
 	AccountPtr authenticate(const string &username, const StaticString &userSuppliedPassword) const {
 		lock_guard<boost::mutex> l(lock);
 		map<string, AccountPtr>::const_iterator it = accounts.find(username);
@@ -105,7 +105,7 @@ public:
 			}
 		}
 	}
-	
+
 	bool remove(const string &username) {
 		lock_guard<boost::mutex> l(lock);
 		map<string, AccountPtr>::iterator it = accounts.find(username);
@@ -116,7 +116,7 @@ public:
 			return true;
 		}
 	}
-	
+
 	unsigned int getUniqueNumber() {
 		lock_guard<boost::mutex> l(lock);
 		unsigned int result = uniqueNumber;

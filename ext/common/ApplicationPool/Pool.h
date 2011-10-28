@@ -115,12 +115,12 @@ public:
 private:
 	struct Group;
 	struct ProcessInfo;
-	
+
 	typedef shared_ptr<Group> GroupPtr;
 	typedef shared_ptr<ProcessInfo> ProcessInfoPtr;
 	typedef list<ProcessInfoPtr> ProcessInfoList;
 	typedef map<string, GroupPtr> GroupMap;
-	
+
 	struct Group {
 		string name;
 		string appRoot;
@@ -134,10 +134,10 @@ private:
 		string environment;
 		bool analytics;
 		string unionStationKey;
-		
+
 		/*****************/
 		/*****************/
-		
+
 		Group() {
 			size         = 0;
 			detached     = false;
@@ -148,7 +148,7 @@ private:
 			/*****************/
 		}
 	};
-	
+
 	struct ProcessInfo {
 		ProcessPtr process;
 		string groupName;
@@ -160,10 +160,10 @@ private:
 		ProcessInfoList::iterator ia_iterator;
 		bool detached;
 		ProcessMetrics metrics;
-		
+
 		/****************/
 		/****************/
-		
+
 		ProcessInfo() {
 			startTime  = SystemTime::getMsec();
 			lastUsed   = 0;
@@ -172,14 +172,14 @@ private:
 			detached   = false;
 			/*****************/
 		}
-		
+
 		/**
 		 * Returns the uptime of this process so far, as a string.
 		 */
 		string uptime() const {
 			unsigned long long seconds = (unsigned long long) time(NULL) - startTime / 1000;
 			stringstream result;
-			
+
 			if (seconds >= 60) {
 				unsigned long long minutes = seconds / 60;
 				if (minutes >= 60) {
@@ -187,7 +187,7 @@ private:
 					minutes = minutes % 60;
 					result << hours << "h ";
 				}
-				
+
 				seconds = seconds % 60;
 				result << minutes << "m ";
 			}
@@ -195,7 +195,7 @@ private:
 			return result.str();
 		}
 	};
-	
+
 	/**
 	 * A data structure which contains data that's shared between an
 	 * ApplicationPool::Pool and a SessionCloseCallback object.
@@ -206,7 +206,7 @@ private:
 		boost::timed_mutex lock;
 		condition_variable_any newAppGroupCreatable;
 		condition_variable_any globalQueuePositionBecameAvailable;
-		
+
 		GroupMap groups;
 		unsigned int max;
 		unsigned int count;
@@ -214,40 +214,40 @@ private:
 		unsigned int maxPerApp;
 		ProcessInfoList inactiveApps;
 	};
-	
+
 	typedef shared_ptr<SharedData> SharedDataPtr;
-	
+
 	/**
 	 * Function object which will be called when a session has been closed.
 	 */
 	struct SessionCloseCallback {
 		SharedDataPtr data;
 		weak_ptr<ProcessInfo> processInfo;
-		
+
 		SessionCloseCallback(const SharedDataPtr &data,
 		                     const weak_ptr<ProcessInfo> &processInfo) {
 			this->data = data;
 			this->processInfo = processInfo;
 		}
-		
+
 		void operator()(const StandardSession *session) {
 			ProcessInfoPtr processInfo = this->processInfo.lock();
 			if (processInfo == NULL || processInfo->detached) {
 				return;
 			}
-			
+
 			boost::timed_mutex::scoped_lock l(data->lock);
 			if (processInfo->detached) {
 				return;
 			}
-			
+
 			GroupMap::iterator it;
 			it = data->groups.find(processInfo->groupName);
 			GroupPtr group = it->second;
 			ProcessInfoList *processes = &group->processes;
-			
+
 			processInfo->processed++;
-			
+
 			if (group->maxRequests > 0 && processInfo->processed >= group->maxRequests) {
 				P_DEBUG("MaxRequests for process " << processInfo->process->getPid() << " reached");
 				processInfo->detached = true;
@@ -277,7 +277,7 @@ private:
 			}
 		}
 	};
-	
+
 	AbstractSpawnManagerPtr spawnManager;
 	AnalyticsLoggerPtr analyticsLogger;
 	SharedDataPtr data;
@@ -290,7 +290,7 @@ private:
 	CachedFileStat cstat;
 	FileChangeChecker fileChangeChecker;
 	ProcessMetricsCollector processMetricsCollector;
-	
+
 	// Shortcuts for instance variables in SharedData. Saves typing in get()
 	// and other methods.
 	boost::timed_mutex &lock;
@@ -302,7 +302,7 @@ private:
 	unsigned int &active;
 	unsigned int &maxPerApp;
 	ProcessInfoList &inactiveApps;
-	
+
 	/**
 	 * Verify that all the invariants are correct.
 	 */
@@ -312,14 +312,14 @@ private:
 		GroupMap::const_iterator it;
 		unsigned int totalSize = 0;
 		unsigned int expectedActive = 0;
-		
+
 		for (it = groups.begin(); it != groups.end(); it++) {
 			const string &appRoot = it->first;
 			Group *group = it->second.get();
 			ProcessInfoList *processes = &group->processes;
-			
+
 			// Invariants for Group.
-			
+
 			P_ASSERT(group->size <= count, false,
 				"groups['" << appRoot << "'].size (" << group->size <<
 				") <= count (" << count << ")");
@@ -328,12 +328,12 @@ private:
 				"groups['" << appRoot << "'].processes is nonempty.");
 			P_ASSERT(!group->detached, false,
 				"groups['" << appRoot << "'].detached is true");
-			
-			
+
+
 			ProcessInfoList::const_iterator lit = processes->begin();
 			for (; lit != processes->end(); lit++) {
 				const ProcessInfoPtr &processInfo = *lit;
-				
+
 				// Invariants for ProcessInfo.
 				P_ASSERT(processInfo->groupName == group->name, false,
 					"groups['" << appRoot << "'].processes[x].groupName "
@@ -344,14 +344,14 @@ private:
 					expectedActive++;
 				}
 			}
-			
+
 			ProcessInfoList::const_iterator prev_lit;
 			prev_lit = processes->begin();
 			lit = prev_lit;
 			lit++;
 			for (; lit != processes->end(); lit++) {
 				const ProcessInfoPtr &processInfo = *lit;
-				
+
 				// Invariants for ProcessInfo that depend on the previous item.
 				if ((*prev_lit)->sessions > 0) {
 					P_ASSERT(processInfo->sessions > 0, false,
@@ -361,7 +361,7 @@ private:
 			}
 		}
 		P_ASSERT(totalSize == count, false, "(sum of all d.size in groups) == count");
-		
+
 		P_ASSERT(active == expectedActive, false,
 			"active (" << active << ") == " << expectedActive);
 		P_ASSERT(active <= count, false,
@@ -371,10 +371,10 @@ private:
 	#endif
 		return true;
 	}
-	
+
 	string inspectWithoutLock() const {
 		stringstream result;
-		
+
 		result << "----------- General information -----------" << endl;
 		result << "max      = " << max << endl;
 		result << "count    = " << count << endl;
@@ -382,19 +382,19 @@ private:
 		result << "inactive = " << inactiveApps.size() << endl;
 		result << "Waiting on global queue: " << waitingOnGlobalQueue << endl;
 		result << endl;
-		
+
 		result << "----------- Groups -----------" << endl;
 		GroupMap::const_iterator it;
 		for (it = groups.begin(); it != groups.end(); it++) {
 			Group *group = it->second.get();
 			ProcessInfoList *processes = &group->processes;
 			ProcessInfoList::const_iterator lit;
-			
+
 			result << it->first << ": " << endl;
 			for (lit = processes->begin(); lit != processes->end(); lit++) {
 				const ProcessInfo *processInfo = lit->get();
 				char buf[128];
-				
+
 				snprintf(buf, sizeof(buf),
 						"PID: %-5lu   Sessions: %-2u   Processed: %-5u   Uptime: %s",
 						(unsigned long) processInfo->process->getPid(),
@@ -407,7 +407,7 @@ private:
 		}
 		return result.str();
 	}
-	
+
 	static void mutateActive(const SharedDataPtr &data, unsigned int value) {
 		if (value < data->active) {
 			data->newAppGroupCreatable.notify_all();
@@ -415,12 +415,12 @@ private:
 		}
 		data->active = value;
 	}
-	
+
 	static void mutateCount(const SharedDataPtr &data, unsigned int value) {
 		data->globalQueuePositionBecameAvailable.notify_all();
 		data->count = value;
 	}
-	
+
 	static void mutateMax(const SharedDataPtr &data, unsigned int value) {
 		if (value > data->max) {
 			data->newAppGroupCreatable.notify_all();
@@ -428,19 +428,19 @@ private:
 		}
 		data->max = value;
 	}
-	
+
 	void mutateActive(unsigned int value) {
 		Pool::mutateActive(data, value);
 	}
-	
+
 	void mutateCount(unsigned int value) {
 		Pool::mutateCount(data, value);
 	}
-	
+
 	void mutateMax(unsigned int value) {
 		Pool::mutateMax(data, value);
 	}
-	
+
 	/**
 	 * Checks whether the given application group needs to be restarted.
 	 *
@@ -456,19 +456,19 @@ private:
 		} else {
 			restartDir = appRoot + "/" + options.restartDir;
 		}
-		
+
 		string alwaysRestartFile = restartDir + "/always_restart.txt";
 		string restartFile = restartDir + "/restart.txt";
 		struct stat buf;
 		return cstat.stat(alwaysRestartFile, &buf, options.statThrottleRate) == 0 ||
 		       fileChangeChecker.changed(restartFile, options.statThrottleRate);
 	}
-	
+
 	bool spawningAllowed(const GroupPtr &group, const PoolOptions &options) const {
 		return ( count < max ) &&
 			( (maxPerApp == 0) || (group->size < maxPerApp) );
 	}
-	
+
 	void dumpProcessInfoAsXml(const ProcessInfo *processInfo, bool includeSensitiveInformation,
 	                          stringstream &result) const
 	{
@@ -501,7 +501,7 @@ private:
 			const ProcessPtr &process = processInfo->process;
 			const Process::SocketInfoMap *serverSockets;
 			Process::SocketInfoMap::const_iterator sit;
-			
+
 			result << "<connect_password>" << process->getConnectPassword() << "</connect_password>";
 			result << "<server_sockets>";
 			serverSockets = process->getServerSockets();
@@ -518,17 +518,17 @@ private:
 		}
 		result << "</process>";
 	}
-	
+
 	static void detachGroupWithoutLock(const SharedDataPtr &data, const GroupPtr &group) {
 		TRACE_POINT();
 		assert(!group->detached);
-		
+
 		ProcessInfoList *processes = &group->processes;
 		ProcessInfoList::iterator list_it;
-		
+
 		for (list_it = processes->begin(); list_it != processes->end(); list_it++) {
 			ProcessInfoPtr processInfo = *list_it;
-			
+
 			if (processInfo->sessions == 0) {
 				data->inactiveApps.erase(processInfo->ia_iterator);
 			} else {
@@ -539,22 +539,22 @@ private:
 			processInfo->detached = true;
 			mutateCount(data, data->count - 1);
 		}
-		
+
 		if (group->spawning) {
 			UPDATE_TRACE_POINT();
 			group->spawnerThread->interrupt_and_join();
 			group->spawnerThread.reset();
 			group->spawning = false;
 		}
-		
+
 		group->detached = true;
 		data->groups.erase(group->name);
 	}
-	
+
 	void detachGroupWithoutLock(const GroupPtr &group) {
 		Pool::detachGroupWithoutLock(data, group);
 	}
-	
+
 	ProcessInfoPtr selectProcess(ProcessInfoList *processes, const PoolOptions &options,
 		unique_lock<boost::timed_mutex> &l,
 		this_thread::disable_interruption &di,
@@ -573,7 +573,7 @@ private:
 			ProcessInfoList::iterator end = processes->end();
 			ProcessInfoList::iterator smallest = processes->begin();
 			ProcessInfoPtr processInfo;
-			
+
 			it++;
 			for (; it != end; it++) {
 				if ((*it)->sessions < (*smallest)->sessions) {
@@ -588,7 +588,7 @@ private:
 			return processInfo;
 		}
 	}
-	
+
 	void spawnInBackground(const GroupPtr &group, const PoolOptions &options) {
 		assert(!group->detached);
 		assert(!group->spawning);
@@ -599,13 +599,13 @@ private:
 			SPAWNER_THREAD_STACK_SIZE
 		));
 	}
-	
+
 	void spawnerThreadCallback(GroupPtr group, PoolOptions options) {
 		TRACE_POINT();
-		
+
 		while (true) {
 			ProcessPtr process;
-			
+
 			try {
 				UPDATE_TRACE_POINT();
 				P_DEBUG("Background spawning a process for " << options.appRoot);
@@ -633,31 +633,31 @@ private:
 				}
 				return;
 			}
-			
+
 			UPDATE_TRACE_POINT();
 			interruptable_lock_guard<boost::timed_mutex> l(lock);
 			this_thread::disable_interruption di;
 			this_thread::disable_syscall_interruption dsi;
 			ProcessInfoPtr processInfo;
-			
+
 			processInfo = ptr(new ProcessInfo());
 			processInfo->process = process;
 			processInfo->groupName = options.getAppGroupName();
-			
+
 			group->processes.push_front(processInfo);
 			processInfo->iterator = group->processes.begin();
-			
+
 			inactiveApps.push_back(processInfo);
 			processInfo->ia_iterator = inactiveApps.end();
 			processInfo->ia_iterator--;
-			
+
 			group->size++;
 			mutateCount(count + 1);
-			
+
 			P_ASSERT_WITH_VOID_RETURN(verifyState(),
 				"Background spawning: ApplicationPool state is valid:\n" <<
 				inspectWithoutLock());
-			
+
 			if (group->size >= options.minProcesses
 			 || !spawningAllowed(group, options)) {
 				group->spawning = false;
@@ -666,18 +666,18 @@ private:
 			}
 		}
 	}
-	
+
 	bool detachWithoutLock(const string &detachKey) {
 		TRACE_POINT();
 		GroupMap::iterator group_it;
 		GroupMap::iterator group_it_end = groups.end();
-		
+
 		for (group_it = groups.begin(); group_it != group_it_end; group_it++) {
 			GroupPtr group = group_it->second;
 			ProcessInfoList &processes = group->processes;
 			ProcessInfoList::iterator process_info_it = processes.begin();
 			ProcessInfoList::iterator process_info_it_end = processes.end();
-			
+
 			for (; process_info_it != process_info_it_end; process_info_it++) {
 				ProcessInfoPtr processInfo = *process_info_it;
 				if (processInfo->process->getDetachKey() == detachKey) {
@@ -701,7 +701,7 @@ private:
 		}
 		return false;
 	}
-	
+
 	void cleanerThreadMainLoop() {
 		this_thread::disable_syscall_interruption dsi;
 		unique_lock<boost::timed_mutex> l(lock);
@@ -732,35 +732,35 @@ private:
 					}
 					// Timeout: maxIdleTime + 1 seconds passed.
 				}
-				
+
 				time_t now = syscalls::time(NULL);
 				ProcessInfoList::iterator it = inactiveApps.begin();
 				ProcessInfoList::iterator end_it = inactiveApps.end();
 				for (; it != end_it; it++) {
 					ProcessInfoPtr processInfo = *it;
-					
+
 					if (now - processInfo->lastUsed > (time_t) maxIdleTime) {
 						ProcessPtr process = processInfo->process;
 						GroupPtr   group   = groups[processInfo->groupName];
-						
+
 						if (group->size > group->minProcesses) {
 							ProcessInfoList *processes = &group->processes;
-							
+
 							P_DEBUG("Cleaning idle process " << process->getAppRoot() <<
 								" (PID " << process->getPid() << ")");
 							P_TRACE(2, "Group size = " << group->size << ", "
 								"min processes = " << group->minProcesses);
 							processes->erase(processInfo->iterator);
 							processInfo->detached = true;
-							
+
 							ProcessInfoList::iterator prev = it;
 							prev--;
 							inactiveApps.erase(it);
 							it = prev;
-							
+
 							group->size--;
 							mutateCount(count - 1);
-							
+
 							if (processes->empty()) {
 								detachGroupWithoutLock(group);
 							}
@@ -772,7 +772,7 @@ private:
 			P_ERROR("Uncaught exception: " << e.what());
 		}
 	}
-	
+
 	void analyticsCollectionThreadMainLoop() {
 		/* Invariant inside this thread:
 		 * analyticsLogger != NULL
@@ -784,14 +784,14 @@ private:
 				this_thread::disable_interruption di;
 				this_thread::disable_syscall_interruption dsi;
 				vector<pid_t> pids;
-				
+
 				// Collect all the PIDs.
 				{
 					UPDATE_TRACE_POINT();
 					lock_guard<boost::timed_mutex> l(lock);
 					GroupMap::const_iterator group_it;
 					GroupMap::const_iterator group_it_end = groups.end();
-					
+
 					UPDATE_TRACE_POINT();
 					pids.reserve(count);
 					for (group_it = groups.begin(); group_it != group_it_end; group_it++) {
@@ -799,26 +799,26 @@ private:
 						const ProcessInfoList &processes = group->processes;
 						ProcessInfoList::const_iterator process_info_it = processes.begin();
 						ProcessInfoList::const_iterator process_info_it_end = processes.end();
-						
+
 						for (; process_info_it != process_info_it_end; process_info_it++) {
 							const ProcessInfoPtr &processInfo = *process_info_it;
 							pids.push_back(processInfo->process->getPid());
 						}
 					}
 				}
-				
+
 				try {
 					// Now collect the process metrics and store them in the
 					// data structures, and log the state into the analytics logs.
 					UPDATE_TRACE_POINT();
 					ProcessMetricMap allMetrics =
 						processMetricsCollector.collect(pids);
-					
+
 					UPDATE_TRACE_POINT();
 					lock_guard<boost::timed_mutex> l(lock);
 					GroupMap::iterator group_it;
 					GroupMap::iterator group_it_end = groups.end();
-					
+
 					UPDATE_TRACE_POINT();
 					for (group_it = groups.begin(); group_it != group_it_end; group_it++) {
 						GroupPtr &group = group_it->second;
@@ -827,7 +827,7 @@ private:
 						ProcessInfoList::iterator process_info_it_end = processes.end();
 						AnalyticsLogPtr log;
 						stringstream xml;
-						
+
 						if (group->analytics && analyticsLogger != NULL) {
 							ssize_t shared;
 							log = analyticsLogger->newTransaction(group->name,
@@ -862,9 +862,9 @@ private:
 				} catch (const std::exception &e) {
 					P_WARN("Error while collecting process metrics: " << e.what());
 				}
-				
+
 				pids.resize(0);
-				
+
 				// Sleep for about 4 seconds, aligned to seconds boundary
 				// for saving power on laptops.
 				UPDATE_TRACE_POINT();
@@ -878,7 +878,7 @@ private:
 			P_ERROR("Uncaught exception: " << e.what());
 		}
 	}
-	
+
 	/**
 	 * @throws boost::thread_interrupted
 	 * @throws SpawnException
@@ -889,7 +889,7 @@ private:
 	pair<ProcessInfoPtr, GroupPtr>
 	checkoutWithoutLock(unique_lock<boost::timed_mutex> &l, const PoolOptions &options) {
 		beginning_of_function:
-		
+
 		TRACE_POINT();
 		this_thread::disable_interruption di;
 		this_thread::disable_syscall_interruption dsi;
@@ -898,10 +898,10 @@ private:
 		ProcessInfoPtr processInfo;
 		GroupPtr group;
 		ProcessInfoList *processes;
-		
+
 		try {
 			GroupMap::iterator group_it = groups.find(appGroupName);
-			
+
 			if (needsRestart(appRoot, options)) {
 				P_DEBUG("Restarting " << appGroupName);
 				spawnManager->reload(appGroupName);
@@ -910,11 +910,11 @@ private:
 					group_it = groups.end();
 				}
 			}
-			
+
 			if (group_it != groups.end()) {
 				group = group_it->second;
 				processes = &group->processes;
-				
+
 				if (processes->front()->sessions == 0) {
 					processInfo = processes->front();
 					processes->pop_front();
@@ -959,7 +959,7 @@ private:
 					}
 					mutateCount(count - 1);
 				}
-				
+
 				UPDATE_TRACE_POINT();
 				processInfo = ptr(new ProcessInfo());
 				{
@@ -1003,7 +1003,7 @@ private:
 			message.append(e.what());
 			throw SpawnException(message);
 		}
-		
+
 		group->maxRequests  = options.maxRequests;
 		group->minProcesses = options.minProcesses;
 		group->environment  = options.environment;
@@ -1011,13 +1011,13 @@ private:
 		if (group->analytics) {
 			group->unionStationKey = options.log->getUnionStationKey();
 		}
-		
+
 		processInfo->lastUsed = time(NULL);
 		processInfo->sessions++;
-		
+
 		return make_pair(processInfo, group);
 	}
-	
+
 	/** @throws boost::thread_resource_error */
 	void initialize(const AnalyticsLoggerPtr &analyticsLogger)
 	{
@@ -1033,7 +1033,7 @@ private:
 			"ApplicationPool cleaner",
 			CLEANER_THREAD_STACK_SIZE
 		);
-		
+
 		if (analyticsLogger != NULL) {
 			this->analyticsLogger = analyticsLogger;
 			analyticsCollectionThread = new oxt::thread(
@@ -1045,7 +1045,7 @@ private:
 			analyticsCollectionThread = NULL;
 		}
 	}
-	
+
 public:
 	/**
 	 * Create a new ApplicationPool::Pool object, and initialize it with a
@@ -1076,13 +1076,13 @@ public:
 		inactiveApps(data->inactiveApps)
 	{
 		TRACE_POINT();
-		
+
 		this->spawnManager = ptr(new SpawnManager(spawnServerCommand, generation,
 			accountsDatabase, rubyCommand, analyticsLogger, logLevel,
 			debugLogFile));
 		initialize(analyticsLogger);
 	}
-	
+
 	/**
 	 * Create a new ApplicationPool::Pool object and initialize it with
 	 * the given spawn manager.
@@ -1107,7 +1107,7 @@ public:
 		this->spawnManager = spawnManager;
 		initialize(analyticsLogger);
 	}
-	
+
 	virtual ~Pool() {
 		TRACE_POINT();
 		this_thread::disable_interruption di;
@@ -1121,24 +1121,24 @@ public:
 		}
 		cleanerThread->join();
 		delete cleanerThread;
-		
+
 		if (analyticsCollectionThread != NULL) {
 			analyticsCollectionThread->interrupt_and_join();
 			delete analyticsCollectionThread;
 		}
 	}
-	
+
 	virtual SessionPtr get(const string &appRoot) {
 		return ApplicationPool::Interface::get(appRoot);
 	}
-	
+
 	virtual SessionPtr get(const PoolOptions &options) {
 		TRACE_POINT();
 		unsigned int attempt = 0;
-		
+
 		while (true) {
 			attempt++;
-			
+
 			pair<ProcessInfoPtr, GroupPtr> p;
 			{
 				unique_lock<boost::timed_mutex> l(lock);
@@ -1147,7 +1147,7 @@ public:
 					"get(): ApplicationPool state is valid:\n" << inspectWithoutLock());
 			}
 			ProcessInfoPtr &processInfo = p.first;
-			
+
 			try {
 				UPDATE_TRACE_POINT();
 				SessionPtr session = processInfo->process->newSession(
@@ -1155,7 +1155,7 @@ public:
 					options.initiateSession
 				);
 				return session;
-				
+
 			} catch (SystemException &e) {
 				P_TRACE(2, "Exception occurred while connecting to checked out "
 					"process " << processInfo->process->getPid() << ": " <<
@@ -1177,10 +1177,10 @@ public:
 						"'");
 					throw;
 				} // else retry
-			
+
 			} catch (const thread_interrupted &) {
 				throw;
-			
+
 			} catch (std::exception &e) {
 				P_TRACE(2, "Exception occurred while connecting to checked out "
 					"process " << processInfo->process->getPid() << ": " <<
@@ -1205,23 +1205,23 @@ public:
 		// Never reached; shut up compiler warning
 		return SessionPtr();
 	}
-	
+
 	virtual bool detach(const string &detachKey) {
 		TRACE_POINT();
 		unique_lock<boost::timed_mutex> l(lock);
 		return detachWithoutLock(detachKey);
 	}
-	
+
 	virtual void clear() {
 		lock_guard<boost::timed_mutex> l(lock);
 		P_DEBUG("Clearing pool");
-		
+
 		while (!groups.empty()) {
 			detachGroupWithoutLock(groups.begin()->second);
 		}
 		newAppGroupCreatable.notify_all();
 		globalQueuePositionBecameAvailable.notify_all();
-		
+
 		P_ASSERT_WITH_VOID_RETURN(groups.size() == 0,
 			"groups.size() == 0\n" << inspectWithoutLock());
 		P_ASSERT_WITH_VOID_RETURN(inactiveApps.size() == 0,
@@ -1232,87 +1232,87 @@ public:
 			"active == 0\n" << inspectWithoutLock());
 		P_ASSERT_WITH_VOID_RETURN(verifyState(),
 			"ApplicationPool state is valid:\n" << inspectWithoutLock());
-		
+
 		// TODO: clear cstat and fileChangeChecker, and reload all spawner servers.
 	}
-	
+
 	virtual void setMaxIdleTime(unsigned int seconds) {
 		lock_guard<boost::timed_mutex> l(lock);
 		maxIdleTime = seconds;
 		cleanerThreadSleeper.notify_one();
 	}
-	
+
 	virtual void setMax(unsigned int max) {
 		lock_guard<boost::timed_mutex> l(lock);
 		mutateMax(max);
 	}
-	
+
 	virtual unsigned int getActive() const {
 		lock_guard<boost::timed_mutex> l(lock);
 		return active;
 	}
-	
+
 	virtual unsigned int getCount() const {
 		lock_guard<boost::timed_mutex> l(lock);
 		return count;
 	}
-	
+
 	virtual unsigned int getGlobalQueueSize() const {
 		lock_guard<boost::timed_mutex> l(lock);
 		return waitingOnGlobalQueue;
 	}
-	
+
 	virtual void setMaxPerApp(unsigned int maxPerApp) {
 		lock_guard<boost::timed_mutex> l(lock);
 		this->maxPerApp = maxPerApp;
 		newAppGroupCreatable.notify_all();
 		globalQueuePositionBecameAvailable.notify_all();
 	}
-	
+
 	virtual pid_t getSpawnServerPid() const {
 		return spawnManager->getServerPid();
 	}
-	
+
 	virtual string inspect() const {
 		lock_guard<boost::timed_mutex> l(lock);
 		return inspectWithoutLock();
 	}
-	
+
 	virtual string toXml(bool includeSensitiveInformation = true) const {
 		lock_guard<boost::timed_mutex> l(lock);
 		stringstream result;
 		GroupMap::const_iterator it;
-		
+
 		result << "<?xml version=\"1.0\" encoding=\"iso8859-1\" ?>\n";
 		result << "<info>";
-		
+
 		result << "<active>" << toString(active) << "</active>";
 		result << "<count>" << toString(count) << "</count>";
 		result << "<max>" << toString(max) << "</max>";
 		result << "<global_queue_size>" << toString(waitingOnGlobalQueue) << "</global_queue_size>";
-		
+
 		result << "<groups>";
 		for (it = groups.begin(); it != groups.end(); it++) {
 			Group *group = it->second.get();
 			ProcessInfoList *processes = &group->processes;
 			ProcessInfoList::const_iterator lit;
-			
+
 			result << "<group>";
 			result << "<app_root>" << escapeForXml(group->appRoot) << "</app_root>";
 			result << "<name>" << escapeForXml(group->name) << "</name>";
 			result << "<environment>" << escapeForXml(group->environment) << "</environment>";
-			
+
 			result << "<processes>";
 			for (lit = processes->begin(); lit != processes->end(); lit++) {
 				ProcessInfo *processInfo = lit->get();
 				dumpProcessInfoAsXml(processInfo, includeSensitiveInformation, result);
 			}
 			result << "</processes>";
-			
+
 			result << "</group>";
 		}
 		result << "</groups>";
-		
+
 		result << "</info>";
 		return result.str();
 	}

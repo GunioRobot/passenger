@@ -29,7 +29,7 @@ class StopCommand < Command
 	def self.description
 		return "Stop a running Phusion Passenger Standalone instance."
 	end
-	
+
 	def run
 		parse_options!("stop") do |opts|
 			opts.on("-p", "--port NUMBER", Integer,
@@ -41,7 +41,7 @@ class StopCommand < Command
 				@options[:pid_file] = value
 			end
 		end
-		
+
 		determine_various_resource_locations(false)
 		create_nginx_controller
 		begin

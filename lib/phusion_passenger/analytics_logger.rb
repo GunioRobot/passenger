@@ -32,12 +32,12 @@ class AnalyticsLogger
 	RETRY_SLEEP = 0.2
 	NETWORK_ERRORS = [Errno::EPIPE, Errno::ECONNREFUSED, Errno::ECONNRESET,
 		Errno::EHOSTUNREACH, Errno::ENETDOWN, Errno::ENETUNREACH, Errno::ETIMEDOUT]
-	
+
 	include Utils
-	
+
 	class Log
 		attr_reader :txn_id
-		
+
 		def initialize(shared_data = nil, txn_id = nil)
 			if shared_data
 				@shared_data = shared_data
@@ -45,11 +45,11 @@ class AnalyticsLogger
 				shared_data.ref
 			end
 		end
-		
+
 		def null?
 			return !@shared_data
 		end
-		
+
 		def message(text)
 			@shared_data.synchronize do
 				@shared_data.client.write("log", @txn_id,
@@ -57,7 +57,7 @@ class AnalyticsLogger
 				@shared_data.client.write_scalar(text)
 			end if @shared_data
 		end
-		
+
 		def begin_measure(name, extra_info = nil)
 			if extra_info
 				extra_info_base64 = [extra_info].pack("m")
@@ -69,7 +69,7 @@ class AnalyticsLogger
 			times = NativeSupport.process_times
 			message "BEGIN: #{name} (#{current_timestamp.to_s(36)},#{times.utime.to_s(36)},#{times.stime.to_s(36)}) #{extra_info_base64}"
 		end
-		
+
 		def end_measure(name, error_encountered = false)
 			times = NativeSupport.process_times
 			if error_encountered
@@ -78,7 +78,7 @@ class AnalyticsLogger
 				message "END: #{name} (#{current_timestamp.to_s(36)},#{times.utime.to_s(36)},#{times.stime.to_s(36)})"
 			end
 		end
-		
+
 		def measure(name, extra_info = nil)
 			begin_measure(name, extra_info)
 			begin
@@ -90,7 +90,7 @@ class AnalyticsLogger
 				end_measure(name, error)
 			end
 		end
-		
+
 		def measured_time_points(name, begin_time, end_time, extra_info = nil)
 			if extra_info
 				extra_info_base64 = [extra_info].pack("m")
@@ -104,7 +104,7 @@ class AnalyticsLogger
 			message "BEGIN: #{name} (#{begin_timestamp.to_s(36)}) #{extra_info_base64}"
 			message "END: #{name} (#{end_timestamp.to_s(36)})"
 		end
-		
+
 		def close(flush_to_disk = false)
 			@shared_data.synchronize do
 				# We need an ACK here. See abstract_request_handler.rb finalize_request.
@@ -125,14 +125,14 @@ class AnalyticsLogger
 				@shared_data = nil
 			end if @shared_data
 		end
-	
+
 	private
 		def current_timestamp
 			time = AnalyticsLogger.current_time
 			return time.to_i * 1_000_000 + time.usec
 		end
 	end
-	
+
 	def self.new_from_options(options)
 		if options["analytics"] && options["logging_agent_address"]
 			return new(options["logging_agent_address"],
@@ -143,10 +143,10 @@ class AnalyticsLogger
 			return nil
 		end
 	end
-	
+
 	attr_accessor :max_connect_tries
 	attr_accessor :reconnect_timeout
-	
+
 	def initialize(logging_agent_address, username, password, node_name)
 		@server_address = logging_agent_address
 		@username = username
@@ -157,11 +157,11 @@ class AnalyticsLogger
 			@node_name = `hostname`.strip
 		end
 		@random_dev = File.open("/dev/urandom")
-		
+
 		# This mutex protects the following instance variables, but
 		# not the contents of @shared_data.
 		@mutex = Mutex.new
-		
+
 		@shared_data = SharedData.new
 		if @server_address && local_socket_address?(@server_address)
 			@max_connect_tries = 10
@@ -171,7 +171,7 @@ class AnalyticsLogger
 		@reconnect_timeout = 60
 		@next_reconnect_time = Time.utc(1980, 1, 1)
 	end
-	
+
 	def clear_connection
 		@mutex.synchronize do
 			@shared_data.synchronize do
@@ -181,7 +181,7 @@ class AnalyticsLogger
 			end
 		end
 	end
-	
+
 	def close
 		@mutex.synchronize do
 			@shared_data.synchronize do
@@ -191,14 +191,14 @@ class AnalyticsLogger
 			end
 		end
 	end
-	
+
 	def new_transaction(group_name, category = :requests, union_station_key = nil)
 		if !@server_address
 			return Log.new
 		elsif !group_name || group_name.empty?
 			raise ArgumentError, "Group name may not be empty"
 		end
-		
+
 		txn_id = (AnalyticsLogger.current_time.to_i / 60).to_s(36)
 		txn_id << "-#{random_token(11)}"
 		Lock.new(@mutex).synchronize do |lock|
@@ -241,14 +241,14 @@ class AnalyticsLogger
 		end
 		end
 	end
-	
+
 	def continue_transaction(txn_id, group_name, category = :requests, union_station_key = nil)
 		if !@server_address
 			return Log.new
 		elsif !txn_id || txn_id.empty?
 			raise ArgumentError, "Transaction ID may not be empty"
 		end
-		
+
 		Lock.new(@mutex).synchronize do |lock|
 		Lock.new(@shared_data.mutex).synchronize do |shared_data_lock|
 			try_count = 0
@@ -291,19 +291,19 @@ private
 		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
 		'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
 		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-	
+
 	class Lock
 		def initialize(mutex)
 			@mutex = mutex
 			@locked = false
 		end
-		
+
 		def reset(mutex, lock_now = true)
 			unlock if @locked
 			@mutex = mutex
 			lock if lock_now
 		end
-		
+
 		def synchronize
 			lock if !@locked
 			begin
@@ -312,56 +312,56 @@ private
 				unlock if @locked
 			end
 		end
-		
+
 		def lock
 			raise if @locked
 			@mutex.lock
 			@locked = true
 		end
-		
+
 		def unlock
 			raise if !@locked
 			@mutex.unlock
 			@locked = false
 		end
 	end
-	
+
 	class SharedData
 		attr_reader :mutex
 		attr_accessor :client
-		
+
 		def initialize
 			@mutex = Mutex.new
 			@refcount = 1
 		end
-		
+
 		def disconnect(check_error_response = false)
 			# TODO: implement check_error_response support
 			@client.close if @client
 		end
-		
+
 		def ref
 			@refcount += 1
 		end
-		
+
 		def unref
 			@refcount -= 1
 			if @refcount == 0
 				disconnect
 			end
 		end
-		
+
 		def synchronize
 			@mutex.synchronize do
 				yield
 			end
 		end
 	end
-	
+
 	def connected?
 		return @shared_data.client && @shared_data.client.connected?
 	end
-	
+
 	def connect
 		@shared_data.client = MessageClient.new(@username, @password, @server_address)
 		@shared_data.client.write("init", @node_name)
@@ -376,13 +376,13 @@ private
 			raise IOError, "Logging server returned an invalid reply for the 'init' command"
 		end
 	end
-	
+
 	def disconnect(check_error_response = false)
 		@shared_data.disconnect(check_error_response)
 		@shared_data.unref
 		@shared_data = SharedData.new
 	end
-	
+
 	def random_token(length)
 		token = ""
 		@random_dev.read(length).each_byte do |c|
@@ -390,15 +390,15 @@ private
 		end
 		return token
 	end
-	
+
 	def current_time
 		return self.class.current_time
 	end
-	
+
 	def self.current_time
 		return Time.now
 	end
-	
+
 	def self.timestamp_string(time = current_time)
 		timestamp = time.to_i * 1_000_000 + time.usec
 		return timestamp.to_s(36)

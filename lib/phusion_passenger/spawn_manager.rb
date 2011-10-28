@@ -58,7 +58,7 @@ module PhusionPassenger
 # it's to work around an obscure bug in ActiveSupport's Dispatcher.
 class SpawnManager < AbstractServer
 	include Utils
-	
+
 	def initialize(options = {})
 		super("", "")
 		@options = options
@@ -66,7 +66,7 @@ class SpawnManager < AbstractServer
 		define_message_handler(:spawn_application, :handle_spawn_application)
 		define_message_handler(:reload, :handle_reload)
 		define_signal_handler('SIGHUP', :reload)
-		
+
 		# Start garbage collector in order to free up some existing
 		# heap slots. This prevents the heap from growing unnecessarily
 		# during the startup phase.
@@ -83,7 +83,7 @@ class SpawnManager < AbstractServer
 			require 'phusion_passenger/exceptions'
 		end
 	end
-	
+
 	# Spawns an application with the given spawn options. When successful, an
 	# AppProcess object will be returned, which represents the spawned application
 	# process.
@@ -122,7 +122,7 @@ class SpawnManager < AbstractServer
 			raise ArgumentError, "The 'app_root' option must be given."
 		end
 		options = sanitize_spawn_options(options)
-		
+
 		case options["app_type"]
 		when "rails"
 			if !defined?(ClassicRails::FrameworkSpawner)
@@ -144,7 +144,7 @@ class SpawnManager < AbstractServer
 			raise ArgumentError, "Unknown 'app_type' value '#{options["app_type"]}'."
 		end
 	end
-	
+
 	# Remove the cached application instances at the given group name.
 	# If nil is specified as group name, then all cached application
 	# instances will be removed, no matter the group name.
@@ -175,7 +175,7 @@ class SpawnManager < AbstractServer
 			end
 		end
 	end
-	
+
 	# Cleanup resources. Should be called when this SpawnManager is no longer needed.
 	def cleanup
 		@spawners.cleanup
@@ -189,7 +189,7 @@ private
 		spawner        = nil
 		create_spawner = nil
 		key            = nil
-		
+
 		case spawn_method
 		when nil, "", "smart", "smart-lv2"
 			if spawn_method != "smart-lv2"
@@ -209,7 +209,7 @@ private
 				end
 				spawner_timeout = options["framework_spawner_timeout"]
 			end
-			
+
 			@spawners.synchronize do
 				spawner = @spawners.lookup_or_add(key) do
 					spawner = create_spawner.call
@@ -231,14 +231,14 @@ private
 				@options.merge(options))
 		end
 	end
-	
+
 	def spawn_rack_application(options)
 		app_group_name = options["app_group_name"]
 		spawn_method   = options["spawn_method"]
 		spawner        = nil
 		create_spawner = nil
 		key            = nil
-		
+
 		case spawn_method
 		when nil, "", "smart", "smart-lv2"
 			@spawners.synchronize do
@@ -265,7 +265,7 @@ private
 				@options.merge(options))
 		end
 	end
-	
+
 	def handle_spawn_application(client, *options)
 		options     = sanitize_spawn_options(Hash[*options])
 		app_process = nil
@@ -312,11 +312,11 @@ private
 			end
 		end
 	end
-	
+
 	def handle_reload(client, app_group_name)
 		reload(app_group_name)
 	end
-	
+
 	def send_error_page(channel, template_name, options = {})
 		require 'phusion_passenger/html_template' unless defined?(HTMLTemplate)
 		if !defined?(PlatformInfo)
@@ -329,7 +329,7 @@ private
 		channel.write('error_page')
 		channel.write_scalar(data)
 	end
-	
+
 	def database_error?(e)
 		return ( defined?(Mysql::Error) && e.child_exception.is_a?(Mysql::Error) ) ||
 		       ( e.child_exception.is_a?(UnknownError) &&
@@ -339,14 +339,14 @@ private
 		           )
 		       )
 	end
-	
+
 	def load_error?(e)
 		return e.child_exception.is_a?(LoadError) || (
 		           e.child_exception.is_a?(UnknownError) &&
 		           e.child_exception.real_class_name == "MissingSourceFile"
 		)
 	end
-	
+
 	def app_name(app_type)
 		if app_type == "rails"
 			return "Ruby on Rails"

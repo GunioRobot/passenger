@@ -29,7 +29,7 @@ module PhusionPassenger
 class Plugin
 	@@hooks = {}
 	@@classes = {}
-	
+
 	def self.load(name, load_once = true)
 		PLUGIN_DIRS.each do |plugin_dir|
 			if plugin_dir =~ /\A~/
@@ -47,12 +47,12 @@ class Plugin
 			end
 		end
 	end
-	
+
 	def self.register_hook(name, &block)
 		hooks_list = (@@hooks[name] ||= [])
 		hooks_list << block
 	end
-	
+
 	def self.call_hook(name, *args, &block)
 		last_result = nil
 		if (hooks_list = @@hooks[name])
@@ -62,12 +62,12 @@ class Plugin
 		end
 		return last_result
 	end
-	
+
 	def self.register(name, klass)
 		classes = (@@classes[name] ||= [])
 		classes << klass
 	end
-	
+
 	def initialize(name, *args, &block)
 		Plugin.load(name)
 		classes = @@classes[name]
@@ -79,7 +79,7 @@ class Plugin
 			return nil
 		end
 	end
-	
+
 	def call_hook(name, *args, &block)
 		last_result = nil
 		if @instances

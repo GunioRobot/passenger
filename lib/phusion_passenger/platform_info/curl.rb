@@ -40,7 +40,7 @@ module PlatformInfo
 		end
 	end
 	memoize :curl_flags
-	
+
 	def self.curl_libs
 		result = `(curl-config --libs) 2>/dev/null`.strip
 		if result.empty?
@@ -50,7 +50,7 @@ module PlatformInfo
 		end
 	end
 	memoize :curl_libs
-	
+
 	def self.curl_supports_ssl?
 		features = `(curl-config --feature) 2>/dev/null`
 		return features =~ /SSL/

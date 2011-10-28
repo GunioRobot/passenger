@@ -53,7 +53,7 @@ module CacheStoreExtension
 			value
 		end
 	end
-	
+
 	def fetch_2_2(key, options = {})
 		@logger_off = true
 		if !options[:force] && value = read(key, options)
@@ -81,7 +81,7 @@ module CacheStoreExtension
 			value
 		end
 	end
-	
+
 	def fetch_2_3(key, options = {})
 		@logger_off = true
 		if !options[:force] && value = read(key, options)

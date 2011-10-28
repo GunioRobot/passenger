@@ -54,7 +54,7 @@ using namespace boost;
 class AbstractSpawnManager {
 public:
 	virtual ~AbstractSpawnManager() { }
-	
+
 	/**
 	 * Spawn a new application process. Spawning details are to be passed
 	 * via the <tt>options</tt> argument.
@@ -74,7 +74,7 @@ public:
 	 * @throws Anything thrown by options.environmentVariables->getItems().
 	 */
 	virtual ProcessPtr spawn(const PoolOptions &options) = 0;
-	
+
 	/**
 	 * Shutdown the ApplicationSpawner server that's running at the given
 	 * application root. This method should be called when it's time to reload
@@ -86,7 +86,7 @@ public:
 	 *         restart was attempted, but it failed.
 	 */
 	virtual void reload(const string &appRoot) = 0;
-	
+
 	/**
 	 * Forcefully kill the spawn server. This AbstractSpawnManager's state will
 	 * not be modified, so that it won't know that the spawn server is killed
@@ -95,7 +95,7 @@ public:
 	 * Used within unit tests.
 	 */
 	virtual void killSpawnServer() const = 0;
-	
+
 	/**
 	 * Returns the spawn server's PID. Used within unit tests.
 	 */

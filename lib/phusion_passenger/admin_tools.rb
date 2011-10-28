@@ -32,7 +32,7 @@ module AdminTools
 		end
 		return "/tmp"
 	end
-	
+
 	def self.process_is_alive?(pid)
 		begin
 			Process.kill(0, pid)

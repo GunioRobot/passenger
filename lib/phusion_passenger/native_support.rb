@@ -27,7 +27,7 @@ class NativeSupportLoader
 	def supported?
 		return !defined?(RUBY_ENGINE) || RUBY_ENGINE == "ruby" || RUBY_ENGINE == "rbx"
 	end
-	
+
 	def start
 		require 'phusion_passenger'
 		load_from_source_dir ||
@@ -43,29 +43,29 @@ private
 			PlatformInfo.ruby_extension_binary_compatibility_ids.join("-")
 		end
 	end
-	
+
 	def libext
 		@libext ||= begin
 			require 'phusion_passenger/platform_info/operating_system'
 			PlatformInfo.library_extension
 		end
 	end
-	
+
 	def home
 		@home ||= begin
 			require 'etc' if !defined?(Etc)
 			home = Etc.getpwuid(Process.uid).dir
 		end
 	end
-	
+
 	def library_name
 		return "passenger_native_support.#{libext}"
 	end
-	
+
 	def extconf_rb
 		File.join(SOURCE_ROOT, "ext", "ruby", "extconf.rb")
 	end
-	
+
 	def load_from_source_dir
 		if defined?(NATIVE_SUPPORT_DIR)
 			begin
@@ -78,14 +78,14 @@ private
 			return false
 		end
 	end
-	
+
 	def load_from_load_path
 		require 'passenger_native_support'
 		return true
 	rescue LoadError
 		return false
 	end
-	
+
 	def load_from_home
 		begin
 			require "#{home}/#{LOCAL_DIR}/native_support/#{VERSION_STRING}/#{archdir}/#{library_name}"
@@ -94,24 +94,24 @@ private
 			return false
 		end
 	end
-	
+
 	def compile_and_load
 		STDERR.puts "*** Phusion Passenger: no #{library_name} found for " +
 			"the current Ruby interpreter. Compiling one..."
-		
+
 		require 'fileutils'
 		require 'phusion_passenger/platform_info/ruby'
-		
+
 		target_dirs = []
 		if defined?(NATIVE_SUPPORT_DIR)
 			target_dirs << "#{NATIVE_SUPPORT_DIR}/#{archdir}"
 		end
 		target_dirs << "#{home}/#{LOCAL_DIR}/native_support/#{VERSION_STRING}/#{archdir}"
-		
+
 		target_dir = compile(target_dirs)
 		require "#{target_dir}/#{library_name}"
 	end
-	
+
 	def mkdir(dir)
 		begin
 			STDERR.puts "# mkdir -p #{dir}"
@@ -119,7 +119,7 @@ private
 		rescue Errno::EEXIST
 		end
 	end
-	
+
 	def sh(*args)
 		command_string = args.join(' ')
 		STDERR.puts "# #{command_string}"
@@ -127,7 +127,7 @@ private
 			raise "Could not compile #{library_name} ('#{command_string}' failed)"
 		end
 	end
-	
+
 	def compile(target_dirs)
 		result = nil
 		target_dirs.each_with_index do |target_dir, i|

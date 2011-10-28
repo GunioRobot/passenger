@@ -29,7 +29,7 @@ class HelpCommand < Command
 	def self.show_in_command_list
 		return false
 	end
-	
+
 	def run
 		puts "Phusion Passenger Standalone, the easiest way to deploy Ruby web apps."
 		puts

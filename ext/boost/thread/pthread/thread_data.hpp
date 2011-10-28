@@ -20,7 +20,7 @@
 namespace boost
 {
     class thread;
-    
+
     namespace detail
     {
         struct tss_cleanup_function;
@@ -38,7 +38,7 @@ namespace boost
 
         struct thread_data_base;
         typedef boost::shared_ptr<thread_data_base> thread_data_ptr;
-        
+
         struct BOOST_THREAD_DECL thread_data_base:
             enable_shared_from_this<thread_data_base>
         {
@@ -85,7 +85,7 @@ namespace boost
                     throw thread_interrupted();
                 }
             }
-            
+
             void operator=(interruption_checker&);
         public:
             explicit interruption_checker(pthread_cond_t* cond):
@@ -113,9 +113,9 @@ namespace boost
     namespace this_thread
     {
         void BOOST_THREAD_DECL yield();
-        
+
         void BOOST_THREAD_DECL sleep(system_time const& abs_time);
-        
+
         template<typename TimeDuration>
         inline void sleep(TimeDuration const& rel_time)
         {

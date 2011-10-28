@@ -148,7 +148,7 @@
 // all versions support __declspec:
 //
 #if defined(__STRICT_ANSI__)
-// config/platform/win32.hpp will define BOOST_SYMBOL_EXPORT, etc., unless already defined  
+// config/platform/win32.hpp will define BOOST_SYMBOL_EXPORT, etc., unless already defined
 #  define BOOST_SYMBOL_EXPORT
 #endif
 //

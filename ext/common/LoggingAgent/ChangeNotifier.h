@@ -44,14 +44,14 @@ class ChangeNotifier {
 public:
 	typedef function<string (const StaticString &groupName, const StaticString &nodeName,
 		const StaticString &category)> GetLastPosFunction;
-	
+
 	GetLastPosFunction getLastPos;
-	
+
 	ChangeNotifier(struct ev_loop *_loop) { }
 	virtual ~ChangeNotifier() { }
-	
+
 	virtual void addClient(const FileDescriptor &fd) { }
-	
+
 	virtual void changed(const DataStoreId &dataStoreId) { }
 };
 

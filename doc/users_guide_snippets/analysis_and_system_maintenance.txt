@@ -66,7 +66,7 @@ active   = 0
 inactive = 1
 
 ----------- Domains -----------
-/var/www/projects/app1-foobar: 
+/var/www/projects/app1-foobar:
   PID: 9617      Sessions: 0    Processed: 7       Uptime: 2m 23s
 --------------------------------------------------
 

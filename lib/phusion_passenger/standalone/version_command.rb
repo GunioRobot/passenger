@@ -30,7 +30,7 @@ class VersionCommand < Command
 	def self.show_in_command_list
 		return false
 	end
-	
+
 	def run
 		puts "Phusion Passenger version #{VERSION_STRING}"
 		puts

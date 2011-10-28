@@ -28,17 +28,17 @@ module PhusionPassenger
 module PlatformInfo
 private
 	@@cache_dir = nil
-	
+
 	def self.cache_dir=(value)
 		@@cache_dir = value
 	end
-	
+
 	def self.private_class_method(name)
 		metaclass = class << self; self; end
 		metaclass.send(:private, name)
 	end
 	private_class_method :private_class_method
-	
+
 	# Turn the specified class method into a memoized one. If the given
 	# class method is called without arguments, then its result will be
 	# memoized, frozen, and returned upon subsequent calls without arguments.
@@ -54,7 +54,7 @@ private
 	#     rand(max)
 	#   end
 	#   memoize :foo
-	#   
+	#
 	#   foo        # => 3
 	#   foo        # => 3
 	#   foo(100)   # => 49
@@ -114,7 +114,7 @@ private
 	    class_eval(source, __FILE__, line)
 	end
 	private_class_method :memoize
-	
+
 	# Look in the directory +dir+ and check whether there's an executable
 	# whose base name is equal to one of the elements in +possible_names+.
 	# If so, returns the full filename. If not, returns nil.
@@ -128,7 +128,7 @@ private
 		return nil
 	end
 	private_class_method :select_executable
-	
+
 	def self.read_file(filename)
 		return File.read(filename)
 	rescue
@@ -151,19 +151,19 @@ public
 		end
 		return nil
 	end
-	
+
 	def self.env_defined?(name)
 		return !ENV[name].nil? && !ENV[name].empty?
 	end
-	
+
 	def self.cc
 		return ENV['CC'] || "gcc"
 	end
-	
+
 	def self.cxx
 		return ENV['CXX'] || "g++"
 	end
-	
+
 	def self.try_compile(language, source, flags = nil)
 		if language == :c
 			compiler = cc
@@ -184,7 +184,7 @@ public
 		end
 	end
 	private_class_method :try_compile
-	
+
 	def self.try_link(language, source, flags = nil)
 		if language == :c
 			compiler = cc
@@ -205,7 +205,7 @@ public
 		end
 	end
 	private_class_method :try_link
-	
+
 	def self.try_compile_and_run(language, source, flags = nil)
 		if language == :c
 			compiler = cc
@@ -224,7 +224,7 @@ public
 					pid = Process.spawn("#{filename}.out",
 						:out => ["/dev/null", "w"],
 						:err => ["/dev/null", "w"])
-					
+
 				else
 					pid = fork do
 						STDOUT.reopen("/dev/null", "w")

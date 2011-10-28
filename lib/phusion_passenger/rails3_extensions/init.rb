@@ -41,11 +41,11 @@ class AnalyticsLogging < ActiveSupport::LogSubscriber
 	def self.install!(options)
 		analytics_logger = options["analytics_logger"]
 		return false if !analytics_logger || !options["analytics"]
-		
+
 		# If the Ruby interpreter supports GC statistics then turn it on
 		# so that the info can be logged.
 		GC.enable_stats if GC.respond_to?(:enable_stats)
-		
+
 		subscriber = self.new
 		AnalyticsLogging.attach_to(:action_controller, subscriber)
 		AnalyticsLogging.attach_to(:active_record, subscriber)
@@ -53,29 +53,29 @@ class AnalyticsLogging < ActiveSupport::LogSubscriber
 			ActiveSupport::Cache::Store.instrument = true
 			AnalyticsLogging.attach_to(:active_support, subscriber)
 		end
-		
+
 		if defined?(ActionDispatch::ShowExceptions)
 			Rails.application.middleware.insert_after(
 				ActionDispatch::ShowExceptions,
 				ExceptionLogger, analytics_logger)
 		end
-		
+
 		if defined?(ActionController::Base)
 			ActionController::Base.class_eval do
 				include ACExtension
 			end
 		end
-		
+
 		if defined?(ActiveSupport::Benchmarkable)
 			ActiveSupport::Benchmarkable.class_eval do
 				include ASBenchmarkableExtension
 				alias_method_chain :benchmark, :passenger
 			end
 		end
-		
+
 		return true
 	end
-	
+
 	def process_action(event)
 		log = Thread.current[PASSENGER_ANALYTICS_WEB_LOG]
 		if log
@@ -83,7 +83,7 @@ class AnalyticsLogging < ActiveSupport::LogSubscriber
 			log.message("View rendering time: #{(view_runtime * 1000).to_i}") if view_runtime
 		end
 	end
-	
+
 	def sql(event)
 		log = Thread.current[PASSENGER_ANALYTICS_WEB_LOG]
 		if log
@@ -94,7 +94,7 @@ class AnalyticsLogging < ActiveSupport::LogSubscriber
 				event.time, event.end, "#{name}\n#{sql}")
 		end
 	end
-	
+
 	def cache_read(event)
 		if event.payload[:hit]
 			PhusionPassenger.log_cache_hit(nil, event.payload[:key])
@@ -102,29 +102,29 @@ class AnalyticsLogging < ActiveSupport::LogSubscriber
 			PhusionPassenger.log_cache_miss(nil, event.payload[:key])
 		end
 	end
-	
+
 	def cache_fetch_hit(event)
 		PhusionPassenger.log_cache_hit(nil, event.payload[:key])
 	end
-	
+
 	def cache_generate(event)
 		PhusionPassenger.log_cache_miss(nil, event.payload[:key],
 			event.duration * 1000)
 	end
-	
+
 	class ExceptionLogger
 		def initialize(app, analytics_logger)
 			@app = app
 			@analytics_logger = analytics_logger
 		end
-		
+
 		def call(env)
 			@app.call(env)
 		rescue Exception => e
 			log_analytics_exception(env, e) if env[PASSENGER_TXN_ID]
 			raise e
 		end
-	
+
 	private
 		def log_analytics_exception(env, exception)
 			log = @analytics_logger.new_transaction(
@@ -135,7 +135,7 @@ class AnalyticsLogging < ActiveSupport::LogSubscriber
 				request = ActionDispatch::Request.new(env)
 				controller = request.parameters['controller'].humanize + "Controller"
 				action = request.parameters['action']
-				
+
 				request_txn_id = env[PASSENGER_TXN_ID]
 				message = exception.message
 				message = exception.to_s if message.empty?
@@ -148,7 +148,7 @@ class AnalyticsLogging < ActiveSupport::LogSubscriber
 				else
 					controller_action = controller
 				end
-				
+
 				log.message("Request transaction ID: #{request_txn_id}")
 				log.message("Message: #{message}")
 				log.message("Class: #{exception.class.name}")
@@ -159,7 +159,7 @@ class AnalyticsLogging < ActiveSupport::LogSubscriber
 			end
 		end
 	end
-	
+
 	module ACExtension
 		def process_action(action, *args)
 			log = request.env[PASSENGER_ANALYTICS_WEB_LOG]
@@ -172,7 +172,7 @@ class AnalyticsLogging < ActiveSupport::LogSubscriber
 				super
 			end
 		end
-		
+
 		def render(*args)
 			log = request.env[PASSENGER_ANALYTICS_WEB_LOG]
 			if log
@@ -184,7 +184,7 @@ class AnalyticsLogging < ActiveSupport::LogSubscriber
 			end
 		end
 	end
-	
+
 	module ASBenchmarkableExtension
 		def benchmark_with_passenger(message = "Benchmarking", *args)
 			log = Thread.current[PASSENGER_ANALYTICS_WEB_LOG]

@@ -1,4 +1,4 @@
-// Boost.Units - A C++ library for zero-overhead dimensional analysis and 
+// Boost.Units - A C++ library for zero-overhead dimensional analysis and
 // unit/quantity manipulation and conversion
 //
 // Copyright (C) 2003-2008 Matthias Christian Schabel
@@ -36,22 +36,22 @@ demangle(const char* name)
 {
     // need to demangle C++ symbols
     char*       realname;
-    std::size_t len; 
+    std::size_t len;
     int         stat;
-     
+
     realname = abi::__cxa_demangle(name,NULL,&len,&stat);
-    
+
     if (realname != NULL)
     {
         std::string   out(realname);
-        
+
         std::free(realname);
-        
+
         boost::replace_all(out,"boost::units::","");
-        
+
         return out;
     }
-    
+
     return std::string("demangle :: error - unable to demangle specified symbol");
 }
 
@@ -97,7 +97,7 @@ std::string simplify_typename(const L& /*source*/)
 } // namespace boost
 
 // To get system-specific predefined macros:
-// gcc -arch ppc -dM -E - < /dev/null | sort 
+// gcc -arch ppc -dM -E - < /dev/null | sort
 
 #endif // BOOST_UNITS_USE_DEMANGLING
 

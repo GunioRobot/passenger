@@ -86,7 +86,7 @@ using namespace oxt;
  *    pipe(p);
  *    MessageChannel channel1(p[0]);
  *    MessageChannel channel2(p[1]);
- *    
+ *
  *    // Send an array message.
  *    channel2.write("hello", "world !!", NULL);
  *    list<string> args;
@@ -124,7 +124,7 @@ class MessageChannel {
 private:
 	const static char DELIMITER = '\0';
 	int fd;
-	
+
 	#ifdef __OpenBSD__
 		typedef u_int32_t uint32_t;
 		typedef u_int16_t uint16_t;
@@ -147,21 +147,21 @@ public:
 	MessageChannel(int fd) {
 		this->fd = fd;
 	}
-	
+
 	/**
 	 * Returns the underlying file descriptor. -1 if it has already been closed.
 	 */
 	int filenum() const {
 		return fd;
 	}
-	
+
 	/**
 	 * Returns whether close() has been called.
 	 */
 	bool connected() const {
 		return fd != -1;
 	}
-	
+
 	/**
 	 * Close the underlying file descriptor. If this method is called multiple
 	 * times, the file descriptor will only be closed the first time.
@@ -210,10 +210,10 @@ public:
 			data.append(*it);
 			data.append(1, DELIMITER);
 		}
-		
+
 		writeExact(fd, data);
 	}
-	
+
 	/**
 	 * Send an array message, which consists of the given elements, over the underlying
 	 * file descriptor.
@@ -227,7 +227,7 @@ public:
 	void write(const list<string> &args) {
 		write<list<string>, list<string>::const_iterator>(args);
 	}
-	
+
 	/**
 	 * Send an array message, which consists of the given elements, over the underlying
 	 * file descriptor.
@@ -241,7 +241,7 @@ public:
 	void write(const vector<string> &args) {
 		write<vector<string>, vector<string>::const_iterator>(args);
 	}
-	
+
 	/**
 	 * Send an array message, which consists of the given strings, over the underlying
 	 * file descriptor. Like <tt>write(const char *name, ...)</tt> but takes a va_list
@@ -254,7 +254,7 @@ public:
 	void write(const char *name, va_list &ap) {
 		list<string> args;
 		args.push_back(name);
-		
+
 		while (true) {
 			const char *arg = va_arg(ap, const char *);
 			if (arg == NULL) {
@@ -265,7 +265,7 @@ public:
 		}
 		write(args);
 	}
-	
+
 	/**
 	 * Send an array message, which consists of the given strings, over the underlying
 	 * file descriptor.
@@ -289,7 +289,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	/**
 	 * Write a 32-bit big-endian unsigned integer to the underlying file descriptor.
 	 *
@@ -300,7 +300,7 @@ public:
 		uint32_t l = htonl(value);
 		writeExact(fd, &l, sizeof(uint32_t));
 	}
-	
+
 	/**
 	 * Write a scalar message to the underlying file descriptor.
 	 *
@@ -316,7 +316,7 @@ public:
 	void writeScalar(const string &str) {
 		writeScalar(str.c_str(), str.size());
 	}
-	
+
 	/**
 	 * Write a scalar message to the underlying file descriptor.
 	 *
@@ -335,7 +335,7 @@ public:
 		writeUint32(size);
 		writeExact(fd, data, size);
 	}
-	
+
 	/**
 	 * Pass a file descriptor. This only works if the underlying file
 	 * descriptor is a Unix socket.
@@ -351,14 +351,14 @@ public:
 		// See message_channel.rb for more info about negotiation.
 		if (negotiate) {
 			vector<string> args;
-			
+
 			if (!read(args)) {
 				throw IOException("Unexpected end of stream encountered while pre-negotiating a file descriptor");
 			} else if (args.size() != 1 || args[0] != "pass IO") {
 				throw IOException("FD passing pre-negotiation message expected.");
 			}
 		}
-		
+
 		struct msghdr msg;
 		struct iovec vec;
 		char dummy[1];
@@ -372,21 +372,21 @@ public:
 		#endif
 		struct cmsghdr *control_header;
 		int ret;
-	
+
 		msg.msg_name = NULL;
 		msg.msg_namelen = 0;
-	
+
 		/* Linux and Solaris require msg_iov to be non-NULL. */
 		dummy[0]       = '\0';
 		vec.iov_base   = dummy;
 		vec.iov_len    = sizeof(dummy);
 		msg.msg_iov    = &vec;
 		msg.msg_iovlen = 1;
-	
+
 		msg.msg_control    = (caddr_t) &control_data;
 		msg.msg_controllen = sizeof(control_data);
 		msg.msg_flags      = 0;
-		
+
 		control_header = CMSG_FIRSTHDR(&msg);
 		control_header->cmsg_level = SOL_SOCKET;
 		control_header->cmsg_type  = SCM_RIGHTS;
@@ -397,15 +397,15 @@ public:
 			control_header->cmsg_len = CMSG_LEN(sizeof(int));
 			memcpy(CMSG_DATA(control_header), &fileDescriptor, sizeof(int));
 		#endif
-		
+
 		ret = syscalls::sendmsg(fd, &msg, 0);
 		if (ret == -1) {
 			throw SystemException("Cannot send file descriptor with sendmsg()", errno);
 		}
-		
+
 		if (negotiate) {
 			vector<string> args;
-			
+
 			if (!read(args)) {
 				throw IOException("Unexpected end of stream encountered while post-negotiating a file descriptor");
 			} else if (args.size() != 1 || args[0] != "got IO") {
@@ -413,7 +413,7 @@ public:
 			}
 		}
 	}
-	
+
 	/**
 	 * Read an array message from the underlying file descriptor.
 	 *
@@ -428,7 +428,7 @@ public:
 		uint16_t size;
 		int ret;
 		unsigned int alreadyRead = 0;
-		
+
 		do {
 			ret = syscalls::read(fd, (char *) &size + alreadyRead, sizeof(size) - alreadyRead);
 			if (ret == -1) {
@@ -439,7 +439,7 @@ public:
 			alreadyRead += ret;
 		} while (alreadyRead < sizeof(size));
 		size = ntohs(size);
-		
+
 		string buffer;
 		args.clear();
 		buffer.reserve(size);
@@ -453,7 +453,7 @@ public:
 			}
 			buffer.append(tmp, ret);
 		}
-		
+
 		if (!buffer.empty()) {
 			string::size_type start = 0, pos;
 			const string &const_buffer(buffer);
@@ -464,7 +464,7 @@ public:
 		}
 		return true;
 	}
-	
+
 	/**
 	 * Read a 32-bit big-endian unsigned integer from the underlying file descriptor.
 	 *
@@ -482,7 +482,7 @@ public:
 	 */
 	bool readUint32(unsigned int &value, unsigned long long *timeout = NULL) {
 		uint32_t temp;
-		
+
 		if (!readRaw(&temp, sizeof(uint32_t), timeout)) {
 			return false;
 		} else {
@@ -490,7 +490,7 @@ public:
 			return true;
 		}
 	}
-	
+
 	/**
 	 * Read a scalar message from the underlying file descriptor.
 	 *
@@ -516,15 +516,15 @@ public:
 	bool readScalar(string &output, unsigned int maxSize = 0, unsigned long long *timeout = NULL) {
 		unsigned int size;
 		unsigned int remaining;
-		
+
 		if (!readUint32(size, timeout)) {
 			return false;
 		}
-		
+
 		if (maxSize != 0 && size > maxSize) {
 			throw SecurityException("There is more data available than is allowed by the size limit.");
 		}
-		
+
 		output.clear();
 		output.reserve(size);
 		remaining = size;
@@ -532,10 +532,10 @@ public:
 			char buf[1024 * 32];
 			// Wipe the buffer when we're done; it might contain sensitive data.
 			MemZeroGuard g(buf, sizeof(buf));
-			
+
 			while (remaining > 0) {
 				unsigned int blockSize = min((unsigned int) sizeof(buf), remaining);
-				
+
 				if (!readRaw(buf, blockSize, timeout)) {
 					return false;
 				}
@@ -545,7 +545,7 @@ public:
 		}
 		return true;
 	}
-	
+
 	/**
 	 * Read exactly <tt>size</tt> bytes of data from the underlying file descriptor,
 	 * and put the result in <tt>buf</tt>. If end-of-file has been reached, or if
@@ -595,7 +595,7 @@ public:
 			return Passenger::readExact(fd, buf, size) == size;
 		}
 	}
-	
+
 	/**
 	 * Receive a file descriptor, which had been passed over the underlying
 	 * file descriptor.
@@ -614,7 +614,7 @@ public:
 		if (negotiate) {
 			write("pass IO", NULL);
 		}
-		
+
 		struct msghdr msg;
 		struct iovec vec;
 		char dummy[1];
@@ -635,7 +635,7 @@ public:
 
 		msg.msg_name    = NULL;
 		msg.msg_namelen = 0;
-		
+
 		dummy[0]       = '\0';
 		vec.iov_base   = dummy;
 		vec.iov_len    = sizeof(dummy);
@@ -645,12 +645,12 @@ public:
 		msg.msg_control    = (caddr_t) &control_data;
 		msg.msg_controllen = sizeof(control_data);
 		msg.msg_flags      = 0;
-		
+
 		ret = syscalls::recvmsg(fd, &msg, 0);
 		if (ret == -1) {
 			throw SystemException("Cannot read file descriptor with recvmsg()", errno);
 		}
-		
+
 		control_header = CMSG_FIRSTHDR(&msg);
 		if (control_header == NULL) {
 			throw IOException("No valid file descriptor received.");
@@ -660,13 +660,13 @@ public:
 		 || control_header->cmsg_type  != SCM_RIGHTS) {
 			throw IOException("No valid file descriptor received.");
 		}
-		
+
 		#if defined(__APPLE__) || defined(__SOLARIS__) || defined(__arm__)
 			int fd = control_data.fd;
 		#else
 			int fd = *((int *) CMSG_DATA(control_header));
 		#endif
-		
+
 		if (negotiate) {
 			try {
 				write("got IO", NULL);
@@ -676,10 +676,10 @@ public:
 				throw;
 			}
 		}
-		
+
 		return fd;
 	}
-	
+
 	/**
 	 * Set the timeout value for reading data from this channel.
 	 * If no data can be read within the timeout period, then a
@@ -694,7 +694,7 @@ public:
 		// See the comment for setWriteTimeout().
 		struct timeval tv;
 		int ret;
-		
+
 		tv.tv_sec = msec / 1000;
 		tv.tv_usec = msec % 1000 * 1000;
 		ret = syscalls::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO,
@@ -707,7 +707,7 @@ public:
 			}
 		#endif
 	}
-	
+
 	/**
 	 * Set the timeout value for writing data to this channel.
 	 * If no data can be written within the timeout period, then a
@@ -725,7 +725,7 @@ public:
 		// That's why we use APR's timeout facilities as well (see Hooks.cpp).
 		struct timeval tv;
 		int ret;
-		
+
 		tv.tv_sec = msec / 1000;
 		tv.tv_usec = msec % 1000 * 1000;
 		ret = syscalls::setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO,

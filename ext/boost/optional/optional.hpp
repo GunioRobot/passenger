@@ -149,7 +149,7 @@ class optional_base : public optional_tag
     typedef
 #if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564))
     BOOST_DEDUCED_TYPENAME
-#endif 
+#endif
     ::boost::detail::make_reference_content<T>::type internal_type ;
 
     typedef aligned_storage<internal_type> storage_type ;
@@ -200,7 +200,7 @@ class optional_base : public optional_tag
     {
       construct(val);
     }
-    
+
     // Creates an optional<T> initialized with 'val' IFF cond is true, otherwise creates an uninitialzed optional<T>.
     // Can throw if T::T(T const&) does
     optional_base ( bool cond, argument_type val )
@@ -582,7 +582,7 @@ class optional : public optional_detail::optional_base<T>
     // Returns a copy of the value if this is initialized, 'v' otherwise
     reference_const_type get_value_or ( reference_const_type v ) const { return this->is_initialized() ? get() : v ; }
     reference_type       get_value_or ( reference_type       v )       { return this->is_initialized() ? get() : v ; }
-    
+
     // Returns a pointer to the value if this is initialized, otherwise,
     // the behaviour is UNDEFINED
     // No-throw
@@ -605,16 +605,16 @@ class optional : public optional_detail::optional_base<T>
 } ;
 
 // Returns optional<T>(v)
-template<class T> 
-inline 
+template<class T>
+inline
 optional<T> make_optional ( T const& v  )
 {
   return optional<T>(v);
 }
 
 // Returns optional<T>(cond,v)
-template<class T> 
-inline 
+template<class T>
+inline
 optional<T> make_optional ( bool cond, T const& v )
 {
   return optional<T>(cond,v);

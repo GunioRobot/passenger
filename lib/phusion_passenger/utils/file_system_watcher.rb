@@ -38,7 +38,7 @@ module Utils
 # - +termination_pipe+ (as passed to the constructor) becomes readable.
 #   This will cause +nil+ to be returned.
 # - The thread is interrupted. This will cause +nil+ to be returned.
-# 
+#
 # The constructor will attempt to stat and possible also open all specified
 # files/directories. If one of them cannot be statted or opened, then
 # +false+ will be returned by #wait_for_change.
@@ -55,7 +55,7 @@ module Utils
 
 if defined?(NativeSupport::FileSystemWatcher)
 	FileSystemWatcher = NativeSupport::FileSystemWatcher
-	
+
 	FileSystemWatcher.class_eval do
 		def self.new(filenames, termination_pipe = nil)
 			# Default parameter values, type conversion and exception
@@ -65,7 +65,7 @@ if defined?(NativeSupport::FileSystemWatcher)
 			end
 			return _new(filenames, termination_pipe)
 		end
-		
+
 		def self.opens_files?
 			return true
 		end
@@ -73,17 +73,17 @@ if defined?(NativeSupport::FileSystemWatcher)
 else
 	class FileSystemWatcher
 		attr_accessor :poll_interval
-		
+
 		def self.opens_files?
 			return false
 		end
-		
+
 		def initialize(filenames, termination_pipe = nil)
 			@poll_interval = 3
 			@termination_pipe = termination_pipe
 			@dirs  = []
 			@files = []
-		
+
 			begin
 				filenames.each do |filename|
 					stat = File.stat(filename)
@@ -97,12 +97,12 @@ else
 				@dirs = @files = nil
 			end
 		end
-		
+
 		def wait_for_change
 			if !@dirs
 				return false
 			end
-			
+
 			while true
 				if changed?
 					return true
@@ -111,15 +111,15 @@ else
 				end
 			end
 		end
-	
+
 		def close
 		end
-		
+
 	private
 		class DirInfo
 			DOT    = "."
 			DOTDOT = ".."
-			
+
 			def initialize(filename, stat)
 				@filename = filename
 				@stat = stat
@@ -130,18 +130,18 @@ else
 					@subfiles[entry] = FileInfo.new(subfilename, File.stat(subfilename))
 				end
 			end
-			
+
 			def changed?
 				new_stat = File.stat(@filename)
 				if @stat.ino != new_stat.ino || !new_stat.directory? || @stat.mtime != new_stat.mtime
 					return true
 				end
-				
+
 				count = 0
 				Dir.foreach(@filename) do |entry|
 					next if entry == DOT || entry == DOTDOT
 					subfilename = "#{@filename}/#{entry}"
-				
+
 					file_info = @subfiles[entry]
 					if !file_info || file_info.changed?(false)
 						return true
@@ -149,19 +149,19 @@ else
 						count += 1
 					end
 				end
-				
+
 				return count != @subfiles.size
 			rescue Errno::EACCES, Errno::ENOENT
 				return true
 			end
 		end
-		
+
 		class FileInfo
 			def initialize(filename, stat)
 				@filename = filename
 				@stat = stat
 			end
-			
+
 			def changed?(check_mtime = true)
 				new_stat = File.stat(@filename)
 				if check_mtime
@@ -174,7 +174,7 @@ else
 				return true
 			end
 		end
-		
+
 		def changed?
 			return @dirs.any?  { |dir_info| dir_info.changed? } ||
 			       @files.any? { |file_info| file_info.changed? }

@@ -12,16 +12,16 @@ module PhusionPassenger
 
 describe Rack::ApplicationSpawner do
 	include SpawnerSpecHelper
-	
+
 	after :each do
 		@spawner.stop if @spawner && @spawner.started?
 	end
-	
+
 	describe "conservative spawning" do
 		def spawn_some_application(extra_options = {})
 			stub = register_stub(RackStub.new('rack'))
 			yield stub if block_given?
-			
+
 			defaults = {
 				"app_root"     => stub.app_root,
 				"default_user" => CONFIG['default_user']
@@ -30,15 +30,15 @@ describe Rack::ApplicationSpawner do
 			app = Rack::ApplicationSpawner.spawn_application(options)
 			return register_app(app)
 		end
-		
+
 		it_should_behave_like "a spawner"
 		it_should_behave_like "a spawner that does not preload app code"
-		
+
 		describe_rails_versions('>= 3.0') do
 			def spawn_some_application(extra_options = {})
 				stub = register_stub(RailsStub.new("#{rails_version}/empty"))
 				yield stub if block_given?
-				
+
 				defaults = {
 					"app_root"     => stub.app_root,
 					"default_user" => CONFIG['default_user']
@@ -47,16 +47,16 @@ describe Rack::ApplicationSpawner do
 				app = Rack::ApplicationSpawner.spawn_application(options)
 				return register_app(app)
 			end
-			
+
 			include_shared_example_group "analytics logging extensions for Rails"
 		end
 	end
-	
+
 	describe "smart spawning" do
 		def server
 			return spawner
 		end
-		
+
 		def spawner
 			@spawner ||= begin
 				stub = register_stub(RackStub.new("rack"))
@@ -65,11 +65,11 @@ describe Rack::ApplicationSpawner do
 				spawner
 			end
 		end
-		
+
 		def spawn_some_application(extra_options = {})
 			stub = register_stub(RackStub.new('rack'))
 			yield stub if block_given?
-			
+
 			defaults = {
 				"app_root"     => stub.app_root,
 				"default_user" => CONFIG['default_user']
@@ -83,12 +83,12 @@ describe Rack::ApplicationSpawner do
 			app = @spawner.spawn_application(options)
 			return register_app(app)
 		end
-		
+
 		it_should_behave_like "an AbstractServer"
 		it_should_behave_like "a spawn server"
 		it_should_behave_like "a spawner"
 		it_should_behave_like "a spawner that preloads app code"
-		
+
 		describe_rails_versions('>= 3.0') do
 			def spawn_some_application(extra_options = {})
 				stub = register_stub(RailsStub.new("#{rails_version}/empty"))
@@ -107,7 +107,7 @@ describe Rack::ApplicationSpawner do
 				app = @spawner.spawn_application(options)
 				return register_app(app)
 			end
-			
+
 			include_shared_example_group "analytics logging extensions for Rails"
 		end
 	end

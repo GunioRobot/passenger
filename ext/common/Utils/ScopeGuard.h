@@ -41,24 +41,24 @@ using namespace boost;
 class ScopeGuard: public noncopyable {
 private:
 	function<void ()> func;
-	
+
 public:
 	ScopeGuard() { }
-	
+
 	ScopeGuard(const function<void ()> &func) {
 		this->func = func;
 	}
-	
+
 	~ScopeGuard() {
 		if (func) {
 			func();
 		}
 	}
-	
+
 	void clear() {
 		func = function<void()>();
 	}
-	
+
 	void runNow() {
 		function<void ()> oldFunc = func;
 		func = function<void()>();

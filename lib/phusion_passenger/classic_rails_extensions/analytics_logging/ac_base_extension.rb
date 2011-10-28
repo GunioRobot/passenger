@@ -43,7 +43,7 @@ private
 			perform_action_without_passenger(*args)
 		end
 	end
-	
+
 protected
 	def render_with_passenger(*args, &block)
 		log = request.env[PASSENGER_ANALYTICS_WEB_LOG]

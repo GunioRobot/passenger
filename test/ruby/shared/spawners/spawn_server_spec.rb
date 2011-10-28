@@ -10,7 +10,7 @@ shared_examples_for "a spawn server" do
 		spawning = lambda { spawn_some_application }
 		spawning.should raise_error(AbstractServer::ServerError)
 	end
-	
+
 	it "works correctly after a restart, if something went wrong" do
 		filename = "#{Utils.passenger_tmpdir}/works.txt"
 		before_start %Q{

@@ -104,20 +104,20 @@ private:
 	AnalyticsLoggerPtr analyticsLogger;
 	int logLevel;
 	string debugLogFile;
-	
+
 	boost::mutex lock;
 	RandomGenerator random;
-	
+
 	pid_t pid;
 	FileDescriptor ownerSocket;
 	string socketFilename;
 	string socketPassword;
 	bool serverNeedsRestart;
-	
+
 	static void deleteAccount(AccountsDatabasePtr accountsDatabase, const string &username) {
 		accountsDatabase->remove(username);
 	}
-	
+
 	/**
 	 * Restarts the spawn server.
 	 *
@@ -131,7 +131,7 @@ private:
 		if (pid != 0) {
 			UPDATE_TRACE_POINT();
 			ownerSocket.close();
-			
+
 			/* Wait at most 5 seconds for the spawn server to exit.
 			 * If that doesn't work, kill it, then wait at most 5 seconds
 			 * for it to exit.
@@ -161,12 +161,12 @@ private:
 			}
 			pid = 0;
 		}
-		
+
 		FileDescriptor serverSocket;
 		string socketFilename;
 		string socketPassword;
 		int ret, fds[2];
-		
+
 		UPDATE_TRACE_POINT();
 		socketFilename = generation->getPath() + "/spawn-server/socket." +
 			toString(getpid()) + "." +
@@ -182,7 +182,7 @@ private:
 			throw FileSystemException("Cannot set permissions on '" + socketFilename + "'",
 				e, socketFilename);
 		}
-		
+
 		if (syscalls::socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {
 			int e = errno;
 			syscalls::unlink(socketFilename.c_str());
@@ -196,12 +196,12 @@ private:
 			dup2(fds[1], HIGHEST_FD + 2);
 			dup2(HIGHEST_FD + 1, SERVER_SOCKET_FD);
 			dup2(HIGHEST_FD + 2, OWNER_SOCKET_FD);
-			
+
 			// Close all unnecessary file descriptors
 			for (long i = sysconf(_SC_OPEN_MAX) - 1; i > HIGHEST_FD; i--) {
 				close(i);
 			}
-			
+
 			execlp(rubyCommand.c_str(),
 				rubyCommand.c_str(),
 				spawnServerCommand.c_str(),
@@ -232,7 +232,7 @@ private:
 			FileDescriptor ownerSocket = fds[0];
 			syscalls::close(fds[1]);
 			serverSocket.close();
-			
+
 			// Pass arguments to spawn server.
 			writeExact(ownerSocket, socketFilename + "\n");
 			writeExact(ownerSocket, socketPassword + "\n");
@@ -250,14 +250,14 @@ private:
 			}
 			writeExact(ownerSocket, toString(logLevel) + "\n");
 			writeExact(ownerSocket, debugLogFile + "\n");
-			
+
 			this->ownerSocket    = ownerSocket;
 			this->socketFilename = socketFilename;
 			this->socketPassword = socketPassword;
 			spawnServerStarted();
 		}
 	}
-	
+
 	/**
 	 * Connects to the spawn server and returns the connection.
 	 *
@@ -273,7 +273,7 @@ private:
 		channel.writeScalar(socketPassword);
 		return fd;
 	}
-	
+
 	/**
 	 * Send the spawn command to the spawn server.
 	 *
@@ -287,9 +287,9 @@ private:
 		TRACE_POINT();
 		FileDescriptor connection;
 		MessageChannel channel;
-		
+
 		P_DEBUG("Spawning a new application process for " << options.appRoot << "...");
-		
+
 		try {
 			connection = connect();
 			channel = MessageChannel(connection);
@@ -300,7 +300,7 @@ private:
 			throw SpawnException(string("Could not connect to the spawn server: ") +
 				e.what());
 		}
-		
+
 		UPDATE_TRACE_POINT();
 		vector<string> args;
 		string appRoot;
@@ -315,11 +315,11 @@ private:
 			random.generateAsciiString(11);
 		AccountPtr account;
 		function<void ()> destructionCallback;
-		
+
 		try {
 			args.push_back("spawn_application");
 			options.toVector(args);
-			
+
 			args.push_back("detach_key");
 			args.push_back(detachKey);
 			args.push_back("connect_password");
@@ -330,19 +330,19 @@ private:
 				account = accountsDatabase->add(username, password, false, options.rights);
 				destructionCallback = boost::bind(&SpawnManager::deleteAccount,
 					accountsDatabase, username);
-				
+
 				args.push_back("pool_account_username");
 				args.push_back(username);
 				args.push_back("pool_account_password_base64");
 				args.push_back(Base64::encode(password));
 			}
-			
+
 			channel.write(args);
 		} catch (const SystemException &e) {
 			throw SpawnException(string("Could not write 'spawn_application' "
 				"command to the spawn server: ") + e.sys());
 		}
-		
+
 		try {
 			UPDATE_TRACE_POINT();
 			// Read status.
@@ -355,7 +355,7 @@ private:
 			if (args[0] == "error_page") {
 				UPDATE_TRACE_POINT();
 				string errorPage;
-				
+
 				if (!channel.readScalar(errorPage)) {
 					throw SpawnException("The spawn server has exited unexpectedly.");
 				}
@@ -364,7 +364,7 @@ private:
 			} else if (args[0] != "ok") {
 				throw SpawnException("The spawn server sent an invalid message.");
 			}
-			
+
 			// Read application info.
 			UPDATE_TRACE_POINT();
 			if (!channel.read(args)) {
@@ -373,11 +373,11 @@ private:
 			if (args.size() != 3) {
 				throw SpawnException("The spawn server sent an invalid message.");
 			}
-			
+
 			appRoot = args[0];
 			appPid  = (pid_t) stringToULL(args[1]);
 			nServerSockets = atoi(args[2]);
-			
+
 			UPDATE_TRACE_POINT();
 			for (i = 0; i < nServerSockets; i++) {
 				if (!channel.read(args)) {
@@ -395,7 +395,7 @@ private:
 		} catch (const SystemException &e) {
 			throw SpawnException(string("Could not read from the spawn server: ") + e.sys());
 		}
-		
+
 		UPDATE_TRACE_POINT();
 		try {
 			ownerPipe = channel.readFileDescriptor();
@@ -408,13 +408,13 @@ private:
 				"application's owner pipe from the spawn server: ") +
 				e.what());
 		}
-		
+
 		UPDATE_TRACE_POINT();
 		P_DEBUG("Application process " << appPid << " spawned");
 		return ProcessPtr(new Process(appRoot, appPid, ownerPipe, serverSockets,
 			detachKey, connectPassword, gupid, destructionCallback));
 	}
-	
+
 	/**
 	 * @throws boost::thread_interrupted
 	 * @throws Anything thrown by options.environmentVariables->getItems().
@@ -442,12 +442,12 @@ private:
 			throw SpawnException("The spawn server died unexpectedly, and restarting it failed.");
 		}
 	}
-	
+
 	/**
 	 * Send the reload command to the spawn server.
 	 *
 	 * @param appRoot The application root to reload.
-	 * @throws RuntimeException 
+	 * @throws RuntimeException
 	 * @throws SystemException
 	 * @throws boost::thread_interrupted
 	 */
@@ -455,7 +455,7 @@ private:
 		TRACE_POINT();
 		FileDescriptor connection;
 		MessageChannel channel;
-		
+
 		try {
 			connection = connect();
 			channel = MessageChannel(connection);
@@ -466,7 +466,7 @@ private:
 			throw RuntimeException(string("Could not connect to the spawn server: ") +
 				e.what());
 		}
-		
+
 		try {
 			channel.write("reload", appRoot.c_str(), NULL);
 		} catch (SystemException &e) {
@@ -474,7 +474,7 @@ private:
 			throw;
 		}
 	}
-	
+
 	void handleReloadException(const SystemException &e, const string &appRoot) {
 		TRACE_POINT();
 		bool restarted;
@@ -496,11 +496,11 @@ private:
 			throw SpawnException("The spawn server died unexpectedly, and restarting it failed.");
 		}
 	}
-	
+
 	IOException prependMessageToException(const IOException &e, const string &message) {
 		return IOException(message + ": " + e.what());
 	}
-	
+
 	SystemException prependMessageToException(const SystemException &e, const string &message) {
 		return SystemException(message + ": " + e.brief(), e.code());
 	}
@@ -511,7 +511,7 @@ protected:
 	 * It doesn't do anything by default and serves as a hook for unit tests.
 	 */
 	virtual void spawnServerStarted() { }
-	
+
 public:
 	/**
 	 * Construct a new SpawnManager.
@@ -556,7 +556,7 @@ public:
 			throw prependMessageToException(e, "Could not start the spawn server");
 		}
 	}
-	
+
 	virtual ~SpawnManager() {
 		TRACE_POINT();
 		if (pid != 0) {
@@ -568,13 +568,13 @@ public:
 			syscalls::waitpid(pid, NULL, 0);
 		}
 	}
-	
+
 	virtual ProcessPtr spawn(const PoolOptions &options) {
 		TRACE_POINT();
 		AnalyticsScopeLog scope(options.log, "spawn app process");
 		ProcessPtr result;
 		boost::mutex::scoped_lock l(lock);
-		
+
 		try {
 			result = sendSpawnCommand(options);
 		} catch (const SpawnException &e) {
@@ -587,7 +587,7 @@ public:
 		scope.success();
 		return result;
 	}
-	
+
 	virtual void reload(const string &appRoot) {
 		TRACE_POINT();
 		this_thread::disable_interruption di;
@@ -598,11 +598,11 @@ public:
 			return handleReloadException(e, appRoot);
 		}
 	}
-	
+
 	virtual void killSpawnServer() const {
 		kill(pid, SIGKILL);
 	}
-	
+
 	virtual pid_t getServerPid() const {
 		return pid;
 	}

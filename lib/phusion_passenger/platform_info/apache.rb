@@ -39,7 +39,7 @@ module PhusionPassenger
 
 module PlatformInfo
 	################ Programs ################
-	
+
 	# The absolute path to the 'apxs' or 'apxs2' executable, or nil if not found.
 	def self.apxs2
 		if env_defined?("APXS2")
@@ -54,14 +54,14 @@ module PlatformInfo
 		return nil
 	end
 	memoize :apxs2
-	
+
 	# The absolute path to the 'apachectl' or 'apache2ctl' binary, or nil if
 	# not found.
 	def self.apache2ctl
 		return find_apache2_executable('apache2ctl', 'apachectl2', 'apachectl')
 	end
 	memoize :apache2ctl
-	
+
 	# The absolute path to the Apache binary (that is, 'httpd', 'httpd2', 'apache'
 	# or 'apache2'), or nil if not found.
 	def self.httpd
@@ -80,7 +80,7 @@ module PlatformInfo
 		end
 	end
 	memoize :httpd
-	
+
 	# The absolute path to the 'apr-config' or 'apr-1-config' executable,
 	# or nil if not found.
 	def self.apr_config
@@ -106,7 +106,7 @@ module PlatformInfo
 		end
 	end
 	memoize :apr_config
-	
+
 	# The absolute path to the 'apu-config' or 'apu-1-config' executable, or nil
 	# if not found.
 	def self.apu_config
@@ -132,10 +132,10 @@ module PlatformInfo
 		end
 	end
 	memoize :apu_config
-	
-	
+
+
 	################ Directories ################
-	
+
 	# The absolute path to the Apache 2 'bin' directory, or nil if unknown.
 	def self.apache2_bindir
 		if apxs2.nil?
@@ -145,7 +145,7 @@ module PlatformInfo
 		end
 	end
 	memoize :apache2_bindir
-	
+
 	# The absolute path to the Apache 2 'sbin' directory, or nil if unknown.
 	def self.apache2_sbindir
 		if apxs2.nil?
@@ -155,10 +155,10 @@ module PlatformInfo
 		end
 	end
 	memoize :apache2_sbindir
-	
-	
+
+
 	################ Compiler and linker flags ################
-	
+
 	# The C compiler flags that are necessary to compile an Apache module.
 	# Also includes APR and APU compiler flags if with_apr_flags is true.
 	def self.apache2_module_cflags(with_apr_flags = true)
@@ -187,7 +187,7 @@ module PlatformInfo
 				options.reject! { |f| f =~ /^\-mt/ }
 				apxs2_flags = options.join(' ')
 			end
-			
+
 			apxs2_flags.strip!
 			flags << apxs2_flags
 		end
@@ -225,7 +225,7 @@ module PlatformInfo
 		return flags.compact.join(' ').strip
 	end
 	memoize :apache2_module_cflags, true
-	
+
 	# Linker flags that are necessary for linking an Apache module.
 	# Already includes APR and APU linker flags.
 	def self.apache2_module_ldflags
@@ -234,30 +234,30 @@ module PlatformInfo
 		return flags
 	end
 	memoize :apache2_module_ldflags
-	
+
 	# The C compiler flags that are necessary for programs that use APR.
 	def self.apr_flags
 		return determine_apr_info[0]
 	end
-	
+
 	# The linker flags that are necessary for linking programs that use APR.
 	def self.apr_libs
 		return determine_apr_info[1]
 	end
-	
+
 	# The C compiler flags that are necessary for programs that use APR-Util.
 	def self.apu_flags
 		return determine_apu_info[0]
 	end
-	
+
 	# The linker flags that are necessary for linking programs that use APR-Util.
 	def self.apu_libs
 		return determine_apu_info[1]
 	end
-	
+
 	################ Miscellaneous information ################
-	
-	
+
+
 	# Returns whether it is necessary to use information outputted by
 	# 'apr-config' and 'apu-config' in order to compile an Apache module.
 	# When Apache is installed with --with-included-apr, the APR/APU
@@ -295,7 +295,7 @@ private
 		return nil
 	end
 	private_class_method :find_apache2_executable
-	
+
 	def self.determine_apr_info
 		if apr_config.nil?
 			return [nil, nil]

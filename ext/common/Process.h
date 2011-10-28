@@ -58,17 +58,17 @@ public:
 	struct SocketInfo {
 		string address;
 		string type;
-		
+
 		SocketInfo() {}
-		
+
 		SocketInfo(const string &address, const string &type) {
 			this->address = address;
 			this->type    = type;
 		}
 	};
-	
+
 	typedef map<string, SocketInfo> SocketInfoMap;
-	
+
 private:
 	string appRoot;
 	pid_t pid;
@@ -79,7 +79,7 @@ private:
 	SocketInfoMap serverSockets;
 	SocketInfo *mainServerSocket;
 	function<void ()> destructionCallback;
-	
+
 public:
 	/**
 	 * Construct a new Process object.
@@ -116,12 +116,12 @@ public:
 		mainServerSocket = &this->serverSockets["main"];
 		P_TRACE(3, "Application process " << pid << " (" << this << "): created.");
 	}
-	
+
 	virtual ~Process() {
 		TRACE_POINT();
 		SocketInfoMap::const_iterator it;
 		int ret;
-		
+
 		if (ownerPipe != -1) {
 			do {
 				ret = close(ownerPipe);
@@ -136,12 +136,12 @@ public:
 			}
 		}
 		P_TRACE(3, "Application process " << pid << " (" << this << "): destroyed.");
-		
+
 		if (destructionCallback) {
 			destructionCallback();
 		}
 	}
-	
+
 	/**
 	 * Returns the application root for this application process. See
 	 * the constructor for information about the application root.
@@ -149,21 +149,21 @@ public:
 	string getAppRoot() const {
 		return appRoot;
 	}
-	
+
 	/**
 	 * Returns the process ID of this application process.
 	 */
 	pid_t getPid() const {
 		return pid;
 	}
-	
+
 	/**
 	 * Returns this process's detach key.
 	 */
 	string getDetachKey() const {
 		return detachKey;
 	}
-	
+
 	/**
 	 * Returns this process's connect password. This password is
 	 * guaranteed to be valid ASCII.
@@ -171,7 +171,7 @@ public:
 	string getConnectPassword() const {
 		return connectPassword;
 	}
-	
+
 	/**
 	 * Returns this process's gupid. This is like a PID, but does not rotate
 	 * and is even unique over multiple servers.
@@ -179,7 +179,7 @@ public:
 	string getGupid() const {
 		return gupid;
 	}
-	
+
 	/**
 	 * Returns a map containing all server sockets that this process
 	 * listens on.
@@ -187,7 +187,7 @@ public:
 	const SocketInfoMap *getServerSockets() const {
 		return &serverSockets;
 	}
-	
+
 	/**
 	 * Request a new session from this application process by connecting to its
 	 * main server socket. This session represents the life time of a single
@@ -198,7 +198,7 @@ public:
 	 * @code
 	 *   // Request a new session from the process.
 	 *   SessionPtr session = process->newSession(...);
-	 *   
+	 *
 	 *   // Send the request headers and request body data.
 	 *   session->sendHeaders(...);
 	 *   session->sendBodyBlock(...);

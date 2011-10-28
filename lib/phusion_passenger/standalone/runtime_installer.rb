@@ -71,7 +71,7 @@ module Standalone
 # and +support_dir+ before starting this installer.
 class RuntimeInstaller < AbstractInstaller
 	include Utils
-	
+
 protected
 	def dependencies
 		result = [
@@ -97,11 +97,11 @@ protected
 		end
 		return result
 	end
-	
+
 	def users_guide
 		return "#{DOCDIR}/Users guide Standalone.html"
 	end
-	
+
 	def install!
 		if @support_dir && @nginx_dir
 			show_welcome_screen
@@ -114,7 +114,7 @@ protected
 		if nginx_needs_to_be_installed?
 			check_whether_we_can_write_to(@nginx_dir) || exit(1)
 		end
-		
+
 		if passenger_support_files_need_to_be_installed? && should_download_binaries?
 			download_and_extract_passenger_binaries(@support_dir) do |progress, total|
 				show_progress(progress, total, 1, 1, "Extracting Passenger binaries...")
@@ -129,7 +129,7 @@ protected
 			puts
 			puts
 		end
-		
+
 		if nginx_needs_to_be_installed?
 			nginx_source_dir = download_and_extract_nginx_sources do |progress, total|
 				show_progress(progress, total, 1, 7, "Extracting...")
@@ -154,12 +154,12 @@ protected
 				show_progress(progress, total, 6..7, 7, status_text)
 			end
 		end
-		
+
 		puts
 		color_puts "<green><b>All done!</b></green>"
 		puts
 	end
-	
+
 	def before_install
 		super
 		@plugin.call_hook(:runtime_installer_start, self) if @plugin
@@ -180,22 +180,22 @@ private
 	def nginx_needs_to_be_installed?
 		return @nginx_dir && !File.exist?("#{@nginx_dir}/sbin/nginx")
 	end
-	
+
 	def passenger_support_files_need_to_be_installed?
 		return @support_dir && !File.exist?("#{@support_dir}/Rakefile")
 	end
-	
+
 	def should_download_binaries?
 		return @download_binaries && @binaries_url_root
 	end
-	
+
 	def show_welcome_screen
 		render_template 'standalone/welcome',
 			:version => @version,
 			:dir => @nginx_dir
 		puts
 	end
-	
+
 	def check_whether_we_can_write_to(dir)
 		FileUtils.mkdir_p(dir)
 		File.new("#{dir}/__test__.txt", "w").close
@@ -211,14 +211,14 @@ private
 	ensure
 		File.unlink("#{dir}/__test__.txt") rescue nil
 	end
-	
+
 	def show_progress(progress, total, phase, total_phases, status_text = "")
 		if !phase.is_a?(Range)
 			phase = phase..phase
 		end
 		total_progress = (phase.first - 1).to_f / total_phases
 		total_progress += (progress.to_f / total) * ((phase.last - phase.first + 1).to_f / total_phases)
-		
+
 		max_width = 79
 		progress_bar_width = 45
 		text = sprintf("[%-#{progress_bar_width}s] %s",
@@ -230,24 +230,24 @@ private
 		STDOUT.flush
 		@plugin.call_hook(:runtime_installer_progress, total_progress, status_text) if @plugin
 	end
-	
+
 	def myself
 		return `whoami`.strip
 	end
-	
+
 	def begin_progress_bar
 		if !@begun
 			@begun = true
 			color_puts "<banner>Installing Phusion Passenger Standalone...</banner>"
 		end
 	end
-	
+
 	def show_possible_solutions_for_download_and_extraction_problems
 		new_screen
 		render_template "standalone/possible_solutions_for_download_and_extraction_problems"
 		puts
 	end
-	
+
 	def extract_tarball(filename)
 		File.open(filename, 'rb') do |f|
 			IO.popen("tar xzf -", "w") do |io|
@@ -280,7 +280,7 @@ private
 		end
 		return true
 	end
-	
+
 	def run_command_with_throbber(command, status_text)
 		backlog = ""
 		IO.popen("#{command} 2>&1", "r") do |io|
@@ -299,7 +299,7 @@ private
 			exit 1
 		end
 	end
-	
+
 	def copy_files(files, target)
 		FileUtils.mkdir_p(target)
 		files.each_with_index do |filename, i|
@@ -312,15 +312,15 @@ private
 			yield(i + 1, files.size)
 		end
 	end
-	
+
 	def rake
 		return PlatformInfo.rake_command
 	end
-	
+
 	def run_rake_task!(target)
 		total_lines = `#{rake} #{target} --dry-run`.split("\n").size - 1
 		backlog = ""
-		
+
 		IO.popen("#{rake} #{target} --trace STDERR_TO_STDOUT=1", "r") do |io|
 			progress = 1
 			while !io.eof?
@@ -341,7 +341,7 @@ private
 			exit 1
 		end
 	end
-	
+
 	def download_and_extract_passenger_binaries(target, &block)
 		color_puts "<banner>Downloading Passenger binaries for your platform, if available...</banner>"
 		url     = "#{@binaries_url_root}/#{runtime_version_string}/support.tar.gz"
@@ -351,7 +351,7 @@ private
 				"necessary binaries will be compiled from source instead.</b>"
 			return nil
 		end
-		
+
 		FileUtils.mkdir_p(target)
 		Dir.chdir(target) do
 			return extract_tarball(tarball, &block)
@@ -359,7 +359,7 @@ private
 	rescue Interrupt
 		exit 2
 	end
-	
+
 	def download_and_extract_nginx_binaries(target, &block)
 		color_puts "<banner>Downloading Nginx binaries for your platform, if available...</banner>"
 		basename = "nginx-#{@version}.tar.gz"
@@ -378,7 +378,7 @@ private
 	rescue Interrupt
 		exit 2
 	end
-	
+
 	def download_and_extract_nginx_sources(&block)
 		if @tarball
 			tarball  = @tarball
@@ -391,7 +391,7 @@ private
 			end
 		end
 		nginx_sources_name = "nginx-#{@version}"
-		
+
 		Dir.chdir(@working_dir) do
 			begin_progress_bar
 			if extract_tarball(tarball, &block)
@@ -403,10 +403,10 @@ private
 	rescue Interrupt
 		exit 2
 	end
-	
+
 	def install_passenger_support_files
 		begin_progress_bar
-		
+
 		# Copy Phusion Passenger sources to designated directory if necessary.
 		yield(0, 1, 1, "Preparing Phusion Passenger...")
 		FileUtils.rm_rf(@support_dir)
@@ -416,7 +416,7 @@ private
 				yield(progress, total, 1, "Copying files...")
 			end
 		end
-		
+
 		# Then compile it.
 		yield(0, 1, 2, "Preparing Phusion Passenger...")
 		Dir.chdir(@support_dir) do
@@ -425,7 +425,7 @@ private
 			end
 		end
 	end
-	
+
 	def install_nginx_from_source(source_dir)
 		require 'phusion_passenger/platform_info/compiler'
 		Dir.chdir(source_dir) do
@@ -445,7 +445,7 @@ private
 			run_command_with_throbber(command, "Preparing Nginx...") do |status_text|
 				yield(0, 1, status_text)
 			end
-			
+
 			backlog = ""
 			total_lines = `#{PlatformInfo.gnu_make} --dry-run`.split("\n").size
 			IO.popen("#{PlatformInfo.gnu_make} 2>&1", "r") do |io|
@@ -463,7 +463,7 @@ private
 				STDERR.puts backlog
 				exit 1
 			end
-			
+
 			yield(1, 1, 'Copying files...')
 			if !system("mkdir -p '#{@nginx_dir}/sbin'") ||
 			   !system("cp -pR objs/nginx '#{@nginx_dir}/sbin/'")

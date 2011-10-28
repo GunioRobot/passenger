@@ -77,7 +77,7 @@ replaceStringInFile(const char *filename, const string &toFind, const string &re
 	}
 	string content(readAll(fileno(f)));
 	fclose(f);
-	
+
 	f = fopen(filename, "w");
 	if (f == NULL) {
 		int e = errno;
@@ -117,7 +117,7 @@ touchFile(const char *filename, time_t timestamp) {
 		message.append("'");
 		throw FileSystemException(message, e, filename);
 	}
-	
+
 	if (timestamp != (time_t) -1) {
 		struct utimbuf times;
 		times.actime = timestamp;
@@ -131,7 +131,7 @@ listDir(const string &path) {
 	vector<string> result;
 	DIR *d = opendir(path.c_str());
 	struct dirent *ent;
-	
+
 	if (d == NULL) {
 		int e = errno;
 		throw FileSystemException("Cannot open directory " + path,
@@ -150,7 +150,7 @@ string
 getPrimaryGroupName(const string &username) {
 	struct passwd *user;
 	struct group  *group;
-	
+
 	user = getpwnam(username.c_str());
 	if (user == NULL) {
 		throw RuntimeException(string("User '") + username + "' does not exist.");
@@ -159,7 +159,7 @@ getPrimaryGroupName(const string &username) {
 	if (group == NULL) {
 		throw RuntimeException(string("Primary group for user '") + username + "' does not exist.");
 	}
-	
+
 	return group->gr_name;
 }
 

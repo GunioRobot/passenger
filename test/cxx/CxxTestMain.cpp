@@ -92,12 +92,12 @@ main(int argc, char *argv[]) {
 	unsetenv("PASSENGER_TMPDIR");
 	unsetenv("PASSENGER_TEMP_DIR");
 	oxt::setup_syscall_interruption_support();
-	
+
 	tut::reporter reporter;
 	tut::runner.get().set_callback(&reporter);
 	allGroups = tut::runner.get().list_groups();
 	parseOptions(argc, argv);
-	
+
 	try {
 		bool all_ok = true;
 		if (runMode == RUN_ALL_GROUPS) {

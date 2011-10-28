@@ -36,12 +36,12 @@ module WSGI
 class ApplicationSpawner
 	include Utils
 	REQUEST_HANDLER = File.expand_path(File.dirname(__FILE__) + "/request_handler.py")
-	
+
 	def self.spawn_application(*args)
 		@@instance ||= ApplicationSpawner.new
 		@@instance.spawn_application(*args)
 	end
-	
+
 	# Spawn an instance of the given WSGI application. When successful, an
 	# Application object will be returned, which represents the spawned
 	# application.
@@ -54,16 +54,16 @@ class ApplicationSpawner
 		a, b = UNIXSocket.pair
 		pid = safe_fork(self.class.to_s, true) do
 			a.close
-			
+
 			file_descriptors_to_leave_open = [0, 1, 2, b.fileno]
 			NativeSupport.close_all_file_descriptors(file_descriptors_to_leave_open)
 			close_all_io_objects_for_fds(file_descriptors_to_leave_open)
-			
+
 			run(MessageChannel.new(b), options)
 		end
 		b.close
 		Process.waitpid(pid) rescue nil
-		
+
 		channel = MessageChannel.new(a)
 		return AppProcess.read_from_channel(channel)
 	end
@@ -73,13 +73,13 @@ private
 		$0 = "WSGI: #{options['app_root']}"
 		prepare_app_process("passenger_wsgi.py", options)
 		ENV['WSGI_ENV'] = options['environment']
-		
+
 		if defined?(NativeSupport)
 			unix_path_max = NativeSupport::UNIX_PATH_MAX
 		else
 			unix_path_max = 100
 		end
-		
+
 		socket_file = "#{passenger_tmpdir}/backends/wsgi.#{Process.pid}.#{rand 10000000}"
 		socket_file = socket_file.slice(0, unix_path_max - 1)
 		server = UNIXServer.new(socket_file)
@@ -91,7 +91,7 @@ private
 			app_process.write_to_channel(channel)
 			writer.close
 			channel.close
-			
+
 			NativeSupport.close_all_file_descriptors([0, 1, 2, server.fileno,
 				reader.fileno])
 			exec(REQUEST_HANDLER, socket_file, server.fileno.to_s,

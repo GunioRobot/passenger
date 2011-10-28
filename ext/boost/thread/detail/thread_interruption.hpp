@@ -13,7 +13,7 @@ namespace boost
         {
             disable_interruption(const disable_interruption&);
             disable_interruption& operator=(const disable_interruption&);
-            
+
             bool interruption_was_enabled;
             friend class restore_interruption;
         public:

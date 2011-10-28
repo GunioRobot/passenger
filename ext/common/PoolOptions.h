@@ -51,16 +51,16 @@ using namespace std;
  * "!STARTUP_FILE!", then the startup file's group will be used. Otherwise,
  * the primary group of the user that the application process will run as,
  * will be used as group.
- * 
+ *
  * If the user or group that the application process attempts to switch to
  * doesn't exist, then <em>default_user</em> and <em>default_group</em>, respectively,
  * will be used.
- * 
+ *
  * Phusion Passenger will attempt to avoid running the application process as
  * root: if <em>user</em> or <em>group</em> is set to the root user or the root group,
  * or if the startup file is owned by root, then <em>default_user</em> and
  * <em>default_group</em> will be used instead.
- * 
+ *
  * All this only happen if Phusion Passenger has root privileges. If not, then
  * these options have no effect.
  */
@@ -71,7 +71,7 @@ struct PoolOptions {
 	 * etc. This must be a valid directory, but the path does not have to be absolute.
 	 */
 	string appRoot;
-	
+
 	/**
 	 * A name used by ApplicationPool to uniquely identify an application.
 	 * If one tries to get() from the application pool with name "A", then get()
@@ -82,16 +82,16 @@ struct PoolOptions {
 	 * name.
 	 */
 	string appGroupName;
-	
+
 	/** The application type. Either "rails" (default), "rack" or "wsgi". */
 	string appType;
-	
+
 	/**
 	 * The RAILS_ENV/RACK_ENV environment that should be used. May not be an
 	 * empty string. The default is "production".
 	 */
 	string environment;
-	
+
 	/**
 	 * Method with which application processes should be spawned. Different methods
 	 * have different performance and compatibility properties. Available methods are
@@ -99,7 +99,7 @@ struct PoolOptions {
 	 * are explained in the "Spawning methods explained" section of the users guide.
 	 */
 	string spawnMethod;
-	
+
 	/** See overview. */
 	string user;
 	/** See class overview. */
@@ -108,7 +108,7 @@ struct PoolOptions {
 	string defaultUser;
 	/** See class overview. Defaults to the defaultUser's primary group. */
 	string defaultGroup;
-	
+
 	/**
 	 * The idle timeout, in seconds, of framework spawners. See the "Spawning methods
 	 * explained" section of the users guide for information about framework spawners.
@@ -117,7 +117,7 @@ struct PoolOptions {
 	 * of -1 means that the default timeout value should be used.
 	 */
 	long frameworkSpawnerTimeout;
-	
+
 	/**
 	 * The idle timeout, in seconds, of application spawners. See the "Spawning methods
 	 * explained" section of the users guide for information about application spawners.
@@ -126,7 +126,7 @@ struct PoolOptions {
 	 * of -1 means that the default timeout value should be used.
 	 */
 	long appSpawnerTimeout;
-	
+
 	/**
 	 * Environment variables which should be passed to the spawned application
 	 * process.
@@ -142,7 +142,7 @@ struct PoolOptions {
 	 * @invariant environmentVariables.size() is an even number.
 	 */
 	StringListCreatorPtr environmentVariables;
-	
+
 	/**
 	 * The base URI on which the application runs. If the application is
 	 * running on the root URI, then this value must be "/".
@@ -150,19 +150,19 @@ struct PoolOptions {
 	 * @invariant baseURI != ""
 	 */
 	string baseURI;
-	
+
 	/**
 	 * The maximum number of requests that the spawned application may process
 	 * before exiting. A value of 0 means unlimited.
 	 */
 	unsigned long maxRequests;
-	
+
 	/**
 	 * The minimum number of processes for the current group that the application
 	 * pool's cleaner thread should keep around.
 	 */
 	unsigned long minProcesses;
-	
+
 	/**
 	 * Whether to use a global queue instead of a per-backend process
 	 * queue. This option is only used by ApplicationPool::get().
@@ -174,61 +174,61 @@ struct PoolOptions {
 	 * requests.
 	 */
 	bool useGlobalQueue;
-	
+
 	/**
 	 * Whether to show the Phusion Passenger version number in the
 	 * X-Powered-By header.
 	 */
 	bool showVersionInHeader;
-	
+
 	/**
 	 * A throttling rate for file stats. When set to a non-zero value N,
 	 * restart.txt and other files which are usually stat()ted on every
 	 * ApplicationPool::get() call will be stat()ed at most every N seconds.
 	 */
 	unsigned long statThrottleRate;
-	
+
 	/**
 	 * The directory which contains restart.txt and always_restart.txt.
 	 * An empty string means that the default directory should be used.
 	 */
 	string restartDir;
-	
+
 	/**
 	 * Any rights that the spawned application process may have. The SpawnManager
 	 * will create a new account for each spawned app, and that account will be
 	 * assigned these rights.
 	 */
 	Account::Rights rights;
-	
+
 	/** Whether debugger support should be enabled. */
 	bool debugger;
-	
+
 	/** In case an app process needs to be spawned, whether analytics logging
 	 * should be enabled.
 	 */
 	bool analytics;
-	
+
 	/**
 	 * An analytics log object to log things to. May be the null pointer,
 	 * in which case analytics logging is disabled for this request.
 	 */
 	AnalyticsLogPtr log;
-	
+
 	/**
 	 * Whether the session returned by ApplicationPool::Interface::get()
 	 * should be automatically initiated. Defaults to true.
 	 */
 	bool initiateSession;
-	
+
 	/**
 	 * Whether application processes should print exceptions that occurred during
 	 * application initialization. Defaults to true.
 	 */
 	bool printExceptions;
-	
+
 	/*********************************/
-	
+
 	/**
 	 * Creates a new PoolOptions object with the default values filled in.
 	 * One must still set appRoot manually, after having used this constructor.
@@ -250,10 +250,10 @@ struct PoolOptions {
 		analytics               = false;
 		initiateSession         = true;
 		printExceptions         = true;
-		
+
 		/*********************************/
 	}
-	
+
 	/**
 	 * Creates a new PoolOptions object with the given values.
 	 */
@@ -304,10 +304,10 @@ struct PoolOptions {
 		this->log                     = log;
 		this->initiateSession         = true;
 		this->printExceptions         = true;
-		
+
 		/*********************************/
 	}
-	
+
 	/**
 	 * Creates a new PoolOptions object from the given string vector.
 	 * This vector contains information that's written to by toVector().
@@ -334,7 +334,7 @@ struct PoolOptions {
 	) {
 		int offset = 1;
 		bool hasEnvVars;
-		
+
 		appRoot          = vec[startIndex + offset];                 offset += 2;
 		appGroupName     = vec[startIndex + offset];                 offset += 2;
 		appType          = vec[startIndex + offset];                 offset += 2;
@@ -375,10 +375,10 @@ struct PoolOptions {
 			environmentVariables = ptr(new SimpleStringListCreator(vec[startIndex + offset]));
 		}
 		offset += 2;
-		
+
 		/*********************************/
 	}
-	
+
 	/**
 	 * Append the information in this PoolOptions object to the given
 	 * string vector. The resulting array could, for example, be used
@@ -428,10 +428,10 @@ struct PoolOptions {
 			appendKeyValue(vec, "has_environment_variables", "false");
 			appendKeyValue(vec, "environment_variables", "");
 		}
-		
+
 		/*********************************/
 	}
-	
+
 	PoolOptions own() const {
 		PoolOptions copy = *this;
 		if (copy.environmentVariables != NULL) {
@@ -440,7 +440,7 @@ struct PoolOptions {
 		copy.log.reset();
 		return copy;
 	}
-	
+
 	/**
 	 * Returns the app group name. If there is no explicitly set app group name
 	 * then the app root is considered to be the app group name.
@@ -452,7 +452,7 @@ struct PoolOptions {
 			return appGroupName;
 		}
 	}
-	
+
 	/**
 	 * Serializes the items in environmentVariables into a string, which
 	 * can be used to create a SimpleStringListCreator object.
@@ -462,13 +462,13 @@ struct PoolOptions {
 	string serializeEnvironmentVariables() const {
 		vector<string>::const_iterator it, end;
 		string result;
-		
+
 		if (environmentVariables) {
 			result.reserve(1024);
-			
+
 			StringListPtr items = environmentVariables->getItems();
 			end = items->end();
-			
+
 			for (it = items->begin(); it != end; it++) {
 				result.append(*it);
 				result.append(1, '\0');
@@ -486,25 +486,25 @@ private:
 		vec.push_back(key);
 		vec.push_back(const_cast<string &>(value));
 	}
-	
+
 	static inline void
 	appendKeyValue(vector<string> &vec, const char *key, const char *value) {
 		vec.push_back(key);
 		vec.push_back(value);
 	}
-	
+
 	static inline void
 	appendKeyValue2(vector<string> &vec, const char *key, long value) {
 		vec.push_back(key);
 		vec.push_back(toString(value));
 	}
-	
+
 	static inline void
 	appendKeyValue3(vector<string> &vec, const char *key, unsigned long value) {
 		vec.push_back(key);
 		vec.push_back(toString(value));
 	}
-	
+
 	static inline void
 	appendKeyValue4(vector<string> &vec, const char *key, bool value) {
 		vec.push_back(key);

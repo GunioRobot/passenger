@@ -23,7 +23,7 @@
 
 task 'package:check' do
 	require 'phusion_passenger'
-	
+
 	File.read("ext/common/Constants.h") =~ /PASSENGER_VERSION \"(.+)\"/
 	if $1 != PhusionPassenger::VERSION_STRING
 		abort "Version number in ext/common/Constants.h doesn't match."
@@ -106,7 +106,7 @@ task :fakeroot => [:apache2, :nginx] + Packaging::ASCII_DOCS do
 	require 'fileutils'
 	include Config
 	fakeroot = "pkg/fakeroot"
-	
+
 	# We don't use CONFIG['archdir'] and the like because we want
 	# the files to be installed to /usr, and the Ruby interpreter
 	# on the packaging machine might be in /usr/local.
@@ -121,49 +121,49 @@ task :fakeroot => [:apache2, :nginx] + Packaging::ASCII_DOCS do
 	fake_source_root = "#{fakeroot}#{NATIVELY_PACKAGED_SOURCE_ROOT}"
 	fake_apache2_module = "#{fakeroot}#{NATIVELY_PACKAGED_APACHE2_MODULE}"
 	fake_apache2_module_dir = File.dirname(fake_apache2_module)
-	
+
 	sh "rm -rf #{fakeroot}"
 	sh "mkdir -p #{fakeroot}"
-	
+
 	sh "mkdir -p #{fake_libdir}"
 	sh "cp #{LIBDIR}/phusion_passenger.rb #{fake_libdir}/"
 	sh "cp -R #{LIBDIR}/phusion_passenger #{fake_libdir}/"
-	
+
 	sh "mkdir -p #{fake_native_support_dir}"
 	native_support_archdir = PlatformInfo.ruby_extension_binary_compatibility_ids.join("-")
 	sh "mkdir -p #{fake_native_support_dir}"
 	sh "cp -R ext/ruby/#{native_support_archdir}/*.#{LIBEXT} #{fake_native_support_dir}/"
-	
+
 	sh "mkdir -p #{fake_agents_dir}"
 	sh "cp -R #{AGENTS_DIR}/* #{fake_agents_dir}/"
 	sh "rm -rf #{fake_agents_dir}/*.dSYM"
 	sh "rm -rf #{fake_agents_dir}/*/*.dSYM"
-	
+
 	sh "mkdir -p #{fake_helper_scripts_dir}"
 	sh "cp -R #{HELPER_SCRIPTS_DIR}/* #{fake_helper_scripts_dir}/"
-	
+
 	sh "mkdir -p #{fake_resources_dir}"
 	sh "cp resources/* #{fake_resources_dir}/"
-	
+
 	sh "mkdir -p #{fake_docdir}"
 	Packaging::ASCII_DOCS.each do |docfile|
 		sh "cp", docfile, "#{fake_docdir}/"
 	end
 	sh "cp -R doc/images #{fake_docdir}/"
-	
+
 	sh "mkdir -p #{fake_bindir}"
 	Packaging::USER_EXECUTABLES.each do |exe|
 		sh "cp bin/#{exe} #{fake_bindir}/"
 	end
-	
+
 	sh "mkdir -p #{fake_sbindir}"
 	Packaging::SUPER_USER_EXECUTABLES.each do |exe|
 		sh "cp bin/#{exe} #{fake_sbindir}/"
 	end
-	
+
 	sh "mkdir -p #{fake_apache2_module_dir}"
 	sh "cp #{APACHE2_MODULE} #{fake_apache2_module_dir}/"
-	
+
 	sh "mkdir -p #{fake_source_root}"
 	spec.files.each do |filename|
 		next if File.directory?(filename)
@@ -184,11 +184,11 @@ task 'package:debian' => 'package:check' do
 		# devscripts requires dpkg-dev which contains dpkg-checkbuilddeps.
 		abort "Please run `apt-get install devscripts` first."
 	end
-	
+
 	if !system(checkbuilddeps)
 		STDERR.puts
 		abort "Please install aforementioned build dependencies first."
 	end
-	
+
 	sh "debuild"
 end

@@ -2,7 +2,7 @@
 // William E. Kempf
 // Copyright (C) 2007-9 Anthony Williams
 //
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying 
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #ifndef BOOST_THREAD_EXCEPTIONS_PDM070801_H
@@ -36,11 +36,11 @@ namespace boost
     {
     protected:
         std::string message;
-        
+
         thread_exception():
             m_sys_err(0)
         {}
-    
+
         thread_exception(const std::string &description, int sys_err_code):
             m_sys_err(sys_err_code)
         {
@@ -49,7 +49,7 @@ namespace boost
             s << strerror(sys_err_code) << " (" << sys_err_code << ")";
             message.assign(s.str());
         }
-    
+
         thread_exception(int sys_err_code):
             m_sys_err(sys_err_code)
         {
@@ -57,18 +57,18 @@ namespace boost
             s << strerror(sys_err_code) << " (" << sys_err_code << ")";
             message.assign(s.str());
         }
-    
+
 
     public:
         ~thread_exception() throw()
         {}
-    
+
 
         int native_error() const
         {
             return m_sys_err;
         }
-        
+
         virtual const char *what() const throw()
         {
             if(message.empty())
@@ -80,7 +80,7 @@ namespace boost
                 return message.c_str();
             }
         }
-    
+
     private:
         int m_sys_err;
     };
@@ -94,7 +94,7 @@ namespace boost
             return "Condition error";
         }
     };
-    
+
 
     class lock_error:
         public thread_exception
@@ -102,14 +102,14 @@ namespace boost
     public:
         lock_error()
         {}
-    
+
         lock_error(int sys_err_code):
             thread_exception(sys_err_code)
         {}
-    
+
         ~lock_error() throw()
         {}
-    
+
 
         virtual const char* what() const throw()
         {
@@ -130,18 +130,18 @@ namespace boost
     public:
         thread_resource_error()
         {}
-    
+
         thread_resource_error(int sys_err_code):
             thread_exception(sys_err_code)
         {}
-    
+
         thread_resource_error(const std::string &description, int sys_err_code):
             thread_exception(description, sys_err_code)
         {}
-    
+
         ~thread_resource_error() throw()
         {}
-    
+
 
         virtual const char* what() const throw()
         {
@@ -154,7 +154,7 @@ namespace boost
                 return message.c_str();
             }
         }
-    
+
     };
 
     class unsupported_thread_option:
@@ -163,20 +163,20 @@ namespace boost
     public:
         unsupported_thread_option()
         {}
-    
+
         unsupported_thread_option(int sys_err_code):
             thread_exception(sys_err_code)
         {}
-    
+
         ~unsupported_thread_option() throw()
         {}
-    
+
 
         virtual const char* what() const throw()
         {
             return "boost::unsupported_thread_option";
         }
-    
+
     };
 
     class invalid_thread_argument:
@@ -185,20 +185,20 @@ namespace boost
     public:
         invalid_thread_argument()
         {}
-    
+
         invalid_thread_argument(int sys_err_code):
             thread_exception(sys_err_code)
         {}
-    
+
         ~invalid_thread_argument() throw()
         {}
-    
+
 
         virtual const char* what() const throw()
         {
             return "boost::invalid_thread_argument";
         }
-    
+
     };
 
     class thread_permission_error:
@@ -207,20 +207,20 @@ namespace boost
     public:
         thread_permission_error()
         {}
-    
+
         thread_permission_error(int sys_err_code):
             thread_exception(sys_err_code)
         {}
-    
+
         ~thread_permission_error() throw()
         {}
-    
+
 
         virtual const char* what() const throw()
         {
             return "boost::thread_permission_error";
         }
-    
+
     };
 
 } // namespace boost

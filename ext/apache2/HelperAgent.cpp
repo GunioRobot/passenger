@@ -68,18 +68,18 @@ class TimerUpdateHandler: public MessageServer::Handler {
 private:
 	Timer &timer;
 	unsigned int clients;
-	
+
 public:
 	TimerUpdateHandler(Timer &_timer): timer(_timer) {
 		clients = 0;
 	}
-	
+
 	virtual MessageServer::ClientContextPtr newClient(MessageServer::CommonClientContext &commonContext) {
 		clients++;
 		timer.stop();
 		return MessageServer::ClientContextPtr();
 	}
-	
+
 	virtual void clientDisconnected(MessageServer::CommonClientContext &commonContext,
 	                                MessageServer::ClientContextPtr &handlerSpecificContext)
 	{
@@ -88,7 +88,7 @@ public:
 			timer.start();
 		}
 	}
-	
+
 	virtual bool processMessage(MessageServer::CommonClientContext &commonContext,
 	                            MessageServer::ClientContextPtr &handlerSpecificContext,
 	                            const vector<string> &args)
@@ -100,12 +100,12 @@ public:
 class ExitHandler: public MessageServer::Handler {
 private:
 	EventFd &exitEvent;
-	
+
 public:
 	ExitHandler(EventFd &_exitEvent)
 		: exitEvent(_exitEvent)
 	{ }
-	
+
 	virtual bool processMessage(MessageServer::CommonClientContext &commonContext,
 	                            MessageServer::ClientContextPtr &handlerSpecificContext,
 	                            const vector<string> &args)
@@ -133,7 +133,7 @@ private:
 		#else
 			1024 * 64;
 		#endif
-	
+
 	ServerInstanceDir serverInstanceDir;
 	ServerInstanceDir::GenerationPtr generation;
 	FileDescriptor feedbackFd;
@@ -147,11 +147,11 @@ private:
 	shared_ptr<oxt::thread> messageServerThread;
 	EventFd exitEvent;
 	Timer exitTimer;
-	
+
 	string receivePassword() {
 		TRACE_POINT();
 		vector<string> args;
-		
+
 		if (!feedbackChannel.read(args)) {
 			throw IOException("The watchdog unexpectedly closed the connection.");
 		}
@@ -160,7 +160,7 @@ private:
 		}
 		return Base64::decode(args[1]);
 	}
-	
+
 	/**
 	 * Lowers this process's privilege to that of <em>username</em> and <em>groupname</em>.
 	 */
@@ -168,7 +168,7 @@ private:
 		struct passwd *userEntry;
 		struct group  *groupEntry;
 		int            e;
-		
+
 		userEntry = getpwnam(username.c_str());
 		if (userEntry == NULL) {
 			throw NonExistentUserException(string("Unable to lower Passenger "
@@ -181,7 +181,7 @@ private:
 				"HelperServer's privilege to that of user '") + username +
 				"': user does not exist.");
 		}
-		
+
 		if (initgroups(username.c_str(), userEntry->pw_gid) != 0) {
 			e = errno;
 			throw SystemException(string("Unable to lower Passenger HelperServer's "
@@ -201,7 +201,7 @@ private:
 				"': cannot set user ID", e);
 		}
 	}
-	
+
 public:
 	Server(FileDescriptor feedbackFd,
 		pid_t webServerPid, const string &tempDir,
@@ -216,32 +216,32 @@ public:
 		TRACE_POINT();
 		string messageSocketPassword;
 		string loggingAgentPassword;
-		
+
 		this->feedbackFd  = feedbackFd;
 		feedbackChannel   = MessageChannel(feedbackFd);
-		
+
 		UPDATE_TRACE_POINT();
 		messageSocketPassword = Base64::decode(options.get("message_socket_password"));
 		loggingAgentPassword  = options.get("logging_agent_password");
-		
+
 		generation       = serverInstanceDir.getGeneration(generationNumber);
 		accountsDatabase = AccountsDatabase::createDefault(generation,
 			userSwitching, defaultUser, defaultGroup);
 		accountsDatabase->add("_web_server", messageSocketPassword, false,
 			Account::GET | Account::DETACH | Account::SET_PARAMETERS | Account::EXIT);
 		messageServer = ptr(new MessageServer(generation->getPath() + "/socket", accountsDatabase));
-		
+
 		createFile(generation->getPath() + "/helper_server.pid",
 			toString(getpid()), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-		
+
 		if (geteuid() == 0 && !userSwitching) {
 			lowerPrivilege(defaultUser, defaultGroup);
 		}
-		
+
 		UPDATE_TRACE_POINT();
 		analyticsLogger = ptr(new AnalyticsLogger(options.get("logging_agent_address"),
 			"logging", loggingAgentPassword));
-		
+
 		pool = ptr(new ApplicationPool::Pool(
 			resourceLocator.getSpawnServerFilename(), generation,
 			accountsDatabase, rubyCommand,
@@ -252,23 +252,23 @@ public:
 		pool->setMax(maxPoolSize);
 		pool->setMaxPerApp(maxInstancesPerApp);
 		pool->setMaxIdleTime(poolIdleTime);
-		
+
 		messageServer->addHandler(ptr(new TimerUpdateHandler(exitTimer)));
 		messageServer->addHandler(ptr(new ApplicationPool::Server(pool, analyticsLogger)));
 		messageServer->addHandler(ptr(new BacktracesServer()));
 		messageServer->addHandler(ptr(new ExitHandler(exitEvent)));
-		
+
 		UPDATE_TRACE_POINT();
 		feedbackChannel.write("initialized",
 			"",  // Request socket filename; not available in the Apache helper server.
 			messageServer->getSocketFilename().c_str(),
 			NULL);
-		
+
 		prestarterThread = ptr(new oxt::thread(
 			boost::bind(prestartWebApps, resourceLocator, options.get("prestart_urls"))
 		));
 	}
-	
+
 	~Server() {
 		TRACE_POINT();
 		prestarterThread->interrupt_and_join();
@@ -276,23 +276,23 @@ public:
 			messageServerThread->interrupt_and_join();
 		}
 	}
-	
+
 	void mainLoop() {
 		TRACE_POINT();
-		
+
 		messageServerThread.reset(new oxt::thread(
 			boost::bind(&MessageServer::mainLoop, messageServer.get()),
 			"MessageServer thread",
 			MESSAGE_SERVER_STACK_SIZE
 		));
-		
+
 		/* Wait until the watchdog closes the feedback fd (meaning it
 		 * was killed) or until we receive an exit message.
 		 */
 		this_thread::disable_syscall_interruption dsi;
 		fd_set fds;
 		int largestFd;
-		
+
 		FD_ZERO(&fds);
 		FD_SET(feedbackFd, &fds);
 		FD_SET(exitEvent.fd(), &fds);
@@ -302,7 +302,7 @@ public:
 			int e = errno;
 			throw SystemException("select() failed", e);
 		}
-		
+
 		if (FD_ISSET(feedbackFd, &fds)) {
 			/* If the watchdog has been killed then we'll kill all descendant
 			 * processes and exit. There's no point in keeping this helper
@@ -339,7 +339,7 @@ main(int argc, char *argv[]) {
 	unsigned int maxPoolSize        = options.getInt("max_pool_size");
 	unsigned int maxInstancesPerApp = options.getInt("max_instances_per_app");
 	unsigned int poolIdleTime       = options.getInt("pool_idle_time");
-	
+
 	try {
 		UPDATE_TRACE_POINT();
 		Server server(FEEDBACK_FD, webServerPid, tempDir,
@@ -347,7 +347,7 @@ main(int argc, char *argv[]) {
 			passengerRoot, rubyCommand, generationNumber,
 			maxPoolSize, maxInstancesPerApp, poolIdleTime,
 			options);
-		
+
 		UPDATE_TRACE_POINT();
 		server.mainLoop();
 	} catch (const tracable_exception &e) {
@@ -360,6 +360,6 @@ main(int argc, char *argv[]) {
 		P_ERROR("Unknown exception thrown in main thread.");
 		throw;
 	}
-	
+
 	return 0;
 }

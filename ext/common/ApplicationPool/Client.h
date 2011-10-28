@@ -88,18 +88,18 @@ protected:
 		 */
 		FileDescriptor fd;
 		MessageChannel channel;
-		
+
 		SharedData(FileDescriptor _fd): fd(_fd), channel(fd) { }
-		
+
 		~SharedData() {
 			TRACE_POINT();
 			disconnect();
 		}
-		
+
 		bool connected() const {
 			return fd != -1;
 		}
-		
+
 		/**
 		 * Disconnect from the ApplicationPool server.
 		 */
@@ -110,9 +110,9 @@ protected:
 			channel = MessageChannel();
 		}
 	};
-	
+
 	typedef shared_ptr<SharedData> SharedDataPtr;
-	
+
 	/**
 	 * A communication stub for the Session object on the ApplicationPool server.
 	 * This class is not guaranteed to be thread-safe.
@@ -124,11 +124,11 @@ protected:
 		string socketType;
 		string socketName;
 		int id;
-		
+
 		/** The session's socket connection to the process. */
 		int fd;
 		bool isInitiated;
-		
+
 	public:
 		RemoteSession(SharedDataPtr data, pid_t pid, const string &socketType,
 		              const string &socketName, const string &detachKey,
@@ -146,21 +146,21 @@ protected:
 			fd = -1;
 			isInitiated = false;
 		}
-		
+
 		virtual ~RemoteSession() {
 			closeStream();
 			if (data->connected()) {
 				data->channel.write("close", toString(id).c_str(), NULL);
 			}
 		}
-		
+
 		virtual void initiate() {
 			TRACE_POINT();
 			if (socketType == "unix") {
 				fd = connectToUnixServer(socketName.c_str());
 			} else {
 				vector<string> args;
-				
+
 				split(socketName, ':', args);
 				if (args.size() != 2 || atoi(args[1]) == 0) {
 					throw IOException("Invalid TCP/IP address '" + socketName + "'");
@@ -169,11 +169,11 @@ protected:
 			}
 			isInitiated = true;
 		}
-		
+
 		virtual bool initiated() const {
 			return isInitiated;
 		}
-		
+
 		virtual string getSocketType() const {
 			return socketType;
 		}
@@ -181,19 +181,19 @@ protected:
 		virtual string getSocketName() const {
 			return socketName;
 		}
-		
+
 		virtual int getStream() const {
 			return fd;
 		}
-		
+
 		virtual void setReaderTimeout(unsigned int msec) {
 			MessageChannel(fd).setReadTimeout(msec);
 		}
-		
+
 		virtual void setWriterTimeout(unsigned int msec) {
 			MessageChannel(fd).setWriteTimeout(msec);
 		}
-		
+
 		virtual void shutdownReader() {
 			if (fd != -1) {
 				int ret = syscalls::shutdown(fd, SHUT_RD);
@@ -203,7 +203,7 @@ protected:
 				}
 			}
 		}
-		
+
 		virtual void shutdownWriter() {
 			if (fd != -1) {
 				int ret = syscalls::shutdown(fd, SHUT_WR);
@@ -213,7 +213,7 @@ protected:
 				}
 			}
 		}
-		
+
 		virtual void closeStream() {
 			if (fd != -1) {
 				int ret = syscalls::close(fd);
@@ -229,31 +229,31 @@ protected:
 				}
 			}
 		}
-		
+
 		virtual void discardStream() {
 			fd = -1;
 		}
-		
+
 		virtual pid_t getPid() const {
 			return pid;
 		}
 	};
-	
+
 	/** @invariant data != NULL */
 	SharedDataPtr data;
-	
+
 	/* sendUsername() and sendPassword() exist and are virtual in order to facilitate unit testing. */
-	
+
 	virtual void sendUsername(MessageChannel &channel, const string &username) {
 		TRACE_POINT();
 		channel.writeScalar(username);
 	}
-	
+
 	virtual void sendPassword(MessageChannel &channel, const StaticString &userSuppliedPassword) {
 		TRACE_POINT();
 		channel.writeScalar(userSuppliedPassword.c_str(), userSuppliedPassword.size());
 	}
-	
+
 	/**
 	 * Authenticate to the server with the given username and password.
 	 *
@@ -266,10 +266,10 @@ protected:
 		TRACE_POINT();
 		MessageChannel &channel(data->channel);
 		vector<string> args;
-		
+
 		sendUsername(channel, username);
 		sendPassword(channel, userSuppliedPassword);
-		
+
 		UPDATE_TRACE_POINT();
 		if (!channel.read(args)) {
 			throw IOException("The ApplicationPool server did not send an authentication response.");
@@ -279,7 +279,7 @@ protected:
 			throw SecurityException("The ApplicationPool server denied authentication: " + args[0]);
 		}
 	}
-	
+
 	void checkConnection() const {
 		if (data == NULL) {
 			throw RuntimeException("connect() hasn't been called on this ApplicationPool::Client instance.");
@@ -287,10 +287,10 @@ protected:
 			throw IOException("The connection to the ApplicationPool server is closed.");
 		}
 	}
-	
+
 	bool checkSecurityResponse() const {
 		vector<string> args;
-		
+
 		if (data->channel.read(args)) {
 			if (args[0] == "SecurityException") {
 				throw SecurityException(args[1]);
@@ -303,13 +303,13 @@ protected:
 			return false;
 		}
 	}
-	
+
 	void sendGetCommand(const PoolOptions &options, vector<string> &reply) {
 		TRACE_POINT();
 		MessageChannel &channel(data->channel);
 		bool result;
 		bool serverMightNeedEnvironmentVariables = true;
-		
+
 		/* Send a 'get' request to the ApplicationPool server.
 		 * For efficiency reasons, we do not send the data for
 		 * options.environmentVariables over the wire yet until
@@ -317,7 +317,7 @@ protected:
 		 */
 		try {
 			vector<string> args;
-			
+
 			args.push_back("get");
 			options.toVector(args, false);
 			channel.write(args);
@@ -325,7 +325,7 @@ protected:
 			this_thread::disable_syscall_interruption dsi;
 			UPDATE_TRACE_POINT();
 			data->disconnect();
-			
+
 			e.setBriefMessage("Could not send the 'get' command to the ApplicationPool server: " +
 				e.brief());
 			throw;
@@ -335,7 +335,7 @@ protected:
 			data->disconnect();
 			throw;
 		}
-		
+
 		/* Now check the security response... */
 		UPDATE_TRACE_POINT();
 		try {
@@ -344,7 +344,7 @@ protected:
 			this_thread::disable_syscall_interruption dsi;
 			UPDATE_TRACE_POINT();
 			data->disconnect();
-			
+
 			e.setBriefMessage("Could not read security response for the 'get' command from the ApplicationPool server: " +
 				e.brief());
 			throw;
@@ -357,7 +357,7 @@ protected:
 			data->disconnect();
 			throw;
 		}
-		
+
 		/* After the security response, the first few replies from the server might
 		 * be for requesting environment variables in the pool options object, so
 		 * keep handling these requests until we receive a different reply.
@@ -385,7 +385,7 @@ protected:
 					"closed the connection while we're reading a response "
 					"for the 'get' command.");
 			}
-			
+
 			if (reply[0] == "getEnvironmentVariables") {
 				try {
 					if (options.environmentVariables) {
@@ -413,7 +413,7 @@ protected:
 			}
 		}
 	}
-	
+
 public:
 	/**
 	 * Create a new ApplicationPool::Client object. It doesn't actually connect to the server until
@@ -425,7 +425,7 @@ public:
 		 * virtual methods in the constructor. :-(
 		 */
 	}
-	
+
 	/**
 	 * Connect to the given ApplicationPool server. You may only call this method once per
 	 * instance.
@@ -447,7 +447,7 @@ public:
 		FileDescriptor fd = connectToUnixServer(socketFilename.c_str());
 		UPDATE_TRACE_POINT();
 		data = ptr(new SharedData(fd));
-		
+
 		UPDATE_TRACE_POINT();
 		vector<string> args;
 		if (!data->channel.read(args)) {
@@ -461,25 +461,25 @@ public:
 				args[1] + ".";
 			throw IOException(message);
 		}
-		
+
 		UPDATE_TRACE_POINT();
 		authenticate(username, userSuppliedPassword);
 		return this;
 	}
-	
+
 	virtual bool connected() const {
 		if (data == NULL) {
 			throw RuntimeException("connect() hasn't been called on this ApplicationPool::Client instance.");
 		}
 		return data->connected();
 	}
-	
+
 	virtual bool detach(const string &detachKey) {
 		TRACE_POINT();
 		checkConnection();
 		MessageChannel &channel(data->channel);
 		vector<string> args;
-		
+
 		try {
 			channel.write("detach", detachKey.c_str(), NULL);
 			checkSecurityResponse();
@@ -497,7 +497,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	virtual void clear() {
 		TRACE_POINT();
 		checkConnection();
@@ -514,7 +514,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	virtual void setMaxIdleTime(unsigned int seconds) {
 		TRACE_POINT();
 		checkConnection();
@@ -531,7 +531,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	virtual void setMax(unsigned int max) {
 		TRACE_POINT();
 		checkConnection();
@@ -548,13 +548,13 @@ public:
 			throw;
 		}
 	}
-	
+
 	virtual unsigned int getActive() const {
 		TRACE_POINT();
 		checkConnection();
 		MessageChannel &channel(data->channel);
 		vector<string> args;
-		
+
 		try {
 			channel.write("getActive", NULL);
 			checkSecurityResponse();
@@ -569,13 +569,13 @@ public:
 			throw;
 		}
 	}
-	
+
 	virtual unsigned int getCount() const {
 		TRACE_POINT();
 		checkConnection();
 		MessageChannel &channel(data->channel);
 		vector<string> args;
-		
+
 		try {
 			channel.write("getCount", NULL);
 			checkSecurityResponse();
@@ -590,13 +590,13 @@ public:
 			throw;
 		}
 	}
-	
+
 	virtual unsigned int getGlobalQueueSize() const {
 		TRACE_POINT();
 		checkConnection();
 		MessageChannel &channel(data->channel);
 		vector<string> args;
-		
+
 		try {
 			channel.write("getGlobalQueueSize", NULL);
 			checkSecurityResponse();
@@ -611,12 +611,12 @@ public:
 			throw;
 		}
 	}
-	
+
 	virtual void setMaxPerApp(unsigned int max) {
 		TRACE_POINT();
 		checkConnection();
 		MessageChannel &channel(data->channel);
-		
+
 		try {
 			channel.write("setMaxPerApp", toString(max).c_str(), NULL);
 			checkSecurityResponse();
@@ -629,13 +629,13 @@ public:
 			throw;
 		}
 	}
-	
+
 	virtual pid_t getSpawnServerPid() const {
 		TRACE_POINT();
 		checkConnection();
 		MessageChannel &channel(data->channel);
 		vector<string> args;
-		
+
 		try {
 			channel.write("getSpawnServerPid", NULL);
 			checkSecurityResponse();
@@ -650,13 +650,13 @@ public:
 			throw;
 		}
 	}
-	
+
 	virtual string inspect() const {
 		TRACE_POINT();
 		checkConnection();
 		MessageChannel &channel(data->channel);
 		string result;
-		
+
 		try {
 			channel.write("inspect", NULL);
 			checkSecurityResponse();
@@ -673,13 +673,13 @@ public:
 			throw;
 		}
 	}
-	
+
 	virtual string toXml(bool includeSensitiveInformation = true) const {
 		TRACE_POINT();
 		checkConnection();
 		MessageChannel &channel(data->channel);
 		string result;
-		
+
 		try {
 			channel.write("toXml", includeSensitiveInformation ? "true" : "false", NULL);
 			checkSecurityResponse();
@@ -694,7 +694,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	virtual SessionPtr get(const PoolOptions &options) {
 		TRACE_POINT();
 		MessageChannel &channel(data->channel);
@@ -702,11 +702,11 @@ public:
 		vector<string> reply;
 		bool result;
 		unsigned int attempts = 0;
-		
+
 		while (true) {
 			attempts++;
 			sendGetCommand(options, reply);
-			
+
 			if (reply[0] == "ok") {
 				UPDATE_TRACE_POINT();
 				pid_t pid = (pid_t) atol(reply[1]);
@@ -716,7 +716,7 @@ public:
 				string connectPassword = reply[5];
 				string gupid = reply[6];
 				int sessionID = atoi(reply[7]);
-				
+
 				SessionPtr session(new RemoteSession(data, pid, socketType, socketName,
 					detachKey, connectPassword, gupid, sessionID));
 				if (options.initiateSession) {

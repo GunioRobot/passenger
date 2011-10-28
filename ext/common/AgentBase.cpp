@@ -112,7 +112,7 @@ appendULL(char *buf, unsigned long long value) {
 		remainder = remainder / 10;
 		size++;
 	} while (remainder != 0);
-	
+
 	reverse(buf, size);
 	return buf + size;
 }
@@ -145,21 +145,21 @@ appendSignalReason(char *buf, siginfo_t *info) {
 		buf = appendULL(buf, (unsigned long long) info->si_code);
 		break;
 	}
-	
+
 	if (info->si_code <= 0) {
 		buf = appendText(buf, ", signal sent by PID ");
 		buf = appendULL(buf, (unsigned long long) info->si_pid);
 		buf = appendText(buf, " with UID ");
 		buf = appendULL(buf, (unsigned long long) info->si_uid);
 	}
-	
+
 	return buf;
 }
 
 static void
 abortHandler(int signo, siginfo_t *info, void *ctx) {
 	pid_t pid = getpid();
-	
+
 	char *end = messageBuf;
 	end = appendText(end, "[ pid=");
 	end = appendULL(end, (unsigned long long) pid);
@@ -169,7 +169,7 @@ abortHandler(int signo, siginfo_t *info, void *ctx) {
 	end = appendULL(end, (unsigned long long) signo);
 	end = appendText(end, ", reason=");
 	end = appendSignalReason(end, info);
-	
+
 	// It is important that writing the message and the backtrace are two
 	// seperate operations because it's not entirely clear whether the
 	// latter is async signal safe and thus can crash.
@@ -179,7 +179,7 @@ abortHandler(int signo, siginfo_t *info, void *ctx) {
 		end = appendText(end, "\n");
 	#endif
 	write(STDERR_FILENO, messageBuf, end - messageBuf);
-	
+
 	#ifdef LIBC_HAS_BACKTRACE_FUNC
 		/* For some reason, it would appear that the ABRT signal
 		 * handler has a deadline on some systems: the process will
@@ -207,7 +207,7 @@ abortHandler(int signo, siginfo_t *info, void *ctx) {
 			end = appendText(end, " frames:\n");
 			write(STDERR_FILENO, messageBuf, end - messageBuf);
 			backtrace_symbols_fd(backtraceStore, frames, STDERR_FILENO);
-			
+
 			end = messageBuf;
 			end = appendText(end, "--------------------------------------\n");
 			end = appendText(end, "[ pid=");
@@ -215,7 +215,7 @@ abortHandler(int signo, siginfo_t *info, void *ctx) {
 			end = appendText(end, " ] Dumping a more detailed backtrace with crash-watch "
 				"('gem install crash-watch' if you don't have it)...\n");
 			write(STDERR_FILENO, messageBuf, end - messageBuf);
-			
+
 			end = messageBuf;
 			end = appendText(end, "crash-watch --dump ");
 			end = appendULL(end, (unsigned long long) getpid());
@@ -224,7 +224,7 @@ abortHandler(int signo, siginfo_t *info, void *ctx) {
 			_exit(1);
 		}
 	#endif
-	
+
 	// Run default signal handler.
 	kill(getpid(), SIGABRT);
 }
@@ -247,13 +247,13 @@ VariantMap
 initializeAgent(int argc, char *argv[], const char *processName) {
 	TRACE_POINT();
 	VariantMap options;
-	
+
 	ignoreSigpipe();
 	installAbortHandler();
 	setup_syscall_interruption_support();
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
-	
+
 	try {
 		if (argc == 1) {
 			int ret = fcntl(FEEDBACK_FD, F_GETFL);
@@ -281,7 +281,7 @@ initializeAgent(int argc, char *argv[], const char *processName) {
 		} else {
 			options.readFrom((const char **) argv + 1, argc - 1);
 		}
-		
+
 		setLogLevel(options.getInt("log_level", false, 0));
 		if (!options.get("debug_log_file", false).empty()) {
 			if (strcmp(processName, "PassengerWatchdog") == 0) {
@@ -291,14 +291,14 @@ initializeAgent(int argc, char *argv[], const char *processName) {
 				 */
 				string filename = options.get("debug_log_file");
 				options.erase("debug_log_file");
-				
+
 				int fd = open(filename.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
 				if (fd == -1) {
 					int e = errno;
 					throw FileSystemException("Cannot open debug log file " +
 						filename, e, filename);
 				}
-				
+
 				dup2(fd, STDOUT_FILENO);
 				dup2(fd, STDERR_FILENO);
 				close(fd);
@@ -310,13 +310,13 @@ initializeAgent(int argc, char *argv[], const char *processName) {
 		P_ERROR("*** ERROR: " << e.what() << "\n" << e.backtrace());
 		exit(1);
 	}
-	
+
 	// Change process title.
 	strncpy(argv[0], processName, strlen(argv[0]));
 	for (int i = 1; i < argc; i++) {
 		memset(argv[i], '\0', strlen(argv[i]));
 	}
-	
+
 	return options;
 }
 

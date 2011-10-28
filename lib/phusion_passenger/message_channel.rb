@@ -48,11 +48,11 @@ module PhusionPassenger
 #  a, b = IO.pipe
 #  channel1 = MessageChannel.new(a)
 #  channel2 = MessageChannel.new(b)
-#  
+#
 #  # Send an array message.
 #  channel2.write("hello", "world !!")
 #  channel1.read    # => ["hello", "world !!"]
-#  
+#
 #  # Send a scalar message.
 #  channel2.write_scalar("some long string which can contain arbitrary binary data")
 #  channel1.read_scalar
@@ -77,10 +77,10 @@ class MessageChannel
 	DELIMITER_NAME = "null byte"     # :nodoc:
 	UINT16_PACK_FORMAT = "n"         # :nodoc:
 	UINT32_PACK_FORMAT = "N"         # :nodoc:
-	
+
 	class InvalidHashError < StandardError
 	end
-	
+
 	# The wrapped IO object.
 	attr_accessor :io
 
@@ -90,7 +90,7 @@ class MessageChannel
 		# Make it binary just in case.
 		@io.binmode if @io
 	end
-	
+
 	# Read an array message from the underlying file descriptor.
 	# Returns the array message as an array, or nil when end-of-stream has
 	# been reached.
@@ -110,7 +110,7 @@ class MessageChannel
 				buffer << tmp
 			end
 		end
-		
+
 		chunk_size = buffer.unpack(UINT16_PACK_FORMAT)[0]
 		if !@io.read(chunk_size, buffer)
 			return nil
@@ -123,7 +123,7 @@ class MessageChannel
 				buffer << tmp
 			end
 		end
-		
+
 		message = []
 		offset = 0
 		delimiter_pos = buffer.index(DELIMITER, offset)
@@ -140,7 +140,7 @@ class MessageChannel
 	rescue Errno::ECONNRESET
 		return nil
 	end
-	
+
 	# Read an array message from the underlying file descriptor and return the
 	# result as a hash instead of an array. This assumes that the array message
 	# has an even number of elements.
@@ -161,7 +161,7 @@ class MessageChannel
 				buffer << tmp
 			end
 		end
-		
+
 		chunk_size = buffer.unpack(UINT16_PACK_FORMAT)[0]
 		if !@io.read(chunk_size, buffer)
 			return nil
@@ -174,7 +174,7 @@ class MessageChannel
 				buffer << tmp
 			end
 		end
-		
+
 		result = {}
 		offset = 0
 		delimiter_pos = buffer.index(DELIMITER, offset)
@@ -184,7 +184,7 @@ class MessageChannel
 			else
 				name = buffer[offset .. delimiter_pos - 1]
 			end
-			
+
 			offset = delimiter_pos + 1
 			delimiter_pos = buffer.index(DELIMITER, offset)
 			if delimiter_pos.nil?
@@ -194,7 +194,7 @@ class MessageChannel
 			else
 				value = buffer[offset .. delimiter_pos - 1]
 			end
-			
+
 			result[name] = value
 			offset = delimiter_pos + 1
 			delimiter_pos = buffer.index(DELIMITER, offset)
@@ -229,7 +229,7 @@ class MessageChannel
 				buffer << tmp
 			end
 		end
-		
+
 		size = buffer.unpack(UINT32_PACK_FORMAT)[0]
 		if size == 0
 			buffer.replace('')
@@ -257,7 +257,7 @@ class MessageChannel
 	rescue Errno::ECONNRESET
 		return nil
 	end
-	
+
 	# Send an array message, which consists of the given elements, over the underlying
 	# file descriptor. _name_ is the first element in the message, and _args_ are the
 	# other elements. These arguments will internally be converted to strings by calling
@@ -270,7 +270,7 @@ class MessageChannel
 		args.each do |arg|
 			check_argument(arg)
 		end
-		
+
 		message = "#{name}#{DELIMITER}"
 		args.each do |arg|
 			message << arg.to_s << DELIMITER
@@ -278,7 +278,7 @@ class MessageChannel
 		@io.write([message.size].pack('n') << message)
 		@io.flush
 	end
-	
+
 	# Send a scalar message over the underlying IO object.
 	#
 	# Might raise SystemCallError, IOError or SocketError when something
@@ -287,7 +287,7 @@ class MessageChannel
 		@io.write([data.size].pack('N') << data)
 		@io.flush
 	end
-	
+
 	# Receive an IO object (a file descriptor) from the channel. The other
 	# side must have sent an IO object by calling send_io(). Note that
 	# this only works on Unix sockets.
@@ -300,7 +300,7 @@ class MessageChannel
 		write("got IO") if negotiate
 		return io
 	end
-	
+
 	# Send an IO object (a file descriptor) over the channel. The other
 	# side must receive the IO object by calling recv_io(). Note that
 	# this only works on Unix sockets.
@@ -349,18 +349,18 @@ class MessageChannel
 			end
 		end
 	end
-	
+
 	# Return the file descriptor of the underlying IO object.
 	def fileno
 		return @io.fileno
 	end
-	
+
 	# Close the underlying IO stream. Might raise SystemCallError or
 	# IOError when something goes wrong.
 	def close
 		@io.close
 	end
-	
+
 	# Checks whether the underlying IO stream is closed.
 	def closed?
 		return @io.closed?
@@ -372,7 +372,7 @@ private
 			raise ArgumentError, "Message name and arguments may not contain #{DELIMITER_NAME}."
 		end
 	end
-	
+
 	if defined?(ByteString)
 		def new_buffer
 			return ByteString.new

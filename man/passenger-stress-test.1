@@ -1,43 +1,43 @@
 .TH "passenger-stress-test" "1" "2.0" "Phusion Passenger" "User Commands"
 .SH "NAME"
-.LP 
+.LP
 passenger\-stress\-test \- stress tests a Phusion Passenger powered website.
 .SH "SYNOPSIS"
-.LP 
+.LP
 \fBpassenger\-stress\-test\fR <\fIhostname\fR> <\fIapp_roo\fRt> [\fIoptions\fR]
 .SH "DESCRIPTION"
-.LP 
+.LP
 Stress test the given (Phusion Passenger\-powered) website by
-.LP 
+.LP
 \- crawling it with multiple concurrently running crawlers.
-.LP   
+.LP
 \- gracefully restarting Apache at random times
-.LP 
+.LP
 \- restarting the target (Phusion Passenger\-powered) application at random times
 .SH "OPTIONS"
-.LP 
-.TP 
+.LP
+.TP
 \fB\-c, \-\-concurrency\fR <\fInumber\fR>
 Number of crawlers to start (default = 20)
-.TP 
+.TP
 \fB\-p, \-\-apache\-restart\-interval\fR <\fIinterval\fR>
 Gracefully restart Apache after <\fIinterval\fR> minutes (default = 1440)
-.TP 
+.TP
 \fB\-a, \-\-app\-restart\-interval\fR <\fIinterval\fR>
 Restart the application after <\fIinterval\fR> minutes (default = 55)
-.TP 
+.TP
 \fB\-h, \-\-help\fR
 Output help information and exit.
 
 .SH "SEE ALSO"
-.LP 
+.LP
 passenger\-config(1), passenger\-memory\-stats(8), passenger\-status(8)
-.LP 
+.LP
 User guide at http://www.modrails.com/documentation.html
 .SH "AUTHOR"
-.LP 
+.LP
 Phusion Passenger is written by Phusion (http://www.phusion.nl)
-.LP 
+.LP
 "Phusion" and "Phusion Passenger" are trademarks of Hongli Lai & Ninh Bui.
-.LP 
-This manual page was written by Neil Wilson <neil@brightbox.co.uk> for the Ubuntu project (but may be used by others). 
+.LP
+This manual page was written by Neil Wilson <neil@brightbox.co.uk> for the Ubuntu project (but may be used by others).

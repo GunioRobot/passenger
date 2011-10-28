@@ -31,7 +31,7 @@ namespace boost
     {
     private:
         mutex(mutex const&);
-        mutex& operator=(mutex const&);        
+        mutex& operator=(mutex const&);
         pthread_mutex_t m;
     public:
         mutex()
@@ -50,7 +50,7 @@ namespace boost
                 ret = pthread_mutex_destroy(&m);
             } while(ret==EINTR);
         }
-        
+
         void lock()
         {
             int res;
@@ -72,7 +72,7 @@ namespace boost
             } while (ret==EINTR);
             BOOST_VERIFY(!ret);
         }
-        
+
         bool try_lock()
         {
             int res;
@@ -102,7 +102,7 @@ namespace boost
     {
     private:
         timed_mutex(timed_mutex const&);
-        timed_mutex& operator=(timed_mutex const&);        
+        timed_mutex& operator=(timed_mutex const&);
     private:
         pthread_mutex_t m;
 #ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
@@ -155,7 +155,7 @@ namespace boost
         {
             BOOST_VERIFY(!pthread_mutex_unlock(&m));
         }
-        
+
         bool try_lock()
         {
             int const res=pthread_mutex_trylock(&m);
@@ -193,7 +193,7 @@ namespace boost
             is_locked=false;
             BOOST_VERIFY(!pthread_cond_signal(&cond));
         }
-        
+
         bool try_lock()
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);

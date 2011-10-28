@@ -71,22 +71,22 @@ private:
 	bool baseURIKnown;
 	const char *baseURI;
 	ApplicationType appType;
-	
+
 	inline bool shouldAutoDetectRails() {
 		return config->autoDetectRails == DirConfig::ENABLED ||
 			config->autoDetectRails == DirConfig::UNSET;
 	}
-	
+
 	inline bool shouldAutoDetectRack() {
 		return config->autoDetectRack == DirConfig::ENABLED ||
 			config->autoDetectRack == DirConfig::UNSET;
 	}
-	
+
 	inline bool shouldAutoDetectWSGI() {
 		return config->autoDetectWSGI == DirConfig::ENABLED ||
 			config->autoDetectWSGI == DirConfig::UNSET;
 	}
-	
+
 public:
 	/**
 	 * Create a new DirectoryMapper object.
@@ -106,7 +106,7 @@ public:
 		baseURIKnown = false;
 		baseURI = NULL;
 	}
-	
+
 	/**
 	 * Determine whether the given HTTP request falls under one of the specified
 	 * RailsBaseURIs or RackBaseURIs. If yes, then the first matching base URI will
@@ -129,16 +129,16 @@ public:
 		if (baseURIKnown) {
 			return baseURI;
 		}
-		
+
 		set<string>::const_iterator it;
 		const char *uri = r->uri;
 		size_t uri_len = strlen(uri);
-		
+
 		if (uri_len == 0 || uri[0] != '/') {
 			baseURIKnown = true;
 			return NULL;
 		}
-		
+
 		UPDATE_TRACE_POINT();
 		for (it = config->railsBaseURIs.begin(); it != config->railsBaseURIs.end(); it++) {
 			const string &base(*it);
@@ -153,7 +153,7 @@ public:
 				return baseURI;
 			}
 		}
-		
+
 		UPDATE_TRACE_POINT();
 		for (it = config->rackBaseURIs.begin(); it != config->rackBaseURIs.end(); it++) {
 			const string &base(*it);
@@ -168,7 +168,7 @@ public:
 				return baseURI;
 			}
 		}
-		
+
 		UPDATE_TRACE_POINT();
 		if (shouldAutoDetectRack()
 		 && verifyRackDir(config->getAppRoot(ap_document_root(r)), cstat, throttleRate)) {
@@ -177,7 +177,7 @@ public:
 			appType = RACK;
 			return baseURI;
 		}
-		
+
 		UPDATE_TRACE_POINT();
 		if (shouldAutoDetectRails()
 		 && verifyRailsDir(config->getAppRoot(ap_document_root(r)), cstat, throttleRate)) {
@@ -186,7 +186,7 @@ public:
 			appType = RAILS;
 			return baseURI;
 		}
-		
+
 		UPDATE_TRACE_POINT();
 		if (shouldAutoDetectWSGI()
 		 && verifyWSGIDir(config->getAppRoot(ap_document_root(r)), cstat, throttleRate)) {
@@ -195,11 +195,11 @@ public:
 			appType = WSGI;
 			return baseURI;
 		}
-		
+
 		baseURIKnown = true;
 		return NULL;
 	}
-	
+
 	/**
 	 * Returns the filename of the 'public' directory of the Rails/Rack application
 	 * that's associated with the HTTP request.
@@ -216,7 +216,7 @@ public:
 		if (baseURI == NULL) {
 			return "";
 		}
-		
+
 		const char *docRoot = ap_document_root(r);
 		size_t len = strlen(docRoot);
 		if (len > 0) {
@@ -238,7 +238,7 @@ public:
 			return "";
 		}
 	}
-	
+
 	/**
 	 * Returns the application type that's associated with the HTTP request.
 	 *
@@ -250,7 +250,7 @@ public:
 		}
 		return appType;
 	}
-	
+
 	/**
 	 * Returns the application type (as a string) that's associated
 	 * with the HTTP request.

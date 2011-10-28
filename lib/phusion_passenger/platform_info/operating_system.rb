@@ -37,7 +37,7 @@ module PlatformInfo
 		end
 	end
 	memoize :os_name
-	
+
 	# The current platform's shared library extension ('so' on most Unices).
 	def self.library_extension
 		if RUBY_PLATFORM =~ /darwin/
@@ -46,7 +46,7 @@ module PlatformInfo
 			return "so"
 		end
 	end
-	
+
 	# Returns a list of all CPU architecture names that the current machine CPU
 	# supports. If there are multiple such architectures then the first item in
 	# the result denotes that OS runtime's main/preferred architecture.
@@ -106,7 +106,7 @@ module PlatformInfo
 			elsif arch == "amd64"
 				arch = "x86_64"
 			end
-			
+
 			if arch == "x86"
 				# Most x86 operating systems nowadays are probably running on
 				# a CPU that supports both x86 and x86_64, but we're not gonna
@@ -123,7 +123,7 @@ module PlatformInfo
 		end
 	end
 	memoize :cpu_architectures, true
-	
+
 	# Returns whether the OS's main CPU architecture supports the
 	# x86/x86_64 sfence instruction.
 	def self.supports_sfence_instruction?
@@ -138,7 +138,7 @@ module PlatformInfo
 			}))
 	end
 	memoize :supports_sfence_instruction?, true
-	
+
 	# Returns whether the OS's main CPU architecture supports the
 	# x86/x86_64 lfence instruction.
 	def self.supports_lfence_instruction?

@@ -148,7 +148,7 @@
 #  define BOOST_NO_DECLTYPE
 #  define BOOST_NO_EXPLICIT_CONVERSION_OPERATORS
 #  define BOOST_NO_EXTERN_TEMPLATE
-#  define BOOST_NO_RVALUE_REFERENCES 
+#  define BOOST_NO_RVALUE_REFERENCES
 #  define BOOST_NO_SCOPED_ENUMS
 #  define BOOST_NO_STATIC_ASSERT
 #else
@@ -231,7 +231,7 @@
 // all versions support __declspec:
 //
 #if defined(__STRICT_ANSI__)
-// config/platform/win32.hpp will define BOOST_SYMBOL_EXPORT, etc., unless already defined  
+// config/platform/win32.hpp will define BOOST_SYMBOL_EXPORT, etc., unless already defined
 #  define BOOST_SYMBOL_EXPORT
 #endif
 //

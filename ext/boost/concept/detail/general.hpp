@@ -45,7 +45,7 @@ struct constraint
 {
     static void failed() { ((Model*)0)->constraints(); }
 };
-  
+
 template <class Model>
 struct requirement_<void(*)(Model)>
   : mpl::if_<
@@ -54,7 +54,7 @@ struct requirement_<void(*)(Model)>
       , requirement<failed ************ Model::************>
     >::type
 {};
-  
+
 # else
 
 // For GCC-2.x, these can't have exactly the same name
@@ -62,7 +62,7 @@ template <class Model>
 struct requirement_<void(*)(Model)>
     : requirement<failed ************ Model::************>
 {};
-  
+
 # endif
 
 #  define BOOST_CONCEPT_ASSERT_FN( ModelFnPtr )             \

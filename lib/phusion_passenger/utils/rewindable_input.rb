@@ -20,32 +20,32 @@ module Utils
       @rewindable_io = nil
       @unlinked = false
     end
-    
+
     def gets
       make_rewindable unless @rewindable_io
       @rewindable_io.gets
     end
-    
+
     def read(*args)
       make_rewindable unless @rewindable_io
       @rewindable_io.read(*args)
     end
-    
+
     def each(&block)
       make_rewindable unless @rewindable_io
       @rewindable_io.each(&block)
     end
-    
+
     def rewind
       make_rewindable unless @rewindable_io
       @rewindable_io.rewind
     end
-    
+
     def size
       make_rewindable unless @rewindable_io
       @rewindable_io.size
     end
-    
+
     # Closes this RewindableInput object without closing the originally
     # wrapped IO oject. Cleans up any temporary resources that this RewindableInput
     # has created.
@@ -61,9 +61,9 @@ module Utils
         @rewindable_io = nil
       end
     end
-    
+
     private
-    
+
     if RUBY_VERSION < '1.9.0'
       # Many Ruby 1.8's tempfile libraries have a bug that can cause
       # the #close method to raise an exception. Subclass it and fix
@@ -91,7 +91,7 @@ module Utils
         @rewindable_io.unlink
         @unlinked = true
       end
-      
+
       buffer = ""
       while @io.read(1024 * 4, buffer)
         entire_buffer_written_out = false
@@ -105,11 +105,11 @@ module Utils
       end
       @rewindable_io.rewind
     end
-    
+
     def filesystem_has_posix_semantics?
       RUBY_PLATFORM !~ /(mswin|mingw|cygwin|java)/
     end
-    
+
     def tempfile_unlink_contains_bug?
       # The tempfile library as included in Ruby 1.9.1-p152 and later
       # contains a bug: unlinking an open Tempfile object also closes

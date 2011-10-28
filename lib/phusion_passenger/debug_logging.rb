@@ -30,18 +30,18 @@ module DebugLogging
 	@@log_device = nil
 	@@log_filename = nil
 	@@stderr_evaluator = lambda { STDERR }
-	
+
 	def self.included(klass)
 		klass.class_eval do
 			private :debug
 			private :trace
 		end
 	end
-	
+
 	def self.log_level=(level)
 		@@log_level = level
 	end
-	
+
 	def self.log_file=(filename)
 		if filename && filename.empty?
 			@@log_filename = nil
@@ -51,11 +51,11 @@ module DebugLogging
 		@@log_device.close if @@log_device && !@@log_device.closed?
 		@@log_device = nil
 	end
-	
+
 	def self._log_device
 		return @@log_device
 	end
-	
+
 	def self.stderr_evaluator=(block)
 		if block
 			@@stderr_evaluator = block
@@ -63,22 +63,22 @@ module DebugLogging
 			@@stderr_evaluator = lambda { STDERR }
 		end
 	end
-	
+
 	def error(message)
 		trace(-1, message, 1)
 	end
 	module_function :error
-	
+
 	def warn(message)
 		trace(0, message, 1)
 	end
 	module_function :warn
-	
+
 	def debug(message)
 		trace(1, message, 1)
 	end
 	module_function :debug
-	
+
 	def trace(level, message, nesting_level = 0)
 		if @@log_level >= level
 			if @@log_filename

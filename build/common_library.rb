@@ -90,24 +90,24 @@ def define_common_library_task(namespace, output_dir, extra_compiler_flags = nil
 		#	Blowfish.h
 		#	Blowfish.c)
 	}
-	
+
 	static_library = "#{output_dir}.a"
-	
+
 	# Define compilation targets for the object files in libpassenger_common.
 	flags =  "-Iext -Iext/common #{LIBEV_CFLAGS} #{extra_compiler_flags} "
 	flags << "#{PlatformInfo.portability_cflags} #{EXTRA_CXXFLAGS}"
-	
+
 	if boolean_option('RELEASE')
 		sources = []
 		components.each_pair do |object_name, dependencies|
 			sources << "ext/common/#{dependencies[0]}"
 		end
 		sources.sort!
-		
+
 		aggregate_source = "#{output_dir}/aggregate.cpp"
 		aggregate_object = "#{output_dir}/aggregate.o"
 		object_files     = [aggregate_object]
-		
+
 		file(aggregate_object => sources) do
 			sh "mkdir -p #{output_dir}" if !File.directory?(output_dir)
 			aggregate_content = %Q{
@@ -133,7 +133,7 @@ def define_common_library_task(namespace, output_dir, extra_compiler_flags = nil
 			dependencies = dependencies.map do |dep|
 				"ext/common/#{dep}"
 			end
-		
+
 			file object_file => dependencies do
 				sh "mkdir -p #{output_dir}" if !File.directory?(output_dir)
 				sh "mkdir -p #{output_dir}/Utils" if !File.directory?("#{output_dir}/Utils")
@@ -142,15 +142,15 @@ def define_common_library_task(namespace, output_dir, extra_compiler_flags = nil
 			end
 		end
 	end
-	
+
 	file(static_library => object_files) do
 		create_static_library(static_library, object_files.join(' '))
 	end
-	
+
 	task "#{namespace}:clean" do
 		sh "rm -rf #{static_library} #{output_dir}"
 	end
-	
+
 	return static_library
 end
 
@@ -158,15 +158,15 @@ end
 def define_libboost_oxt_task(namespace, output_dir, extra_compiler_flags = nil)
 	output_file = "#{output_dir}.a"
 	flags = "-Iext #{extra_compiler_flags} #{PlatformInfo.portability_cflags} #{EXTRA_CXXFLAGS}"
-	
+
 	if boolean_option('RELEASE')
 		sources = Dir['ext/boost/src/pthread/*.cpp'] + Dir['ext/oxt/*.cpp']
 		sources.sort!
-		
+
 		aggregate_source = "#{output_dir}/aggregate.cpp"
 		aggregate_object = "#{output_dir}/aggregate.o"
 		object_files     = [aggregate_object]
-		
+
 		file(aggregate_object => sources) do
 			sh "mkdir -p #{output_dir}" if !File.directory?(output_dir)
 			aggregate_content = %Q{
@@ -191,13 +191,13 @@ def define_libboost_oxt_task(namespace, output_dir, extra_compiler_flags = nil)
 			boost_output_dir  = "#{output_dir}/boost"
 			object_file = "#{boost_output_dir}/#{object_name}"
 			boost_object_files << object_file
-		
+
 			file object_file => source_file do
 				sh "mkdir -p #{boost_output_dir}" if !File.directory?(boost_output_dir)
 				compile_cxx(source_file, "#{flags} -o #{object_file}")
 			end
 		end
-		
+
 		# Define compilation targets for .cpp files in ext/oxt.
 		oxt_object_files = []
 		oxt_dependency_files = Dir["ext/oxt/*.hpp"] + Dir["ext/oxt/detail/*.hpp"]
@@ -212,19 +212,19 @@ def define_libboost_oxt_task(namespace, output_dir, extra_compiler_flags = nil)
 				compile_cxx(source_file, "#{flags} -o #{object_file}")
 			end
 		end
-		
+
 		object_files = boost_object_files + oxt_object_files
 	end
-	
+
 	file(output_file => object_files) do
 		sh "mkdir -p #{output_dir}"
 		create_static_library(output_file, object_files.join(' '))
 	end
-	
+
 	task "#{namespace}:clean" do
 		sh "rm -rf #{output_file} #{output_dir}"
 	end
-	
+
 	return output_file
 end
 
@@ -235,9 +235,9 @@ if USE_VENDORED_LIBEV
 	LIBEV_SOURCE_DIR = File.expand_path("../ext/libev", File.dirname(__FILE__)) + "/"
 	LIBEV_CFLAGS = "-Iext/libev"
 	LIBEV_LIBS = LIBEV_OUTPUT_DIR + ".libs/libev.a"
-	
+
 	task :libev => LIBEV_OUTPUT_DIR + ".libs/libev.a"
-	
+
 	dependencies = [
 		"ext/libev/configure",
 		"ext/libev/config.h.in",
@@ -247,13 +247,13 @@ if USE_VENDORED_LIBEV
 		sh "mkdir -p #{LIBEV_OUTPUT_DIR}" if !File.directory?(LIBEV_OUTPUT_DIR)
 		sh "cd #{LIBEV_OUTPUT_DIR} && sh #{LIBEV_SOURCE_DIR}configure --disable-shared --enable-static"
 	end
-	
+
 	libev_sources = Dir["ext/libev/{*.c,*.h}"]
 	file LIBEV_OUTPUT_DIR + ".libs/libev.a" => [LIBEV_OUTPUT_DIR + "Makefile"] + libev_sources do
 		sh "rm -f #{LIBEV_OUTPUT_DIR}/libev.la"
 		sh "cd #{LIBEV_OUTPUT_DIR} && make libev.la"
 	end
-	
+
 	task :clean do
 		if File.exist?(LIBEV_OUTPUT_DIR + "Makefile")
 			sh "cd #{LIBEV_OUTPUT_DIR} && make maintainer-clean"

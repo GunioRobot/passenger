@@ -43,28 +43,28 @@ using namespace boost;
 class SafeLibev {
 private:
 	typedef function<void ()> Callback;
-	
+
 	struct ev_loop *loop;
 	pthread_t loopThread;
 	ev_async async;
-	
+
 	boost::mutex syncher;
 	condition_variable cond;
 	vector<Callback> commands;
-	
+
 	static void asyncHandler(EV_P_ ev_async *w, int revents) {
 		SafeLibev *self = (SafeLibev *) w->data;
 		unique_lock<boost::mutex> l(self->syncher);
 		vector<Callback> commands = self->commands;
 		self->commands.clear();
 		l.unlock();
-		
+
 		vector<Callback>::const_iterator it, end = commands.end();
 		for (it = commands.begin(); it != commands.end(); it++) {
 			(*it)();
 		}
 	}
-	
+
 	template<typename Watcher>
 	void startWatcherAndNotify(Watcher *watcher, bool *done) {
 		watcher->set(loop);
@@ -73,7 +73,7 @@ private:
 		*done = true;
 		cond.notify_all();
 	}
-	
+
 	template<typename Watcher>
 	void stopWatcherAndNotify(Watcher *watcher, bool *done) {
 		watcher->stop();
@@ -81,7 +81,7 @@ private:
 		*done = true;
 		cond.notify_all();
 	}
-	
+
 public:
 	SafeLibev(struct ev_loop *loop) {
 		this->loop = loop;
@@ -90,15 +90,15 @@ public:
 		async.data = this;
 		ev_async_start(loop, &async);
 	}
-	
+
 	~SafeLibev() {
 		ev_async_stop(loop, &async);
 	}
-	
+
 	struct ev_loop *getLoop() const {
 		return loop;
 	}
-	
+
 	template<typename Watcher>
 	void start(Watcher &watcher) {
 		if (pthread_equal(pthread_self(), loopThread)) {
@@ -115,7 +115,7 @@ public:
 			}
 		}
 	}
-	
+
 	template<typename Watcher>
 	void stop(Watcher &watcher) {
 		if (pthread_equal(pthread_self(), loopThread)) {
@@ -131,7 +131,7 @@ public:
 			}
 		}
 	}
-	
+
 	void run(const Callback &callback) {
 		if (pthread_equal(pthread_self(), loopThread)) {
 			callback();

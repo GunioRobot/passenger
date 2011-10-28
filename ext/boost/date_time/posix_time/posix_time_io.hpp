@@ -53,7 +53,7 @@ namespace posix_time {
       std::use_facet<custom_ptime_facet>(os.getloc()).put(oitr, os, os.fill(), p);
     else {
       //instantiate a custom facet for dealing with times since the user
-      //has not put one in the stream so far.  This is for efficiency 
+      //has not put one in the stream so far.  This is for efficiency
       //since we would always need to reconstruct for every time period
       //if the locale did not already exist.  Of course this will be overridden
       //if the user imbues as some later point.
@@ -90,7 +90,7 @@ namespace posix_time {
       catch(...) {
         // mask tells us what exceptions are turned on
         std::ios_base::iostate exception_mask = is.exceptions();
-        // if the user wants exceptions on failbit, we'll rethrow our 
+        // if the user wants exceptions on failbit, we'll rethrow our
         // date_time exception & set the failbit
         if(std::ios_base::failbit & exception_mask) {
           try { is.setstate(std::ios_base::failbit); }
@@ -108,7 +108,7 @@ namespace posix_time {
 
 
   template <class CharT, class TraitsT>
-  inline 
+  inline
   std::basic_ostream<CharT, TraitsT>&
   operator<<(std::basic_ostream<CharT, TraitsT>& os,
              const boost::posix_time::time_period& p) {
@@ -121,7 +121,7 @@ namespace posix_time {
     }
     else {
       //instantiate a custom facet for dealing with periods since the user
-      //has not put one in the stream so far.  This is for efficiency 
+      //has not put one in the stream so far.  This is for efficiency
       //since we would always need to reconstruct for every time period
       //if the local did not already exist.  Of course this will be overridden
       //if the user imbues as some later point.
@@ -171,7 +171,7 @@ namespace posix_time {
   }
 
 
-  //! ostream operator for posix_time::time_duration 
+  //! ostream operator for posix_time::time_duration
   //  todo fix to use facet --  place holder for now...
   template <class CharT, class Traits>
   inline
@@ -186,7 +186,7 @@ namespace posix_time {
       std::use_facet<custom_ptime_facet>(os.getloc()).put(oitr, os, os.fill(), td);
     else {
       //instantiate a custom facet for dealing with times since the user
-      //has not put one in the stream so far.  This is for efficiency 
+      //has not put one in the stream so far.  This is for efficiency
       //since we would always need to reconstruct for every time period
       //if the locale did not already exist.  Of course this will be overridden
       //if the user imbues as some later point.

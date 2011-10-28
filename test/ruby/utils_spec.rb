@@ -13,7 +13,7 @@ module PhusionPassenger
 
 describe Utils do
 	include Utils
-	
+
 	specify "#close_all_io_objects_for_fds closes all IO objects that are associated with the given file descriptors" do
 		filename = "#{Dir.tmpdir}/passenger_test.#{Process.pid}.txt"
 		begin
@@ -30,7 +30,7 @@ describe Utils do
 			File.unlink(filename) rescue nil
 		end
 	end
-	
+
 	describe "#report_app_init_status" do
 		it "reports normal errors, which #unmarshal_and_raise_errors raises" do
 			a, b = IO.pipe
@@ -48,7 +48,7 @@ describe Utils do
 				b.close rescue nil
 			end
 		end
-		
+
 		it "reports SystemExit errors, which #unmarshal_and_raise_errors raises" do
 			a, b = IO.pipe
 			begin
@@ -65,20 +65,20 @@ describe Utils do
 				b.close rescue nil
 			end
 		end
-		
+
 		it "returns whether the block succeeded" do
 			channel = MessageChannel.new(StringIO.new)
 			success = report_app_init_status(channel) do
 				false
 			end
 			success.should be_true
-			
+
 			success = report_app_init_status(channel) do
 				raise StandardError, "hi"
 			end
 			success.should be_false
 		end
-		
+
 		it "reports all data written to STDERR and $stderr" do
 			a, b = IO.pipe
 			begin
@@ -91,7 +91,7 @@ describe Utils do
 					end
 				end
 				b.close
-				
+
 				begin
 					unmarshal_and_raise_errors(MessageChannel.new(a))
 					violated "No exception raised"
@@ -104,7 +104,7 @@ describe Utils do
 				b.close rescue nil
 			end
 		end
-		
+
 		it "reports all data written to STDERR and $stderr even if it was reopened" do
 			a, b = IO.pipe
 			begin
@@ -121,7 +121,7 @@ describe Utils do
 					end
 				end
 				b.close
-				
+
 				begin
 					unmarshal_and_raise_errors(MessageChannel.new(a))
 					violated "No exception raised"
@@ -130,7 +130,7 @@ describe Utils do
 					e.stderr.should =~ /Something went wrong again!/
 					e.stderr.should =~ /Something went wrong yet again!/
 				end
-				
+
 				file_contents = File.read("output.tmp")
 				file_contents.should =~ /Something went wrong again!/
 				file_contents.should =~ /Something went wrong yet again!/
@@ -140,20 +140,20 @@ describe Utils do
 				File.unlink("output.tmp") rescue nil
 			end
 		end
-		
+
 		describe "if the block failed" do
 			before :each do
 				@raise_error = true
 			end
-			
+
 			it_should_behave_like "a pseudo stderr created by #report_app_init_status"
 		end
-		
+
 		describe "if the block succeeded" do
 			it_should_behave_like "a pseudo stderr created by #report_app_init_status"
 		end
 	end
-	
+
 	specify "#safe_fork with double_fork == false reseeds the pseudo-random number generator" do
 		a, b = IO.pipe
 		begin
@@ -165,7 +165,7 @@ describe Utils do
 				b.puts(rand)
 			end
 			Process.waitpid(pid) rescue nil
-			
+
 			first_num = a.readline
 			second_num = a.readline
 			first_num.should_not == second_num
@@ -174,21 +174,21 @@ describe Utils do
 			b.close rescue nil
 		end
 	end
-	
+
 	specify "#safe_fork with double_fork == true reseeds the pseudo-random number generator" do
 		a, b = IO.pipe
 		begin
 			# Seed the pseudo-random number generator here
 			# so that it doesn't happen in the child processes.
 			srand
-			
+
 			safe_fork(self.class, true) do
 				b.puts(rand)
 			end
 			safe_fork(self.class, true) do
 				b.puts(rand)
 			end
-			
+
 			first_num = a.readline
 			second_num = a.readline
 			first_num.should_not == second_num
@@ -197,7 +197,7 @@ describe Utils do
 			b.close rescue nil
 		end
 	end
-	
+
 	describe "#unmarshal_and_raise_errors" do
 		before :each do
 			@a, @b = IO.pipe
@@ -206,12 +206,12 @@ describe Utils do
 				raise StandardError, "Something went wrong!"
 			end
 		end
-		
+
 		after :each do
 			@a.close rescue nil
 			@b.close rescue nil
 		end
-		
+
 		it "prints the exception information to the 'print_exception' argument using #puts, if 'print_exception' responds to that" do
 			buffer = StringIO.new
 			lambda { unmarshal_and_raise_errors(@report_channel, buffer) }.should raise_error(AppInitError)
@@ -219,7 +219,7 @@ describe Utils do
 			buffer.string.should =~ /utils\.rb/
 			buffer.string.should =~ /utils_spec\.rb/
 		end
-		
+
 		it "appends the exception information to the file pointed to by 'print_exception', if 'print_exception' responds to #to_str" do
 			begin
 				lambda { unmarshal_and_raise_errors(@report_channel, "exception.txt") }.should raise_error(AppInitError)
@@ -232,7 +232,7 @@ describe Utils do
 			end
 		end
 	end
-	
+
 	specify "#to_boolean works" do
 		to_boolean(nil).should be_false
 		to_boolean(false).should be_false
@@ -244,7 +244,7 @@ describe Utils do
 		to_boolean("false").should be_false
 		to_boolean("bla bla").should be_true
 	end
-	
+
 	specify "#split_by_null_into_hash works" do
 		split_by_null_into_hash("").should == {}
 		split_by_null_into_hash("foo\0bar\0").should == { "foo" => "bar" }
@@ -252,31 +252,31 @@ describe Utils do
 		split_by_null_into_hash("foo\0bar\0baz\0\0").should == { "foo" => "bar", "baz" => "" }
 		split_by_null_into_hash("\0\0").should == { "" => "" }
 	end
-	
+
 	describe "#passenger_tmpdir" do
 		before :each do
 			@old_passenger_tmpdir = Utils.passenger_tmpdir
 			Utils.passenger_tmpdir = nil
 		end
-		
+
 		after :each do
 			Utils.passenger_tmpdir = @old_passenger_tmpdir
 		end
-		
+
 		it "returns a directory under /tmp if Utils.passenger_tmpdir is nil" do
 			File.dirname(passenger_tmpdir(false)).should == "/tmp"
 		end
-		
+
 		it "returns a directory under /tmp if Utils.passenger_tmpdir is an empty string" do
 			Utils.passenger_tmpdir = ''
 			File.dirname(passenger_tmpdir(false)).should == "/tmp"
 		end
-		
+
 		it "returns Utils.passenger_tmpdir if it's set" do
 			Utils.passenger_tmpdir = '/foo'
 			passenger_tmpdir(false).should == '/foo'
 		end
-		
+
 		it "creates the directory if it doesn't exist, if the 'create' argument is true" do
 			Utils.passenger_tmpdir = 'utils_spec.tmp'
 			passenger_tmpdir
@@ -288,7 +288,7 @@ describe Utils do
 			end
 		end
 	end
-	
+
 	when_user_switching_possible do
 		describe "#lower_privilege" do
 			before :each do
@@ -301,12 +301,12 @@ describe Utils do
 				File.symlink(@startup_file_target, @startup_file)
 				File.touch(@startup_file_target)
 			end
-			
+
 			after :each do
 				File.unlink(@startup_file) rescue nil
 				File.unlink(@startup_file_target) rescue nil
 			end
-			
+
 			def run(options = {})
 				script = %q{
 					require 'phusion_passenger/utils'
@@ -340,7 +340,7 @@ describe Utils do
 					@error = lines[0]
 				end
 			end
-			
+
 			def primary_group_for(username)
 				gid = Etc.getpwnam(username).gid
 				return Etc.getgrgid(gid).name
@@ -349,41 +349,41 @@ describe Utils do
 			def uid_for(username)
 				return Etc.getpwnam(username).uid
 			end
-			
+
 			def gid_for(group_name)
 				return Etc.getgrnam(group_name).gid
 			end
-			
+
 			def group_name_for_gid(gid)
 				return Etc.getgrgid(gid).name
 			end
-			
+
 			describe "if 'user' is given" do
 				describe "and 'user' is 'root'" do
 					before :each do
 						@options["user"] = "root"
 					end
-					
+
 					it "changes the user to the value of 'default_user'" do
 						run
 						@username.should == CONFIG["default_user"]
 					end
-					
+
 					specify "if 'group' is given, it changes group to the given group name" do
 						run("group" => CONFIG["normal_group_1"])
 						@groupname.should == CONFIG["normal_group_1"]
 					end
-					
+
 					specify "if 'group' is set to the root group, it changes group to default_group" do
 						run("group" => group_name_for_gid(0))
 						@groupname.should == CONFIG["default_group"]
 					end
-					
+
 					describe "and 'group' is set to '!STARTUP_FILE!'" do
 						before :each do
 							@options["group"] = "!STARTUP_FILE!"
 						end
-						
+
 						it "changes the group to the startup file's group" do
 							File.lchown(-1,
 								gid_for(CONFIG["normal_group_1"]),
@@ -391,7 +391,7 @@ describe Utils do
 							run
 							@groupname.should == CONFIG["normal_group_1"]
 						end
-						
+
 						specify "if the startup file is a symlink, then it uses the symlink's group, not the target's group" do
 							File.lchown(-1,
 								gid_for(CONFIG["normal_group_2"]),
@@ -403,38 +403,38 @@ describe Utils do
 							@groupname.should == CONFIG["normal_group_2"]
 						end
 					end
-					
+
 					specify "if 'group' is not given, it changes the group to default_user's primary group" do
 						run
 						@groupname.should == primary_group_for(CONFIG["default_user"])
 					end
 				end
-				
+
 				describe "and 'user' is not 'root'" do
 					before :each do
 						@options["user"] = CONFIG["normal_user_1"]
 					end
-					
+
 					it "changes the user to the given username" do
 						run
 						@username.should == CONFIG["normal_user_1"]
 					end
-					
+
 					specify "if 'group' is given, it changes group to the given group name" do
 						run("group" => CONFIG["normal_group_1"])
 						@groupname.should == CONFIG["normal_group_1"]
 					end
-					
+
 					specify "if 'group' is set to the root group, it changes group to default_group" do
 						run("group" => group_name_for_gid(0))
 						@groupname.should == CONFIG["default_group"]
 					end
-					
+
 					describe "and 'group' is set to '!STARTUP_FILE!'" do
 						before :each do
 							@options["group"] = "!STARTUP_FILE!"
 						end
-						
+
 						it "changes the group to the startup file's group" do
 							File.lchown(-1,
 								gid_for(CONFIG["normal_group_1"]),
@@ -442,7 +442,7 @@ describe Utils do
 							run
 							@groupname.should == CONFIG["normal_group_1"]
 						end
-						
+
 						specify "if the startup file is a symlink, then it uses the symlink's group, not the target's group" do
 							File.lchown(-1,
 								gid_for(CONFIG["normal_group_2"]),
@@ -454,38 +454,38 @@ describe Utils do
 							@groupname.should == CONFIG["normal_group_2"]
 						end
 					end
-					
+
 					specify "if 'group' is not given, it changes the group to the user's primary group" do
 						run
 						@groupname.should == primary_group_for(CONFIG["normal_user_1"])
 					end
 				end
-				
+
 				describe "and the given username does not exist" do
 					before :each do
 						@options["user"] = CONFIG["nonexistant_user"]
 					end
-					
+
 					it "changes the user to the value of 'default_user'" do
 						run
 						@username.should == CONFIG["default_user"]
 					end
-					
+
 					specify "if 'group' is given, it changes group to the given group name" do
 						run("group" => CONFIG["normal_group_1"])
 						@groupname.should == CONFIG["normal_group_1"]
 					end
-					
+
 					specify "if 'group' is set to the root group, it changes group to default_group" do
 						run("group" => group_name_for_gid(0))
 						@groupname.should == CONFIG["default_group"]
 					end
-					
+
 					describe "and 'group' is set to '!STARTUP_FILE!'" do
 						before :each do
 							@options["group"] = "!STARTUP_FILE!"
 						end
-						
+
 						it "changes the group to the startup file's group" do
 							File.lchown(-1,
 								gid_for(CONFIG["normal_group_1"]),
@@ -493,7 +493,7 @@ describe Utils do
 							run
 							@groupname.should == CONFIG["normal_group_1"]
 						end
-						
+
 						specify "if the startup file is a symlink, then it uses the symlink's group, not the target's group" do
 							File.lchown(-1,
 								gid_for(CONFIG["normal_group_2"]),
@@ -505,7 +505,7 @@ describe Utils do
 							@groupname.should == CONFIG["normal_group_2"]
 						end
 					end
-					
+
 					specify "if 'group' is not given, it changes the group to default_user's primary group" do
 						run
 						@groupname.should == primary_group_for(CONFIG["default_user"])
@@ -519,12 +519,12 @@ describe Utils do
 							-1,
 							@startup_file)
 					end
-					
+
 					it "changes the user to the owner of the startup file" do
 						run
 						@username.should == CONFIG["normal_user_1"]
 					end
-					
+
 					specify "if the startup file is a symlink, then it uses the symlink's owner, not the target's owner" do
 						File.lchown(uid_for(CONFIG["normal_user_2"]),
 							-1,
@@ -535,22 +535,22 @@ describe Utils do
 						run
 						@username.should == CONFIG["normal_user_2"]
 					end
-					
+
 					specify "if 'group' is given, it changes group to the given group name" do
 						run("group" => CONFIG["normal_group_1"])
 						@groupname.should == CONFIG["normal_group_1"]
 					end
-					
+
 					specify "if 'group' is set to the root group, it changes group to default_group" do
 						run("group" => group_name_for_gid(0))
 						@groupname.should == CONFIG["default_group"]
 					end
-					
+
 					describe "and 'group' is set to '!STARTUP_FILE!'" do
 						before :each do
 							@options["group"] = "!STARTUP_FILE!"
 						end
-						
+
 						it "changes the group to the startup file's group" do
 							File.lchown(-1,
 								gid_for(CONFIG["normal_group_1"]),
@@ -558,7 +558,7 @@ describe Utils do
 							run
 							@groupname.should == CONFIG["normal_group_1"]
 						end
-						
+
 						specify "if the startup file is a symlink, then it uses the symlink's group, not the target's group" do
 							File.lchown(-1,
 								gid_for(CONFIG["normal_group_2"]),
@@ -570,65 +570,65 @@ describe Utils do
 							@groupname.should == CONFIG["normal_group_2"]
 						end
 					end
-					
+
 					specify "if 'group' is not given, it changes the group to the startup file's owner's primary group" do
 						run
 						@groupname.should == primary_group_for(CONFIG["normal_user_1"])
 					end
 				end
-				
+
 				describe "and the startup file's owner doesn't exist" do
 					before :each do
 						File.lchown(CONFIG["nonexistant_uid"],
 							-1,
 							@startup_file)
 					end
-					
+
 					it "changes the user to the value of 'default_user'" do
 						run
 						@username.should == CONFIG["default_user"]
 					end
-					
+
 					specify "if 'group' is given, it changes group to the given group name" do
 						run("group" => CONFIG["normal_group_1"])
 						@groupname.should == CONFIG["normal_group_1"]
 					end
-					
+
 					specify "if 'group' is set to the root group, it changes group to default_group" do
 						run("group" => group_name_for_gid(0))
 						@groupname.should == CONFIG["default_group"]
 					end
-					
+
 					describe "and 'group' is set to '!STARTUP_FILE!'" do
 						before :each do
 							@options["group"] = "!STARTUP_FILE!"
 						end
-						
+
 						describe "and the startup file's group doesn't exist" do
 							before :each do
 								File.lchown(-1,
 									CONFIG["nonexistant_gid"],
 									@startup_file)
 							end
-							
+
 							it "changes the group to the value given by 'default_group'" do
 								run
 								@groupname.should == CONFIG["default_group"]
 							end
 						end
-						
+
 						describe "and the startup file's group exists" do
 							before :each do
 								File.lchown(-1,
 									gid_for(CONFIG["normal_group_1"]),
 									@startup_file)
 							end
-							
+
 							it "changes the group to the startup file's group" do
 								run
 								@groupname.should == CONFIG["normal_group_1"]
 							end
-							
+
 							specify "if the startup file is a symlink, then it uses the symlink's group, not the target's group" do
 								File.lchown(-1,
 									gid_for(CONFIG["normal_group_2"]),
@@ -641,64 +641,64 @@ describe Utils do
 							end
 						end
 					end
-					
+
 					specify "if 'group' is not given, it changes the group to default_user's primary group" do
 						run
 						@groupname.should == primary_group_for(CONFIG["default_user"])
 					end
 				end
 			end
-			
+
 			it "raises an error if it tries to lower to 'default_user', but that user doesn't exist" do
 				run("user" => "root", "default_user" => CONFIG["nonexistant_user"])
 				@error.should =~ /Cannot determine a user to lower privilege to/
 			end
-			
+
 			it "raises an error if it tries to lower to 'default_group', but that group doesn't exist" do
 				run("user" => CONFIG["normal_user_1"],
 					"group" => group_name_for_gid(0),
 					"default_group" => CONFIG["nonexistant_group"])
 				@error.should =~ /Cannot determine a group to lower privilege to/
 			end
-			
+
 			it "changes supplementary groups to the owner's default supplementary groups" do
 				run("user" => CONFIG["normal_user_1"])
 				default_groups = `groups "#{CONFIG['normal_user_1']}"`.strip
 				default_groups.gsub!(/.*: */, '')
 				@groups.should == default_groups
 			end
-			
+
 			it "sets $HOME to the user's home directory" do
 				run("user" => CONFIG["normal_user_1"])
 				@env_home.should == Etc.getpwnam(CONFIG["normal_user_1"]).dir
 			end
-			
+
 			it "sets $USER to the user's name" do
 				run("user" => CONFIG["normal_user_1"])
 				@env_user.should == CONFIG["normal_user_1"]
 			end
 		end
 	end
-	
+
 	describe "#check_directory_tree_permissions" do
 		before :each do
 			@root = PhusionPassenger::Utils.passenger_tmpdir
 		end
-		
+
 		def primary_group_for(username)
 			gid = Etc.getpwnam(username).gid
 			return Etc.getgrgid(gid).name
 		end
-		
+
 		it "raises an error for the top-most parent directory that has wrong permissions" do
 			FileUtils.mkdir_p("#{@root}/a/b/c/d")
-			
+
 			when_running_as_root do
 				user = CONFIG['normal_user_1']
 				group = primary_group_for(user)
 				system("chown -R #{user} #{@root}/a")
 				system("chgrp -R #{group} #{@root}/a")
-				
+
 				output = run_script(%q{
 					require 'phusion_passenger/utils'
 					include PhusionPassenger::Utils
@@ -706,7 +706,7 @@ describe Utils do
 					lower_privilege(nil,
 						"user" => ARGV[1],
 						"group" => ARGV[2])
-					
+
 					File.chmod(0600, "#{@root}/a/b/c/d")
 					File.chmod(0600, "#{@root}/a/b/c")
 					File.chmod(0600, "#{@root}/a")
@@ -741,7 +741,7 @@ describe Utils do
 			end
 		end
 	end
-	
+
 	######################
 end
 

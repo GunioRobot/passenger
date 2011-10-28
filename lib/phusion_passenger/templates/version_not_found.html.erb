@@ -3,14 +3,14 @@
 <div id="content">
 
 	<% if @error.gem_version_spec =~ /^\d/ %>
-		
+
 		The application <tt class="filename"><%=h @app_root %></tt> requires
 		Ruby on Rails version <b><%=h @error.gem_version_spec %></b>,
 		which is not installed. Please install it with the following command:
 		<pre class="commands"><%= PlatformInfo.ruby_sudo_command %> <%= PlatformInfo.gem_command %> install rails --version <%=h @error.gem_version_spec %></pre>
-		
+
 	<% else %>
-		
+
 		The application <tt class="filename"><%=h @app_root %></tt> requires
 		a Ruby on Rails version that matches the version specification
 		"<%=h @error.gem_version_spec %>", but there is no such Ruby on Rails
@@ -18,9 +18,9 @@
 		<div class="commands">
 			<%= PlatformInfo.gem_command %> install rails --version <em>some_version_number</em>
 		</div>
-		
+
 	<% end %>
-	
+
 	<p>
 	If you are unable to install Ruby on Rails (e.g. because you do not have
 	control over this server) then you could also <em>vendor</em> (bundle)

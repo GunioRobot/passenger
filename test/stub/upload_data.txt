@@ -18,14 +18,14 @@ class CalendarEntriesController extends ApplicationController {
 		);
 		$this->before_filter('set_section');
 	}
-	
+
 	public function index() {
 		$this->redirect_to("/calendar_entries/show_by_week");
 	}
-	
+
 	public function new_calendar_entry() {
 	}
-	
+
 	public function create() {
 		if (!isset($this->params['calendar_entry'])) {
 			return;
@@ -49,7 +49,7 @@ class CalendarEntriesController extends ApplicationController {
 			$this->render(array('action' => 'new_calendar_entry'));
 		}
 	}
-	
+
 	public function show_by_week() {
 		if (!isset($this->params['year']) || !isset($this->params['week'])) {
 			$year = strftime("%Y");
@@ -63,7 +63,7 @@ class CalendarEntriesController extends ApplicationController {
 		}
 		$personal = (isset($this->params['personal']) && $this->params['personal']) ? true : false;
 		$start_date = strtotime("+" . ($week - 1) . " weeks", mktime(0, 0, 0, 1, 1, $year));
-		
+
 		$CalendarEntry = $this->CalendarEntry;
 		if ($personal && !is_null($this->current_user)) {
 			$conditions = array('DATE(ending_date) >= ? AND DATE(starting_date) < ? AND user_id = ?',
@@ -92,7 +92,7 @@ class CalendarEntriesController extends ApplicationController {
 		$this->variables->year = $year;
 		$this->variables->week = $week;
 		$this->variables->calendar_entries = $calendar_entries;
-		
+
 		if ($week == 52) {
 			$next_week = 1;
 			$next_week_url = "/calendar_entries/show_by_week?year=" . ($year + 1) . "&week=1";
@@ -123,16 +123,16 @@ class CalendarEntriesController extends ApplicationController {
 		$this->variables->personal_or_shared_calendar = $personal_or_shared_calendar;
 		$this->variables->personal_or_shared_calendar_url = $personal_or_shared_calendar_url;
 	}
-	
+
 	public function show_by_date() {
 		$year  = (int)$this->params['year'];
 		$month = (int)$this->params['month'];
 		$day   = (int)$this->params['day'];
 		$personal = (isset($this->params['personal']) && $this->params['personal']) ? true : false;
-		
+
 		if(checkdate($month, $day, $year)) {
 			$date = mktime(0, 0, 0, $month, $day, $year);
-			
+
 			$CalendarEntry = $this->CalendarEntry;
 			if ($personal && !is_null($this->current_user)) {
 				$conditions = array(
@@ -158,26 +158,26 @@ class CalendarEntriesController extends ApplicationController {
 				)
 			);
 			$this->variables->date = $date;
-			
+
 			$prev_timestamp = $date - 60 * 60 * 24;
 			$prev_date = getdate($prev_timestamp);
 			$this->variables->prev_timestamp = $prev_timestamp;
 			$this->variables->prev_url = sprintf('/calendar_entries/show_by_date?year=%d&month=%d&day=%d&personal=%s',
 				$prev_date['year'], $prev_date['mon'], $prev_date['mday'], $personal);
-			
+
 			$next_timestamp = $date + 60 * 60 * 24;
 			$next_date = getdate($next_timestamp);
 			$this->variables->next_timestamp = $next_timestamp;
 			$this->variables->next_url = sprintf('/calendar_entries/show_by_date?year=%d&month=%d&day=%d&personal=%s',
 				$next_date['year'], $next_date['mon'], $next_date['mday'], $personal);
-			
+
 			$year = strftime("%Y", $date);
 			$week = strftime("%V", $date);
 			$week_view_url = "/calendar_entries/show_by_week?year=$year&week=$week&personal=$personal";
 			$this->variables->year = $year;
 			$this->variables->week = $week;
 			$this->variables->week_view_url = $week_view_url;
-			
+
 			$personal_or_shared_calendar = $personal ? "View shared calendar" : "View personal calendar";
 			$personal_or_shared_calendar_url = "/calendar_entries/show_by_date?year=$year&month=$month&day=$day&personal=" . (!$personal);
 			$this->variables->personal = $personal;
@@ -187,7 +187,7 @@ class CalendarEntriesController extends ApplicationController {
 			die("Invalid date");
 		}
 	}
-	
+
 	public function show() {
 		$id = (int)$this->params['id'];
 		$CalendarEntry = $this->CalendarEntry;
@@ -200,7 +200,7 @@ class CalendarEntriesController extends ApplicationController {
 			$this->variables->participants = $calendar_entry->get_participants();
 		}
 	}
-	
+
 	public function edit() {
 		$id = (int)$this->params['id'];
 		$CalendarEntry = $this->CalendarEntry;
@@ -217,7 +217,7 @@ class CalendarEntriesController extends ApplicationController {
 		}
 		$this->variables->calendar_entry = $calendar_entry;
 	}
-	
+
 	public function update() {
 		if (!isset($this->params['calendar_entry'])) {
 			return;
@@ -247,7 +247,7 @@ class CalendarEntriesController extends ApplicationController {
 			$this->render(array('action' => 'edit'));
 		}
 	}
-	
+
 	public function update_time() {
 		$id = (int)$this->params['id'];
 		$CalendarEntry = $this->CalendarEntry;
@@ -282,7 +282,7 @@ class CalendarEntriesController extends ApplicationController {
 			echo 'error';
 		}
 	}
-	
+
 	public function update_date() {
 		$id = (int)$this->params['id'];
 		$CalendarEntry = $this->CalendarEntry;
@@ -317,7 +317,7 @@ class CalendarEntriesController extends ApplicationController {
 			echo 'error';
 		}
 	}
-	
+
 	public function destroy() {
 		$id = (int)$this->params['id'];
 		$CalendarEntry = $this->CalendarEntry;
@@ -334,7 +334,7 @@ class CalendarEntriesController extends ApplicationController {
 		$calendar_entry->delete();
 		$this->redirect_to('/calendar_entries');
 	}
-	
+
 	public function participate() {
 		$id = (int)$this->params['id'];
 		$day = (int)$this->params['day'];
@@ -358,7 +358,7 @@ class CalendarEntriesController extends ApplicationController {
 		}
 		$this->redirect_to("/calendar_entries/show/$id");
 	}
-	
+
 	public function unparticipate() {
 		$id = (int)$this->params['id'];
 		$CalendarEntry = $this->CalendarEntry;
@@ -395,11 +395,11 @@ class CalendarEntriesController extends ApplicationController {
 		}
 		$this->redirect_to("/calendar_entries/show/$id");
 	}
-	
+
 	protected function set_section() {
 		$this->variables->section = 'events';
 	}
-	
+
 	public function export_xml() {
 		$calendar_entries = $this->CalendarEntry->find('all',
 			array(
@@ -408,7 +408,7 @@ class CalendarEntriesController extends ApplicationController {
 				'limit' => 10
 			)
 		);
-		
+
 		header("Content-Type: application/xml");
 		$xml = new XMLWriter();
 		$xml->openMemory();
@@ -432,7 +432,7 @@ class CalendarEntriesController extends ApplicationController {
 					$xml->text('http://www.ivent.beta/exportxml.php');
 				$xml->endElement();
 			$xml->endElement();
-			
+
 			foreach ($calendar_entries as $event) {
 				$xml->startElement('EVENT');
 					$xml->startElement('EVENTTITLE');
@@ -463,7 +463,7 @@ class CalendarEntriesController extends ApplicationController {
 							$xml->text($event->xml_ending_time());
 						$xml->endElement();
 					$xml->endElement();
-					
+
 					$attendees = $event->get_participants();
 					if (!empty($attendees)) {
 						$xml->startElement('ATTENDEES');

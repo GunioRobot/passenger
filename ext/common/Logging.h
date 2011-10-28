@@ -126,7 +126,7 @@ void setDebugFile(const char *logFile = NULL);
 
 #ifdef PASSENGER_DEBUG
 	#define P_TRACE(level, expr) P_LOG_TO(level, expr, Passenger::_logStream)
-	
+
 	#define P_ASSERT(expr, result_if_failed, message) \
 		do { \
 			if (!(expr)) { \
@@ -143,7 +143,7 @@ void setDebugFile(const char *logFile = NULL);
 		} while (false)
 #else
 	#define P_TRACE(level, expr) do { /* nothing */ } while (false)
-	
+
 	#define P_ASSERT(expr, result_if_failed, message) do { /* nothing */ } while (false)
 	#define P_ASSERT_WITH_VOID_RETURN(expr, message) do { /* nothing */ } while (false)
 #endif
@@ -154,7 +154,7 @@ void setDebugFile(const char *logFile = NULL);
 struct AnalyticsLoggerSharedData {
 	boost::mutex lock;
 	MessageClient client;
-	
+
 	void disconnect(bool checkErrorResponse = false) {
 		if (checkErrorResponse && client.connected()) {
 			// Maybe the server sent us an error message and closed
@@ -162,7 +162,7 @@ struct AnalyticsLoggerSharedData {
 			TRACE_POINT();
 			vector<string> args;
 			bool hasData = true;
-			
+
 			try {
 				hasData = client.read(args);
 			} catch (const SystemException &e) {
@@ -170,7 +170,7 @@ struct AnalyticsLoggerSharedData {
 					throw;
 				}
 			}
-			
+
 			UPDATE_TRACE_POINT();
 			client.disconnect();
 			if (hasData) {
@@ -190,28 +190,28 @@ typedef shared_ptr<AnalyticsLoggerSharedData> AnalyticsLoggerSharedDataPtr;
 class AnalyticsLog {
 private:
 	static const int INT64_STR_BUFSIZE = 22; // Long enough for a 64-bit number.
-	
+
 	AnalyticsLoggerSharedDataPtr sharedData;
 	string txnId;
 	string groupName;
 	string category;
 	string unionStationKey;
 	bool shouldFlushToDiskAfterClose;
-	
+
 	/**
 	 * Buffer must be at least txnId.size() + 1 + INT64_STR_BUFSIZE + 1 bytes.
 	 */
 	char *insertTxnIdAndTimestamp(char *buffer) {
 		int size;
-		
+
 		// "txn-id-here"
 		memcpy(buffer, txnId.c_str(), txnId.size());
 		buffer += txnId.size();
-		
+
 		// "txn-id-here "
 		*buffer = ' ';
 		buffer++;
-		
+
 		// "txn-id-here 123456"
 		size = snprintf(buffer, INT64_STR_BUFSIZE, "%llu", SystemTime::getUsec());
 		if (size >= INT64_STR_BUFSIZE) {
@@ -219,16 +219,16 @@ private:
 			throw IOException("Cannot format a new transaction log message timestamp.");
 		}
 		buffer += size;
-		
+
 		// "txn-id-here 123456 "
 		*buffer = ' ';
-		
+
 		return buffer + 1;
 	}
-	
+
 public:
 	AnalyticsLog() { }
-	
+
 	AnalyticsLog(const AnalyticsLoggerSharedDataPtr &sharedData, const string &txnId,
 		const string &groupName, const string &category, const string &unionStationKey)
 	{
@@ -239,7 +239,7 @@ public:
 		this->unionStationKey = unionStationKey;
 		shouldFlushToDiskAfterClose = false;
 	}
-	
+
 	~AnalyticsLog() {
 		if (sharedData != NULL) {
 			lock_guard<boost::mutex> l(sharedData->lock);
@@ -258,7 +258,7 @@ public:
 						throw;
 					}
 				}
-				
+
 				if (shouldFlushToDiskAfterClose) {
 					vector<string> args;
 					sharedData->client.write("flush", NULL);
@@ -267,7 +267,7 @@ public:
 			}
 		}
 	}
-	
+
 	void message(const StaticString &text) {
 		if (sharedData != NULL) {
 			lock_guard<boost::mutex> l(sharedData->lock);
@@ -280,7 +280,7 @@ public:
 			}
 		}
 	}
-	
+
 	void abort(const StaticString &text) {
 		if (sharedData != NULL) {
 			lock_guard<boost::mutex> l(sharedData->lock);
@@ -289,27 +289,27 @@ public:
 			}
 		}
 	}
-	
+
 	void flushToDiskAfterClose(bool value) {
 		shouldFlushToDiskAfterClose = value;
 	}
-	
+
 	bool isNull() const {
 		return sharedData == NULL;
 	}
-	
+
 	string getTxnId() const {
 		return txnId;
 	}
-	
+
 	string getGroupName() const {
 		return groupName;
 	}
-	
+
 	string getCategory() const {
 		return category;
 	}
-	
+
 	string getUnionStationKey() const {
 		return unionStationKey;
 	}
@@ -328,22 +328,22 @@ private:
 		const char *name;
 		struct {
 			const char *endMessage;
-			const char *abortMessage;	
+			const char *abortMessage;
 		} granular;
 	} data;
 	bool ok;
-	
+
 	static string timevalToString(struct timeval &tv) {
 		unsigned long long i = (unsigned long long) tv.tv_sec * 1000000 + tv.tv_usec;
 		return usecToString(i);
 	}
-	
+
 	static string usecToString(unsigned long long usec) {
 		char timestamp[2 * sizeof(unsigned long long) + 1];
 		integerToHexatri<unsigned long long>(usec, timestamp);
 		return timestamp;
 	}
-	
+
 public:
 	AnalyticsScopeLog(const AnalyticsLogPtr &log, const char *name) {
 		this->log = log.get();
@@ -353,7 +353,7 @@ public:
 		if (log != NULL && !log->isNull()) {
 			string message;
 			struct rusage usage;
-			
+
 			message.reserve(150);
 			message.append("BEGIN: ");
 			message.append(name);
@@ -371,7 +371,7 @@ public:
 			log->message(message);
 		}
 	}
-	
+
 	AnalyticsScopeLog(const AnalyticsLogPtr &log, const char *beginMessage,
 	                  const char *endMessage, const char *abortMessage = NULL
 	) {
@@ -384,7 +384,7 @@ public:
 			log->message(beginMessage);
 		}
 	}
-	
+
 	~AnalyticsScopeLog() {
 		if (log == NULL) {
 			return;
@@ -393,7 +393,7 @@ public:
 			if (!log->isNull()) {
 				string message;
 				struct rusage usage;
-				
+
 				message.reserve(150);
 				if (ok) {
 					message.append("END: ");
@@ -422,7 +422,7 @@ public:
 			}
 		}
 	}
-	
+
 	void success() {
 		ok = true;
 	}
@@ -437,20 +437,20 @@ private:
 	struct SharedDataLock {
 		AnalyticsLoggerSharedDataPtr sharedData;
 		bool locked;
-		
+
 		SharedDataLock(const AnalyticsLoggerSharedDataPtr &d)
 			: sharedData(d)
 		{
 			d->lock.lock();
 			locked = true;
 		}
-		
+
 		~SharedDataLock() {
 			if (locked) {
 				sharedData->lock.unlock();
 			}
 		}
-		
+
 		void reset(const AnalyticsLoggerSharedDataPtr &d, bool lockNow = true) {
 			if (locked) {
 				sharedData->lock.unlock();
@@ -463,39 +463,39 @@ private:
 				locked = false;
 			}
 		}
-		
+
 		void lock() {
 			assert(!locked);
 			sharedData->lock.lock();
 			locked = true;
 		}
 	};
-	
+
 	static const int RETRY_SLEEP = 200000; // microseconds
-	
+
 	string serverAddress;
 	string username;
 	string password;
 	string nodeName;
 	RandomGenerator randomGenerator;
-	
+
 	/** Lock protecting the fields that follow, but not the contents of the shared data. */
 	mutable boost::mutex lock;
-	
+
 	unsigned int maxConnectTries;
 	unsigned long long reconnectTimeout;
 	unsigned long long nextReconnectTime;
 	/** @invariant sharedData != NULL */
 	AnalyticsLoggerSharedDataPtr sharedData;
-	
+
 	bool connected() const {
 		return sharedData->client.connected();
 	}
-	
+
 	void connect() {
 		TRACE_POINT();
 		vector<string> args;
-		
+
 		sharedData->client.connect(serverAddress, username, password);
 		sharedData->client.write("init", nodeName.c_str(), NULL);
 		if (!sharedData->client.read(args)) {
@@ -507,12 +507,12 @@ private:
 		} else if (args[0] != "ok") {
 			throw IOException("Logging server returned an invalid reply for the 'init' command");
 		}
-		
+
 		// Upon a write() error we want to attempt to read() the error
 		// message before closing the socket.
 		sharedData->client.setAutoDisconnect(false);
 	}
-	
+
 	void disconnect(bool checkErrorResponse = false) {
 		sharedData->disconnect(checkErrorResponse);
 		// We create a new SharedData here so that existing AnalyticsLog
@@ -520,16 +520,16 @@ private:
 		// with any newly-established connections.
 		sharedData.reset(new AnalyticsLoggerSharedData());
 	}
-	
+
 	bool isNetworkError(int code) const {
 		return code == EPIPE || code == ECONNREFUSED || code == ECONNRESET
 			|| code == EHOSTUNREACH || code == ENETDOWN || code == ENETUNREACH
 			|| code == ETIMEDOUT;
 	}
-	
+
 public:
 	AnalyticsLogger() { }
-	
+
 	AnalyticsLogger(const string &serverAddress, const string &username,
 	                const string &password, const string &nodeName = "")
 	{
@@ -553,7 +553,7 @@ public:
 		reconnectTimeout  = 60 * 1000000;
 		nextReconnectTime = 0;
 	}
-	
+
 	AnalyticsLogPtr newTransaction(const string &groupName, const string &category = "requests",
 		const string &unionStationKey = string(),
 		const string &filters = string())
@@ -561,7 +561,7 @@ public:
 		if (serverAddress.empty()) {
 			return ptr(new AnalyticsLog());
 		}
-		
+
 		unsigned long long timestamp = SystemTime::getUsec();
 		char txnId[
 			2 * sizeof(unsigned int) +    // max hex timestamp size
@@ -571,7 +571,7 @@ public:
 		char *end;
 		unsigned int timestampSize;
 		char timestampStr[2 * sizeof(unsigned long long) + 1];
-		
+
 		// "[timestamp]"
 		// Our timestamp is like a Unix timestamp but with minutes
 		// resolution instead of seconds. 32 bits will last us for
@@ -579,24 +579,24 @@ public:
 		timestampSize = integerToHexatri<unsigned int>(timestamp / 1000000 / 60,
 			txnId);
 		end = txnId + timestampSize;
-		
+
 		// "[timestamp]-"
 		*end = '-';
 		end++;
-		
+
 		// "[timestamp]-[random id]"
 		randomGenerator.generateAsciiString(end, 11);
 		end += 11;
 		*end = '\0';
-		
+
 		integerToHexatri<unsigned long long>(timestamp, timestampStr);
-		
+
 		unique_lock<boost::mutex> l(lock);
 		SharedDataLock sl(sharedData);
-		
+
 		if (SystemTime::getUsec() >= nextReconnectTime) {
 			unsigned int tryCount = 0;
-			
+
 			while (tryCount < maxConnectTries) {
 				try {
 					if (!connected()) {
@@ -614,7 +614,7 @@ public:
 						"true",
 						filters.c_str(),
 						NULL);
-					
+
 					vector<string> args;
 					sharedData->client.read(args);
 					if (args.size() == 2 && args[0] == "error") {
@@ -624,7 +624,7 @@ public:
 						disconnect();
 						throw IOException("The logging server sent an unexpected reply.");
 					}
-					
+
 					return ptr(new AnalyticsLog(sharedData,
 						string(txnId, end - txnId),
 						groupName, category,
@@ -646,7 +646,7 @@ public:
 						throw;
 					}
 				}
-				
+
 				// Failed to connect.
 				P_WARN("Cannot connect to the logging agent (" << serverAddress << "); " <<
 					"retrying in " << reconnectTimeout / 1000000 << " seconds.");
@@ -655,23 +655,23 @@ public:
 		}
 		return ptr(new AnalyticsLog());
 	}
-	
+
 	AnalyticsLogPtr continueTransaction(const string &txnId, const string &groupName,
 		const string &category = "requests", const string &unionStationKey = string())
 	{
 		if (serverAddress.empty() || txnId.empty()) {
 			return ptr(new AnalyticsLog());
 		}
-		
+
 		char timestampStr[2 * sizeof(unsigned long long) + 1];
 		integerToHexatri<unsigned long long>(SystemTime::getUsec(), timestampStr);
-		
+
 		unique_lock<boost::mutex> l(lock);
 		SharedDataLock sl(sharedData);
-		
+
 		if (SystemTime::getUsec() >= nextReconnectTime) {
 			unsigned int tryCount = 0;
-			
+
 			while (tryCount < maxConnectTries) {
 				try {
 					if (!connected()) {
@@ -708,7 +708,7 @@ public:
 					}
 				}
 			}
-			
+
 			// Failed to connect.
 			P_WARN("Cannot connect to the logging agent (" << serverAddress << "); " <<
 				"retrying in " << reconnectTimeout / 1000000 << " seconds.");
@@ -716,39 +716,39 @@ public:
 		}
 		return ptr(new AnalyticsLog());
 	}
-	
+
 	void setMaxConnectTries(unsigned int value) {
 		lock_guard<boost::mutex> l(lock);
 		maxConnectTries = value;
 	}
-	
+
 	void setReconnectTimeout(unsigned long long usec) {
 		lock_guard<boost::mutex> l(lock);
 		reconnectTimeout = usec;
 	}
-	
+
 	bool isNull() const {
 		return serverAddress.empty();
 	}
-	
+
 	string getAddress() const {
 		return serverAddress;
 	}
-	
+
 	string getUsername() const {
 		return username;
 	}
-	
+
 	string getPassword() const {
 		return password;
 	}
-	
+
 	FileDescriptor getConnection() const {
 		lock_guard<boost::mutex> l(lock);
 		lock_guard<boost::mutex> l2(sharedData->lock);
 		return sharedData->client.getConnection();
 	}
-	
+
 	/**
 	 * @post !result.empty()
 	 */

@@ -67,32 +67,32 @@ public:
 	 */
 	SystemException(const string &briefMessage, int errorCode) {
 		stringstream str;
-		
+
 		str << strerror(errorCode) << " (" << errorCode << ")";
 		systemMessage = str.str();
-		
+
 		setBriefMessage(briefMessage);
 		m_code = errorCode;
 	}
-	
+
 	virtual ~SystemException() throw() {}
-	
+
 	virtual const char *what() const throw() {
 		return fullMessage.c_str();
 	}
-	
+
 	void setBriefMessage(const string &message) {
 		briefMessage = message;
 		fullMessage = briefMessage + ": " + systemMessage;
 	}
-	
+
 	/**
 	 * The value of <tt>errno</tt> at the time the error occured.
 	 */
 	int code() const throw() {
 		return m_code;
 	}
-	
+
 	/**
 	 * Returns a brief version of the exception message. This message does
 	 * not include the system error description, and is equivalent to the
@@ -101,7 +101,7 @@ public:
 	string brief() const throw() {
 		return briefMessage;
 	}
-	
+
 	/**
 	 * Returns the system's error message. This message contains both the
 	 * content of <tt>strerror(errno)</tt> and the errno number itself.
@@ -125,9 +125,9 @@ public:
 		const string &filename)
 		: SystemException(message, errorCode),
 		  m_filename(filename) {}
-	
+
 	virtual ~FileSystemException() throw() {}
-	
+
 	/**
 	 * The filename that's associated to the error.
 	 */
@@ -212,24 +212,24 @@ public:
 		m_hasErrorPage = false;
 		m_isHTML = false;
 	}
-	
+
 	SpawnException(const string &message, const string &errorPage, bool isHTML = true)
 		: msg(message), m_errorPage(errorPage)
 	{
 		m_hasErrorPage = true;
 		m_isHTML = isHTML;
 	}
-	
+
 	virtual ~SpawnException() throw() {}
 	virtual const char *what() const throw() { return msg.c_str(); }
-	
+
 	/**
 	 * Check whether an error page is available.
 	 */
 	bool hasErrorPage() const {
 		return m_hasErrorPage;
 	}
-	
+
 	/**
 	 * Return the error page content.
 	 *
@@ -238,7 +238,7 @@ public:
 	const string getErrorPage() const {
 		return m_errorPage;
 	}
-	
+
 	/**
 	 * Whether the error page content is HTML.
 	 *

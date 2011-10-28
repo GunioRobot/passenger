@@ -78,7 +78,7 @@ ServerAddressType
 getSocketAddressType(const StaticString &address) {
 	const char *data = address.c_str();
 	size_t len = address.size();
-	
+
 	if (len > sizeof("unix:") - 1 && memcmp(data, "unix:", sizeof("unix:") - 1) == 0) {
 		return SAT_UNIX;
 	} else if (len > sizeof("tcp://") - 1 && memcmp(data, "tcp://", sizeof("tcp://") - 1) == 0) {
@@ -101,7 +101,7 @@ parseTcpSocketAddress(const StaticString &address, string &host, unsigned short 
 	if (getSocketAddressType(address) != SAT_TCP) {
 		throw ArgumentException("Not a valid TCP socket address");
 	}
-	
+
 	vector<string> args;
 	string begin(address.c_str() + sizeof("tcp://") - 1, address.size() - sizeof("tcp://") + 1);
 	split(begin, ':', args);
@@ -121,7 +121,7 @@ isLocalSocketAddress(const StaticString &address) {
 	case SAT_TCP: {
 		string host;
 		unsigned short port;
-		
+
 		parseTcpSocketAddress(address, host, port);
 		return host == "127.0.0.1" || host == "::1" || host == "localhost";
 	}
@@ -133,7 +133,7 @@ isLocalSocketAddress(const StaticString &address) {
 void
 setNonBlocking(int fd) {
 	int flags, ret;
-	
+
 	do {
 		flags = fcntl(fd, F_GETFL);
 	} while (flags == -1 && errno == EINTR);
@@ -187,7 +187,7 @@ resolveHostname(const string &hostname, unsigned int port, bool shuffle) {
 	struct addrinfo hints, *res, *current;
 	vector<string> result;
 	int ret;
-	
+
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family   = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
@@ -196,10 +196,10 @@ resolveHostname(const string &hostname, unsigned int port, bool shuffle) {
 	if (ret != 0) {
 		return result;
 	}
-	
+
 	for (current = res; current != NULL; current = current->ai_next) {
 		char host[NI_MAXHOST];
-		
+
 		ret = getnameinfo(current->ai_addr, current->ai_addrlen,
 			host, sizeof(host) - 1,
 			NULL, 0,
@@ -225,7 +225,7 @@ createServer(const StaticString &address, unsigned int backlogSize, bool autoDel
 	case SAT_TCP: {
 		string host;
 		unsigned short port;
-		
+
 		parseTcpSocketAddress(address, host, port);
 		return createTcpServer(host.c_str(), port, backlogSize);
 	}
@@ -238,30 +238,30 @@ int
 createUnixServer(const StaticString &filename, unsigned int backlogSize, bool autoDelete) {
 	struct sockaddr_un addr;
 	int fd, ret;
-	
+
 	if (filename.size() > sizeof(addr.sun_path) - 1) {
 		string message = "Cannot create Unix socket '";
 		message.append(filename.toString());
 		message.append("': filename is too long.");
 		throw RuntimeException(message);
 	}
-	
+
 	fd = syscalls::socket(PF_LOCAL, SOCK_STREAM, 0);
 	if (fd == -1) {
 		int e = errno;
 		throw SystemException("Cannot create a Unix socket file descriptor", e);
 	}
-	
+
 	addr.sun_family = AF_LOCAL;
 	strncpy(addr.sun_path, filename.c_str(), filename.size());
 	addr.sun_path[filename.size()] = '\0';
-	
+
 	if (autoDelete) {
 		do {
 			ret = unlink(filename.c_str());
 		} while (ret == -1 && errno == EINTR);
 	}
-	
+
 	try {
 		ret = syscalls::bind(fd, (const struct sockaddr *) &addr, sizeof(addr));
 	} catch (...) {
@@ -280,7 +280,7 @@ createUnixServer(const StaticString &filename, unsigned int backlogSize, bool au
 		} while (ret == -1 && errno == EINTR);
 		throw SystemException(message, e);
 	}
-	
+
 	if (backlogSize == 0) {
 		backlogSize = 1024;
 	}
@@ -302,7 +302,7 @@ createUnixServer(const StaticString &filename, unsigned int backlogSize, bool au
 		} while (ret == -1 && errno == EINTR);
 		throw SystemException(message, e);
 	}
-	
+
 	return fd;
 }
 
@@ -310,7 +310,7 @@ int
 createTcpServer(const char *address, unsigned short port, unsigned int backlogSize) {
 	struct sockaddr_in addr;
 	int fd, ret, optval;
-	
+
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
 	ret = inet_pton(AF_INET, address, &addr.sin_addr.s_addr);
@@ -327,13 +327,13 @@ createTcpServer(const char *address, unsigned short port, unsigned int backlogSi
 		throw ArgumentException(message);
 	}
 	addr.sin_port = htons(port);
-	
+
 	fd = syscalls::socket(PF_INET, SOCK_STREAM, 0);
 	if (fd == -1) {
 		int e = errno;
 		throw SystemException("Cannot create a TCP socket file descriptor", e);
 	}
-	
+
 	try {
 		ret = syscalls::bind(fd, (const struct sockaddr *) &addr, sizeof(addr));
 	} catch (...) {
@@ -353,7 +353,7 @@ createTcpServer(const char *address, unsigned short port, unsigned int backlogSi
 		} while (ret == -1 && errno == EINTR);
 		throw SystemException(message, e);
 	}
-	
+
 	optval = 1;
 	try {
 		if (syscalls::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
@@ -367,7 +367,7 @@ createTcpServer(const char *address, unsigned short port, unsigned int backlogSi
 		throw;
 	}
 	// Ignore SO_REUSEPORT error, it's not fatal.
-	
+
 	if (backlogSize == 0) {
 		backlogSize = 1024;
 	}
@@ -390,7 +390,7 @@ createTcpServer(const char *address, unsigned short port, unsigned int backlogSi
 		} while (ret == -1 && errno == EINTR);
 		throw SystemException(message, e);
 	}
-	
+
 	return fd;
 }
 
@@ -403,7 +403,7 @@ connectToServer(const StaticString &address) {
 	case SAT_TCP: {
 		string host;
 		unsigned short port;
-		
+
 		parseTcpSocketAddress(address, host, port);
 		return connectToTcpServer(host, port);
 	}
@@ -416,24 +416,24 @@ int
 connectToUnixServer(const StaticString &filename) {
 	int fd, ret;
 	struct sockaddr_un addr;
-	
+
 	if (filename.size() > sizeof(addr.sun_path) - 1) {
 		string message = "Cannot connect to Unix socket '";
 		message.append(filename.toString());
 		message.append("': filename is too long.");
 		throw RuntimeException(message);
 	}
-	
+
 	fd = syscalls::socket(PF_UNIX, SOCK_STREAM, 0);
 	if (fd == -1) {
 		int e = errno;
 		throw SystemException("Cannot create a Unix socket file descriptor", e);
 	}
-	
+
 	addr.sun_family = AF_UNIX;
 	memcpy(addr.sun_path, filename.c_str(), filename.size());
 	addr.sun_path[filename.size()] = '\0';
-	
+
 	bool retry = true;
 	int counter = 0;
 	while (retry) {
@@ -457,7 +457,7 @@ connectToUnixServer(const StaticString &filename) {
 				retry = false;
 			#endif
 			retry = retry && counter < 9;
-			
+
 			if (retry) {
 				syscalls::usleep((useconds_t) (10000 * pow((double) 2, (double) counter)));
 				counter++;
@@ -483,7 +483,7 @@ int
 connectToTcpServer(const StaticString &hostname, unsigned int port) {
 	struct addrinfo hints, *res;
 	int ret, e, fd;
-	
+
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family   = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
@@ -497,7 +497,7 @@ connectToTcpServer(const StaticString &hostname, unsigned int port) {
 		message.append(gai_strerror(ret));
 		throw IOException(message);
 	}
-	
+
 	try {
 		fd = syscalls::socket(PF_INET, SOCK_STREAM, 0);
 	} catch (...) {
@@ -509,7 +509,7 @@ connectToTcpServer(const StaticString &hostname, unsigned int port) {
 		freeaddrinfo(res);
 		throw SystemException("Cannot create a TCP socket file descriptor", e);
 	}
-	
+
 	try {
 		ret = syscalls::connect(fd, res->ai_addr, res->ai_addrlen);
 	} catch (...) {
@@ -532,7 +532,7 @@ connectToTcpServer(const StaticString &hostname, unsigned int port) {
 		} while (ret == -1 && errno == EINTR);
 		throw SystemException(message, e);
 	}
-	
+
 	return fd;
 }
 
@@ -540,7 +540,7 @@ SocketPair
 createUnixSocketPair() {
 	int fds[2];
 	FileDescriptor sockets[2];
-	
+
 	if (syscalls::socketpair(AF_UNIX, SOCK_STREAM, 0, fds) == -1) {
 		int e = errno;
 		throw SystemException("Cannot create a Unix socket pair", e);
@@ -555,7 +555,7 @@ Pipe
 createPipe() {
 	int fds[2];
 	FileDescriptor p[2];
-	
+
 	if (syscalls::pipe(fds) == -1) {
 		int e = errno;
 		throw SystemException("Cannot create a pipe", e);
@@ -570,11 +570,11 @@ static bool
 waitUntilIOEvent(int fd, short event, unsigned long long *timeout) {
 	struct pollfd pfd;
 	int ret;
-	
+
 	pfd.fd = fd;
 	pfd.events = event;
 	pfd.revents = 0;
-	
+
 	Timer timer;
 	ret = syscalls::poll(&pfd, 1, *timeout / 1000);
 	if (ret == -1) {
@@ -605,7 +605,7 @@ unsigned int
 readExact(int fd, void *buf, unsigned int size, unsigned long long *timeout) {
 	ssize_t ret;
 	unsigned int alreadyRead = 0;
-	
+
 	while (alreadyRead < size) {
 		if (timeout != NULL && !waitUntilReadable(fd, timeout)) {
 			throw TimeoutException("Cannot read enough data within the specified timeout");
@@ -719,16 +719,16 @@ ssize_t
 gatheredWrite(int fd, const StaticString data[], unsigned int dataCount, string &restBuffer) {
 	size_t totalSize, iovCount, i;
 	ssize_t ret;
-	
+
 	if (restBuffer.empty()) {
 		struct iovec iov[dataCount];
-		
+
 		totalSize = staticStringArrayToIoVec(data, dataCount, iov, iovCount);
 		if (totalSize == 0) {
 			errno = 0;
 			return 0;
 		}
-		
+
 		ret = writevFunction(fd, iov, std::min(iovCount, (size_t) IOV_MAX));
 		if (ret == -1) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -747,7 +747,7 @@ gatheredWrite(int fd, const StaticString data[], unsigned int dataCount, string 
 			}
 		} else if ((size_t) ret < totalSize) {
 			size_t index, offset;
-			
+
 			// Put all unsent data in the rest buffer.
 			restBuffer.reserve(ret);
 			findDataPositionIndexAndOffset(iov, iovCount, ret, &index, &offset);
@@ -762,11 +762,11 @@ gatheredWrite(int fd, const StaticString data[], unsigned int dataCount, string 
 						iov[i].iov_len);
 				}
 			}
-			
+
 			// TODO: we should call writev() again if iovCount > iovMax
 			// in order to send out the rest of the data without
 			// putting them in the rest buffer.
-			
+
 			return ret;
 		} else {
 			// Everything is sent, and the rest buffer was empty anyway, so
@@ -775,13 +775,13 @@ gatheredWrite(int fd, const StaticString data[], unsigned int dataCount, string 
 		}
 	} else {
 		struct iovec iov[dataCount + 1];
-		
+
 		iov[0].iov_base = (char *) restBuffer.data();
 		iov[0].iov_len  = restBuffer.size();
 		totalSize = staticStringArrayToIoVec(data, dataCount, iov + 1, iovCount);
 		totalSize += restBuffer.size();
 		iovCount++;
-		
+
 		ret = writevFunction(fd, iov, std::min(iovCount, (size_t) IOV_MAX));
 		if (ret == -1) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -802,12 +802,12 @@ gatheredWrite(int fd, const StaticString data[], unsigned int dataCount, string 
 		} else {
 			string::size_type restBufferSize = restBuffer.size();
 			size_t restBufferSent = std::min((size_t) ret, (size_t) restBufferSize);
-			
+
 			// Remove everything in the rest buffer that we've been able to send.
 			restBuffer.erase(0, restBufferSent);
 			if (restBuffer.empty()) {
 				size_t index, offset;
-				
+
 				// Looks like everything in the rest buffer was sent.
 				// Put all unsent data into the rest buffer.
 				findDataPositionIndexAndOffset(iov, iovCount, ret,
@@ -823,7 +823,7 @@ gatheredWrite(int fd, const StaticString data[], unsigned int dataCount, string 
 							iov[i].iov_len);
 					}
 				}
-				
+
 				// TODO: we should call writev() again if
 				// iovCount > iovMax && ret < totalSize
 				// in order to send out the rest of the data without
@@ -864,9 +864,9 @@ gatheredWrite(int fd, const StaticString data[], unsigned int count) {
 	struct iovec iov[count];
 	size_t total, iovCount;
 	size_t written = 0;
-	
+
 	total = staticStringArrayToIoVec(data, count, iov, iovCount);
-	
+
 	while (written < total) {
 		ssize_t ret = writevFunction(fd, iov, std::min(iovCount, (size_t) IOV_MAX));
 		if (ret == -1) {
@@ -874,7 +874,7 @@ gatheredWrite(int fd, const StaticString data[], unsigned int count) {
 			throw SystemException("Unable to write all data", e);
 		} else {
 			size_t index, offset;
-			
+
 			written += ret;
 			findDataPositionIndexAndOffset(iov, iovCount, ret, &index, &offset);
 			iovCount = eraseBeginningOfIoVec(iov, iovCount, index, offset);

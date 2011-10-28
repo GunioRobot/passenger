@@ -20,12 +20,12 @@ shared_examples_for "a spawner" do
 			client.close
 		end
 	end
-	
+
 	it "returns a valid AppProcess object" do
 		app = spawn_some_application
 		lambda { Process.kill(0, app.pid) }.should_not raise_error
 	end
-	
+
 	it "sets the working directory of the app to its app root" do
 		before_start %q{
 			File.touch("cwd.txt")
@@ -33,7 +33,7 @@ shared_examples_for "a spawner" do
 		app = spawn_some_application
 		File.exist?("#{app.app_root}/cwd.txt").should be_true
 	end
-	
+
 	it "sets ENV['RAILS_ENV'] and ENV['RACK_ENV']" do
 		before_start %q{
 			File.write("rails_env.txt", ENV['RAILS_ENV'])
@@ -43,7 +43,7 @@ shared_examples_for "a spawner" do
 		File.read("#{app.app_root}/rails_env.txt").should == "staging"
 		File.read("#{app.app_root}/rack_env.txt").should == "staging"
 	end
-	
+
 	it "sets ENV['RAILS_RELATIVE_URL_ROOT'] and ENV['RACK_BASE_URI'] if the 'base_uri' option is set to a valid value" do
 		before_start %q{
 			File.write("rails_relative_url_root.txt", ENV['RAILS_RELATIVE_URL_ROOT'])
@@ -53,7 +53,7 @@ shared_examples_for "a spawner" do
 		File.read("#{app.app_root}/rails_relative_url_root.txt").should == "/foo"
 		File.read("#{app.app_root}/rack_base_uri.txt").should == "/foo"
 	end
-	
+
 	it "doesn't set ENV['RAILS_RELATIVE_URL_ROOT'] and ENV['RACK_BASE_URI'] if 'base_uri' is not given" do
 		before_start %q{
 			if ENV['RAILS_RELATIVE_URL_ROOT']
@@ -67,7 +67,7 @@ shared_examples_for "a spawner" do
 		File.exist?("#{app.app_root}/rails_relative_url_root.txt").should be_false
 		File.exist?("#{app.app_root}/rack_base_uri.txt").should be_false
 	end
-	
+
 	it "doesn't set ENV['RAILS_RELATIVE_URL_ROOT'] and ENV['RACK_BASE_URI'] if 'base_uri' is empty" do
 		before_start %q{
 			if ENV['RAILS_RELATIVE_URL_ROOT']
@@ -81,7 +81,7 @@ shared_examples_for "a spawner" do
 		File.exist?("#{app.app_root}/rails_relative_url_root.txt").should be_false
 		File.exist?("#{app.app_root}/rack_base_uri.txt").should be_false
 	end
-	
+
 	it "doesn't set ENV['RAILS_RELATIVE_URL_ROOT'] and ENV['RACK_BASE_URI'] if 'base_uri' is '/'" do
 		before_start %q{
 			if ENV['RAILS_RELATIVE_URL_ROOT']
@@ -95,7 +95,7 @@ shared_examples_for "a spawner" do
 		File.exist?("#{app.app_root}/rails_relative_url_root.txt").should be_false
 		File.exist?("#{app.app_root}/rack_base_uri.txt").should be_false
 	end
-	
+
 	it "sets the environment variables in the 'environment_variables' option" do
 		before_start %q{
 			File.open("env.txt", "w") do |f|
@@ -105,23 +105,23 @@ shared_examples_for "a spawner" do
 				end
 			end
 		}
-		
+
 		env_vars_string = "PATH\0/usr/bin:/opt/sw/bin\0FOO\0foo bar!\0"
 		options = { "environment_variables" => [env_vars_string].pack("m") }
 		app = spawn_some_application(options)
-		
+
 		contents = File.read("#{app.app_root}/env.txt")
 		contents.should =~ %r(\nPATH = /usr/bin:/opt/sw/bin\n)
 		contents.should =~ %r(\nFOO = foo bar\!\n)
 	end
-	
+
 	it "does not cache things like the connect password" do
 		app1 = spawn_some_application("connect_password" => "1234")
 		app2 = spawn_some_application("connect_password" => "5678")
 		ping_app(app1, "1234").should == "pong"
 		ping_app(app2, "5678").should == "pong"
 	end
-	
+
 	it "calls the starting_worker_process event after the startup file has been loaded" do
 		after_start %q{
 			history_file = "#{PhusionPassenger::Utils.passenger_tmpdir}/history.txt"
@@ -133,7 +133,7 @@ shared_examples_for "a spawner" do
 		spawn_some_application.close
 		app = spawn_some_application
 		app.close
-		
+
 		history_file = "#{PhusionPassenger::Utils.passenger_tmpdir}/history.txt"
 		eventually do
 			contents = File.read(history_file)
@@ -142,7 +142,7 @@ shared_examples_for "a spawner" do
 				lines.count("worker_process_started") == 2
 		end
 	end
-	
+
 	it "calls the stopping_worker_process event" do
 		after_start %q{
 			history_file = "#{PhusionPassenger::Utils.passenger_tmpdir}/history.txt"
@@ -154,7 +154,7 @@ shared_examples_for "a spawner" do
 		spawn_some_application.close
 		app = spawn_some_application
 		app.close
-		
+
 		history_file = "#{PhusionPassenger::Utils.passenger_tmpdir}/history.txt"
 		eventually do
 			contents = File.read(history_file)
@@ -163,7 +163,7 @@ shared_examples_for "a spawner" do
 				lines.count("worker_process_stopped") == 2
 		end
 	end
-	
+
 	it "calls #at_exit blocks upon exiting" do
 		before_start %q{
 			history_file = "#{PhusionPassenger::Utils.passenger_tmpdir}/history.txt"
@@ -178,7 +178,7 @@ shared_examples_for "a spawner" do
 				end
 			end
 		}
-		
+
 		spawn_some_application.close
 		history_file = "#{PhusionPassenger::Utils.passenger_tmpdir}/history.txt"
 		eventually do
@@ -188,7 +188,7 @@ shared_examples_for "a spawner" do
 				"at_exit 1\n"
 		end
 	end
-	
+
 	it "lowers privilege using Utils#lower_privilege" do
 		filename = "#{PhusionPassenger::Utils.passenger_tmpdir}/called.txt"
 		PhusionPassenger::Utils.stub!(:lower_privilege_called).and_return do
@@ -199,7 +199,7 @@ shared_examples_for "a spawner" do
 			File.exist?(filename).should be_true
 		end
 	end
-	
+
 	describe "error handling" do
 		it "raises an AppInitError if the spawned app raises a standard exception during startup" do
 			before_start %q{
@@ -212,12 +212,12 @@ shared_examples_for "a spawner" do
 				e.child_exception.message.should == "This is a dummy exception."
 			end
 		end
-		
+
 		it "raises an AppInitError if the spawned app raises a custom-defined exception during startup" do
 			before_start %q{
 				class MyError < StandardError
 				end
-				
+
 				raise MyError, "This is a custom exception."
 			}
 			begin
@@ -227,7 +227,7 @@ shared_examples_for "a spawner" do
 				e.child_exception.message.should == "This is a custom exception. (MyError)"
 			end
 		end
-		
+
 		it "raises an AppInitError if the spawned app calls exit() during startup" do
 			before_start %q{
 				exit
@@ -239,14 +239,14 @@ shared_examples_for "a spawner" do
 				e.child_exception.class.should == SystemExit
 			end
 		end
-		
+
 		it "prints the exception to STDERR if the spawned app raised an error" do
 			old_stderr = STDERR
 			file = File.new('output.tmp', 'w+')
 			begin
 				Object.send(:remove_const, "STDERR") rescue nil
 				Object.const_set("STDERR", file)
-				
+
 				before_start %q{
 					def dummy_function
 						raise 'This is a dummy exception.'
@@ -255,7 +255,7 @@ shared_examples_for "a spawner" do
 				}
 				block = lambda { spawn_some_application }
 				block.should raise_error(AppInitError)
-				
+
 				file.rewind
 				data = file.read
 				data.should =~ /This is a dummy exception/

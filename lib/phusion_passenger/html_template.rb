@@ -36,23 +36,23 @@ class HTMLTemplate
 			self[name] = value
 		end
 	end
-	
+
 	def []=(name, value)
 		instance_variable_set("@#{name}".to_sym, value)
 		return self
 	end
-	
+
 	def result
 		return @template.result(binding)
 	end
 
 private
 	include ERB::Util
-	
+
 	def get_binding
 		return binding
 	end
-	
+
 	def layout(template_name, options = {})
 		options.each_pair do |name, value|
 			self[name] = value
@@ -65,11 +65,11 @@ private
 		end
 		@buffer << layout_template.result(b)
 	end
-	
+
 	def include(filename)
 		return File.read("#{TEMPLATES_DIR}/#{filename}")
 	end
-	
+
 	def backtrace_html_for(error)
 		html = %Q{
 			<table class="backtrace">
@@ -98,7 +98,7 @@ private
 		html << "</table>\n"
 		return html
 	end
-	
+
 	def starts_with(str, substr)
 		return str[0 .. substr.size - 1] == substr
 	end

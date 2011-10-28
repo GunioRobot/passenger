@@ -33,27 +33,27 @@ explicitly define some special types:
   A doubly linked list which contains elements of type SomeType. It supports
   all the usual list operations that one can expect from a linked list, like
   add_to_back(), etc.
-  
+
   We assume that operations that insert an element into the list return an
   iterator object. An iterator object is an opaque object which represents a
   specific position in the list; it probably contains the links to the previous
   and the next iterator, as well as a reference to the actual list element,
   depending on the list implementation.
-  
+
   The following operations deserve special mention:
   * remove(iterator)
     Removes the specified element from the list, as represented by the given
     iterator. This operation can be done in O(1) time.
-  
+
   * move_to_front(iterator)
     Moves the specified element - as represented by the given iterator - to
     the front of the list. This operation can be done in O(1) time.
-  
+
 - Group
   A compound type (class) which contains information about an application root,
   such as the application processes that have been spawned for this application
   root.
-  
+
   A Group has the following members:
   * name (string):
     This group's key in the _groups_ map of the application pool.
@@ -64,7 +64,7 @@ explicitly define some special types:
 
   * processes (list<ProcessInfo>):
     A list of ProcessInfo objects.
-    
+
     Invariant:
         processes is non-empty.
         for all 0 <= i < processes.size() - 1:
@@ -77,7 +77,7 @@ explicitly define some special types:
     Invariant:
         if !detached:
            size == processes.size()
-  
+
   * max_requests (unsigned integer):
     The maximum number of requests that each application process in
     this group may process. After having processed this
@@ -111,7 +111,7 @@ explicitly define some special types:
   object, as well as various metadata, such as iterators for various linked
   lists. These iterators make it possible to perform actions on the linked
   lists in O(1) time.
-  
+
   A ProcessInfo has the following members:
   * process - A process object, representing an application process.
   * group_name (string) - The name of the group that this ProcessInfo belongs
@@ -147,7 +147,7 @@ explicitly define some special types:
 - PoolOptions
   A structure containing additional information used by the spawn manager's
   spawning process, as well as by the get() function.
-  
+
   A PoolOptions has at least the following members:
   * app_group_name (string) - A name which is used to group application
     processes together.
@@ -187,7 +187,7 @@ information:
 - groups: map[string => Group]
   Maps an application root to its Group object. This map contains all
   application processes in the pool.
-  
+
   Invariant:
      for all values g in groups:
         !g.detached
@@ -195,7 +195,7 @@ information:
 	for all i in g.processes:
            !i.detached
      (sum of all g.size in groups) == count
-  
+
 - max: integer
   The maximum number of ProcessInfo objects that may exist in the pool.
 
@@ -216,7 +216,7 @@ information:
 - inactive_apps: list<ProcessInfo>
   A linked list of ProcessInfo objects. All application processes in this list
   are inactive.
-  
+
   Invariant:
      inactive_apps.size() == count - active
      for all x in inactive_apps:
@@ -236,7 +236,7 @@ Here's an UML diagram in ASCII art:
 [ProcessInfo] 1..* --------+
                            |
                            |
-                           
+
                            1
 [ApplicationPool]       [Group]
        1                  0..*
@@ -292,17 +292,17 @@ function detach(identifier):
 # All exceptions that occur are propagated.
 private function checkout_without_lock(app_root, options):
 	group = groups[options.app_group_name]
-	
+
 	if needs_restart(app_root, options):
 		Tell spawn server to reload code for options.app_group_name.
 		if (group != null):
 			detach_group_without_lock(group)
 			group = null
-	
+
 	if (group != null):
 		# There are existing processes for this app group.
 		processes = group.processes
-		
+
 		if (processes.front.sessions == 0):
 			# There is an inactive process, so we use it.
 			process_info = processes.front
@@ -365,14 +365,14 @@ private function checkout_without_lock(app_root, options):
 		mutate_active(active + 1)
 		if (options.min_processes > 1) and spawning_allowed(group, options):
 			spawn_in_background(group, options)
-	
+
 	group.max_requests = options.max_requests
 	group.min_processes = options.min_processes
 	group.environment = options.environment
-	
+
 	process_info.last_used = current_time()
 	process_info.sessions++
-	
+
 	return [process_info, group]
 
 
@@ -406,7 +406,7 @@ private function needs_restart(app_root, options):
 		restart_dir = options.restart_dir
 	else:
 		restart_dir = app_root + "/" + options.restart_dir
-	
+
 	return (file_exists("$restart_dir/always_restart.txt")) or
 	       (we haven't seen "$restart_dir/restart.txt" before) or
 	       ("$restart_dir/restart.txt" changed since the last time we checked)
@@ -485,7 +485,7 @@ private function spawner_thread_callback(group, options):
 					# error.
 					remove_group_without_lock(group)
 				return
-		
+
 		lock.synchronize:
 			if (group.detached):
 				return
@@ -530,7 +530,7 @@ private function detach_without_lock(identifier):
 # ProcessInfo object that it belongs to has been destroyed.
 callback session_has_been_closed(session, process_info):
 	Convert process_info into a normal reference.
-	
+
 	# We check process_info.detached without locking. This should be safe:
 	# even if a boolean update isn't atomic on the current CPU, a non-zero
 	# value evaluates to true. Once true, _detached_ will never become false,
@@ -538,15 +538,15 @@ callback session_has_been_closed(session, process_info):
 	# damage.
 	if (process_info == null) or (process_info.detached):
 		return
-	
+
 	lock.synchronize:
 		if process_info.detached:
 			return
-		
+
 		group = groups[process_info.group_name]
 		processes = group.processes
 		process_info.processed++
-		
+
 		if (group.max_requests > 0) and (process_info.processed >= group.max_requests):
 			# The application process has processed its maximum allowed
 			# number of requests, so we shut it down.
@@ -594,10 +594,10 @@ thread cleaner:
 					return
 				else if MAX_IDLE_TIME changed:
 					restart loop
-			
+
 			# Invariant:
 			# From this point on, MAX_IDLE_TIME > 0
-			
+
 			now = current_time()
 			for all process_info in inactive_apps:
 				if (now - process_info.last_used > MAX_IDLE_TIME):

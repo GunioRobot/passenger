@@ -8,13 +8,13 @@
 # include <boost/detail/workaround.hpp>
 # include <boost/concept/detail/backward_compatibility.hpp>
 
-namespace boost { namespace concepts { 
+namespace boost { namespace concepts {
 
 # if BOOST_WORKAROUND(__GNUC__, == 2)
 
 #  define BOOST_CONCEPT_USAGE(model) ~model()
 
-# else 
+# else
 
 template <class Model>
 struct usage_requirements
@@ -37,7 +37,7 @@ struct usage_requirements
 
 #  endif
 
-# endif 
+# endif
 
 }} // namespace boost::concepts
 

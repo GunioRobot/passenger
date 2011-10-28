@@ -83,13 +83,13 @@ protected:
 	string detachKey;
 	string connectPassword;
 	string gupid;
-	
+
 public:
 	/**
 	 * Concrete classes might throw arbitrary exceptions.
 	 */
 	virtual ~Session() {}
-	
+
 	/**
 	 * Initiate the session by connecting to the associated process.
 	 * A Session is not usable until it's initiated.
@@ -99,13 +99,13 @@ public:
 	 * @throws boost::thread_interrupted
 	 */
 	virtual void initiate() = 0;
-	
+
 	/**
 	 * Returns whether this session has been initiated (that is, whether
 	 * initiate() had been called in the past).
 	 */
 	virtual bool initiated() const = 0;
-	
+
 	/**
 	 * Returns the type of the socket that this session is served from,
 	 * e.g. "unix" indicating a Unix socket.
@@ -113,7 +113,7 @@ public:
 	 * @post !result.empty()
 	 */
 	virtual string getSocketType() const = 0;
-	
+
 	/**
 	 * Returns the address of the socket that this session is served
 	 * from. This can be a Unix socket filename or a TCP host:port string
@@ -122,7 +122,7 @@ public:
 	 * @post !result.empty()
 	 */
 	virtual string getSocketName() const = 0;
-	
+
 	/**
 	 * Send HTTP request headers to the application. The HTTP headers must be
 	 * converted into CGI headers, and then encoded into a string that matches this grammar:
@@ -166,7 +166,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	/**
 	 * Convenience shortcut for sendHeaders(const char *, unsigned int)
 	 * @param headers The headers
@@ -178,7 +178,7 @@ public:
 	virtual void sendHeaders(const StaticString &headers) {
 		sendHeaders(headers.c_str(), headers.size());
 	}
-	
+
 	/**
 	 * Send a chunk of HTTP request body data to the application.
 	 * You can call this method as many times as is required to transfer
@@ -210,7 +210,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	/**
 	 * Returns this session's channel's file descriptor. This stream is
 	 * full-duplex, and will be automatically closed upon Session's
@@ -221,7 +221,7 @@ public:
 	 *          been closed or discarded.
 	 */
 	virtual int getStream() const = 0;
-	
+
 	/**
 	 * Set the timeout value for reading data from the I/O channel.
 	 * If no data can be read within the timeout period, then the
@@ -234,7 +234,7 @@ public:
 	 * @throws SystemException Cannot set the timeout.
 	 */
 	virtual void setReaderTimeout(unsigned int msec) = 0;
-	
+
 	/**
 	 * Set the timeout value for writing data from the I/O channel.
 	 * If no data can be written within the timeout period, then the
@@ -247,7 +247,7 @@ public:
 	 * @throws SystemException Cannot set the timeout.
 	 */
 	virtual void setWriterTimeout(unsigned int msec) = 0;
-	
+
 	/**
 	 * Indicate that we don't want to read data anymore from the I/O channel.
 	 * Calling this method after closeStream()/discardStream() is called will
@@ -258,7 +258,7 @@ public:
 	 * @throws boost::thread_interrupted
 	 */
 	virtual void shutdownReader() = 0;
-	
+
 	/**
 	 * Indicate that we don't want to write data anymore to the I/O channel.
 	 * Calling this method after closeStream()/discardStream() is called will
@@ -269,7 +269,7 @@ public:
 	 * @throws boost::thread_interrupted
 	 */
 	virtual void shutdownWriter() = 0;
-	
+
 	/**
 	 * Close the I/O stream.
 	 *
@@ -279,7 +279,7 @@ public:
 	 * @post getStream() == -1
 	 */
 	virtual void closeStream() = 0;
-	
+
 	/**
 	 * Discard the I/O channel's file descriptor, so that the destructor
 	 * won't automatically close it.
@@ -288,17 +288,17 @@ public:
 	 * @post getStream() == -1
 	 */
 	virtual void discardStream() = 0;
-	
+
 	/**
 	 * Get the process ID of the application process that this session
 	 * belongs to.
 	 */
 	virtual pid_t getPid() const = 0;
-	
+
 	const string getDetachKey() const {
 		return detachKey;
 	}
-	
+
 	/**
 	 * Returns this session's process's connect password. This password is
 	 * guaranteed to be valid ASCII.
@@ -306,7 +306,7 @@ public:
 	const string getConnectPassword() const {
 		return connectPassword;
 	}
-	
+
 	const string getGupid() const {
 		return gupid;
 	}
@@ -321,17 +321,17 @@ typedef shared_ptr<Session> SessionPtr;
 class StandardSession: public Session {
 public:
 	typedef function<void (const StandardSession *)> CloseCallback;
-	
+
 protected:
 	pid_t pid;
 	CloseCallback closeCallback;
 	string socketType;
 	string socketName;
-	
+
 	/** The session connection file descriptor. */
 	int fd;
 	bool isInitiated;
-	
+
 public:
 	StandardSession(pid_t pid,
 	                const CloseCallback &closeCallback,
@@ -355,7 +355,7 @@ public:
 		fd = -1;
 		isInitiated = false;
 	}
-	
+
 	virtual ~StandardSession() {
 		TRACE_POINT();
 		closeStream();
@@ -363,14 +363,14 @@ public:
 			closeCallback(this);
 		}
 	}
-	
+
 	virtual void initiate() {
 		TRACE_POINT();
 		if (socketType == "unix") {
 			fd = connectToUnixServer(socketName.c_str());
 		} else {
 			vector<string> args;
-			
+
 			split(socketName, ':', args);
 			if (args.size() != 2 || atoi(args[1]) == 0) {
 				UPDATE_TRACE_POINT();
@@ -380,31 +380,31 @@ public:
 		}
 		isInitiated = true;
 	}
-	
+
 	virtual bool initiated() const {
 		return isInitiated;
 	}
-	
+
 	virtual string getSocketType() const {
 		return socketType;
 	}
-	
+
 	virtual string getSocketName() const {
 		return socketName;
 	}
-	
+
 	virtual int getStream() const {
 		return fd;
 	}
-	
+
 	virtual void setReaderTimeout(unsigned int msec) {
 		MessageChannel(fd).setReadTimeout(msec);
 	}
-	
+
 	virtual void setWriterTimeout(unsigned int msec) {
 		MessageChannel(fd).setWriteTimeout(msec);
 	}
-	
+
 	virtual void shutdownReader() {
 		TRACE_POINT();
 		if (fd != -1) {
@@ -419,7 +419,7 @@ public:
 			}
 		}
 	}
-	
+
 	virtual void shutdownWriter() {
 		TRACE_POINT();
 		if (fd != -1) {
@@ -434,7 +434,7 @@ public:
 			}
 		}
 	}
-	
+
 	virtual void closeStream() {
 		TRACE_POINT();
 		if (fd != -1) {
@@ -454,11 +454,11 @@ public:
 			}
 		}
 	}
-	
+
 	virtual void discardStream() {
 		fd = -1;
 	}
-	
+
 	virtual pid_t getPid() const {
 		return pid;
 	}

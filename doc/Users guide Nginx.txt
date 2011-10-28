@@ -221,9 +221,9 @@ http {
     passenger_root /somewhere/passenger-x.x.x;
     passenger_ruby /usr/bin/ruby;
     passenger_max_pool_size 10;
-    
+
     gzip on;
-    
+
     server {
         server_name www.foo.com;
         listen 80;
@@ -243,9 +243,9 @@ http {
     # passenger_root /somewhere/passenger-x.x.x;
     # passenger_ruby /usr/bin/ruby;
     # passenger_max_pool_size 10;
-    
+
     gzip on;
-    
+
     server {
         server_name www.foo.com;
         listen 80;
@@ -299,14 +299,14 @@ For example:
 -------------------------------------------
 http {
     ...
-    
+
     server {
         listen 80;
         server_name www.mycook.com;
         root /webapps/mycook/public;
         passenger_enabled on;
     }
-    
+
     ...
 }
 -------------------------------------------
@@ -320,13 +320,13 @@ Suppose that you already have a 'server' virtual host entry:
 -------------------------------------------
 http {
     ...
-    
+
     server {
         listen 80;
         server_name www.phusion.nl;
         root /websites/phusion;
     }
-    
+
     ...
 }
 -------------------------------------------
@@ -345,7 +345,7 @@ option to the 'server' block:
 -------------------------------------------
 http {
     ...
-    
+
     server {
         listen 80;
         server_name www.phusion.nl;
@@ -353,7 +353,7 @@ http {
         passenger_enabled on;        # <--- These lines have
         passenger_base_uri /rails;   # <--- been added.
     }
-    
+
     ...
 }
 -------------------------------------------
@@ -515,14 +515,14 @@ Suppose that you already have a virtual host:
 -------------------------------------------
 http {
     ...
-    
+
     server {
         listen 80;
         server_name www.phusion.nl;
         root /websites/phusion;
         passenger_enabled on;
     }
-    
+
     ...
 }
 -------------------------------------------
@@ -541,7 +541,7 @@ option to the 'server' block:
 -------------------------------------------
 http {
     ...
-    
+
     server {
         listen 80;
         server_name www.phusion.nl;
@@ -549,7 +549,7 @@ http {
         passenger_enabled on;        # <--- These lines have
         passenger_base_uri /rack;    # <--- been added.
     }
-    
+
     ...
 }
 -------------------------------------------
@@ -957,7 +957,7 @@ http {
     ...
     passenger_max_pool_size 15;
     passenger_pool_idle_time 10;
-    
+
     server {
         listen 80;
         server_name foobar.com;
@@ -1016,7 +1016,7 @@ Rails/Rack web page. We recommend a value of `2 * x`, where `x` is the average
 number of seconds that a visitor spends on a single Rails/Rack web page. But your
 mileage may vary.
 
-When this value is set to '0', application instances will not be shutdown unless 
+When this value is set to '0', application instances will not be shutdown unless
 it's really necessary, i.e. when Phusion Passenger is out of worker processes
 for a given application and one of the inactive application instances needs to
 make place for another application instance. Setting the value to 0 is

@@ -44,17 +44,17 @@ protected:
 	FileDescriptor fd;
 	MessageChannel channel;
 	bool shouldAutoDisconnect;
-	
+
 	/* sendUsername() and sendPassword() exist and are virtual in order to facilitate unit testing. */
-	
+
 	virtual void sendUsername(MessageChannel &channel, const string &username) {
 		channel.writeScalar(username);
 	}
-	
+
 	virtual void sendPassword(MessageChannel &channel, const StaticString &userSuppliedPassword) {
 		channel.writeScalar(userSuppliedPassword.c_str(), userSuppliedPassword.size());
 	}
-	
+
 	/**
 	 * Authenticate to the server with the given username and password.
 	 *
@@ -66,10 +66,10 @@ protected:
 	 */
 	void authenticate(const string &username, const StaticString &userSuppliedPassword) {
 		vector<string> args;
-		
+
 		sendUsername(channel, username);
 		sendPassword(channel, userSuppliedPassword);
-		
+
 		if (!channel.read(args)) {
 			throw IOException("The message server did not send an authentication response.");
 		} else if (args.size() != 1) {
@@ -78,7 +78,7 @@ protected:
 			throw SecurityException("The message server denied authentication: " + args[0]);
 		}
 	}
-	
+
 	void autoDisconnect() {
 		if (shouldAutoDisconnect) {
 			// Closes the connection without throwing close exceptions.
@@ -86,7 +86,7 @@ protected:
 			channel = MessageChannel();
 		}
 	}
-	
+
 public:
 	/**
 	 * Create a new MessageClient object. It doesn't actually connect to the server until
@@ -99,9 +99,9 @@ public:
 		 */
 		shouldAutoDisconnect = true;
 	}
-	
+
 	virtual ~MessageClient() { }
-	
+
 	/**
 	 * Connect to the given MessageServer. If a connection was already established,
 	 * then the old connection will be closed and a new connection will be established.
@@ -129,7 +129,7 @@ public:
 		try {
 			fd = connectToServer(serverAddress.c_str());
 			channel = MessageChannel(fd);
-			
+
 			vector<string> args;
 			if (!read(args)) {
 				throw IOException("The message server closed the connection before sending a version identifier.");
@@ -142,7 +142,7 @@ public:
 					args[1] + ".";
 				throw IOException(message);
 			}
-			
+
 			authenticate(username, userSuppliedPassword);
 			return this;
 		} catch (const RuntimeException &) {
@@ -159,25 +159,25 @@ public:
 			throw;
 		}
 	}
-	
+
 	void disconnect() {
 		fd.close();
 		fd = FileDescriptor();
 		channel = MessageChannel();
 	}
-	
+
 	bool connected() const {
 		return fd != -1;
 	}
-	
+
 	void setAutoDisconnect(bool value) {
 		shouldAutoDisconnect = value;
 	}
-	
+
 	FileDescriptor getConnection() const {
 		return fd;
 	}
-	
+
 	/**
 	 * @throws SystemException
 	 * @throws boost::thread_interrupted
@@ -190,7 +190,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	/**
 	 * @throws SystemException
 	 * @throws SecurityException
@@ -211,7 +211,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	/**
 	 * @throws SystemExeption
 	 * @throws IOException
@@ -228,7 +228,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	/**
 	 * @throws SystemException
 	 * @throws boost::thread_interrupted
@@ -249,7 +249,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	/**
 	 * @throws SystemException
 	 * @throws boost::thread_interrupted
@@ -262,7 +262,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	/**
 	 * @throws SystemException
 	 * @throws boost::thread_interrupted
@@ -275,7 +275,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	/**
 	 * @throws SystemException
 	 * @throws boost::thread_interrupted

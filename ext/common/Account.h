@@ -61,7 +61,7 @@ public:
 	enum Rights {
 		ALL                       = ~0,
 		NONE                      = 0,
-		
+
 		// ApplicationPool::Server rights.
 		GET                       = 1 << 0,
 		CLEAR                     = 1 << 1,
@@ -72,10 +72,10 @@ public:
 		INSPECT_SENSITIVE_INFO    = 1 << 6,
 		//INSPECT_BACKEND_ADDRESSES = 1 << 6,
 		//INSPECT_DETACH_KEYS       = 1 << 7,
-		
+
 		// BacktracesServer rights.
 		INSPECT_BACKTRACES        = 1 << 8,
-		
+
 		// Other rights.
 		EXIT                      = 1 << 31
 	};
@@ -89,19 +89,19 @@ private:
 public:
 	// Urgh, I can't use 'Rights' here as type because apparently bitwise
 	// ORing two enums results in an int type.
-	
+
 	static Rights parseRightsString(const string &str, int defaultValue = NONE) {
 		vector<string> rights_vec;
 		vector<string>::const_iterator it;
 		int result = defaultValue;
-		
+
 		split(str, ',', rights_vec);
 		for (it = rights_vec.begin(); it != rights_vec.end(); it++) {
 			if (*it == "all") {
 				result = ALL;
 			} else if (*it == "none") {
 				result = NONE;
-			
+
 			} else if (*it == "get") {
 				result |= GET;
 			} else if (*it == "clear") {
@@ -116,28 +116,28 @@ public:
 				result |= INSPECT_BASIC_INFO;
 			} else if (*it == "inspect_sensitive_info") {
 				result |= INSPECT_SENSITIVE_INFO;
-			
+
 			} else if (*it == "inspect_backtraces") {
 				result |= INSPECT_BACKTRACES;
-				
+
 			} else if (*it == "exit") {
 				result |= EXIT;
-				
+
 			} else if (*it != "") {
 				throw ArgumentException("Unknown right '" + *it + "'.");
 			}
 		}
-		
+
 		return (Rights) result;
 	}
-	
+
 	Account(const string &username, const string &passwordOrHash, bool hashGiven, int rights = ALL) {
 		this->username       = username;
 		this->passwordOrHash = passwordOrHash;
 		this->hashGiven      = hashGiven;
 		this->rights         = (Rights) rights;
 	}
-	
+
 	bool checkPasswordOrHash(const StaticString &userSuppliedPassword) const {
 		if (hashGiven) {
 			return passwordOrHash == createHash(userSuppliedPassword);
@@ -145,23 +145,23 @@ public:
 			return userSuppliedPassword == passwordOrHash;
 		}
 	}
-	
+
 	bool hasRights(int rights) const {
 		return this->rights & rights;
 	}
-	
+
 	void setRights(int rights) {
 		this->rights = (Rights) rights;
 	}
-	
+
 	string getUsername() const {
 		return username;
 	}
-	
+
 	string getRawPassword() const {
 		return passwordOrHash;
 	}
-	
+
 	static string createHash(const StaticString &userSuppliedPassword) {
 		// TODO: use bcrypt or something
 		return userSuppliedPassword;

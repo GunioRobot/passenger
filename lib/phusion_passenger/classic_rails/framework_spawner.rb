@@ -47,11 +47,11 @@ module ClassicRails
 # Starting it synchronously with AbstractServer#start_synchronously has not been tested.
 class FrameworkSpawner < AbstractServer
 	include Utils
-	
+
 	# This exception means that the FrameworkSpawner server process exited unexpectedly.
 	class Error < AbstractServer::ServerError
 	end
-	
+
 	# Creates a new instance of FrameworkSpawner.
 	#
 	# Extra supported options:
@@ -76,14 +76,14 @@ class FrameworkSpawner < AbstractServer
 		if !@framework_version
 			raise ArgumentError, "The 'framework_version' option must specified"
 		end
-		
+
 		super()
 		@options = options
 		self.max_idle_time = DEFAULT_FRAMEWORK_SPAWNER_MAX_IDLE_TIME
 		define_message_handler(:spawn_application, :handle_spawn_application)
 		define_message_handler(:reload, :handle_reload)
 	end
-	
+
 	# Overrided from AbstractServer#start.
 	#
 	# May raise these additional exceptions:
@@ -118,7 +118,7 @@ class FrameworkSpawner < AbstractServer
 			raise
 		end
 	end
-	
+
 	# Spawn a RoR application using the Ruby on Rails framework
 	# version associated with this FrameworkSpawner.
 	# When successful, an Application object will be returned, which represents
@@ -146,7 +146,7 @@ class FrameworkSpawner < AbstractServer
 		# so we just need to decide here whether we want to print it.
 		print_exceptions = options["print_exceptions"]
 		options["print_exceptions"] = false
-		
+
 		begin
 			connect do |channel|
 				channel.write("spawn_application", *options.to_a.flatten)
@@ -170,7 +170,7 @@ class FrameworkSpawner < AbstractServer
 			raise Error, "The framework spawner server exited unexpectedly: #{e}"
 		end
 	end
-	
+
 	# Remove the cached application instances at the given group name.
 	# If nil is specified as group name, then all cached application
 	# instances will be removed, no matter the group name.
@@ -221,7 +221,7 @@ protected
 		end
 		channel.write('success')
 	end
-	
+
 	# Overrided method.
 	def finalize_server # :nodoc:
 		@spawners.cleanup
@@ -295,7 +295,7 @@ private
 	ensure
 		app_process.close if app_process
 	end
-	
+
 	def handle_reload(client, app_group_name = nil)
 		@spawners.synchronize do
 			if app_group_name

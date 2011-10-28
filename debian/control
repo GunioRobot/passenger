@@ -21,12 +21,12 @@ Description: Rails and Rack support for Apache2
  deployment of Ruby web applications, such as those built on the
  revolutionary Ruby on Rails web framework, a breeze.
  .
- This package provides the bits of Passenger common to both its Apache 
+ This package provides the bits of Passenger common to both its Apache
  and NGINX support.
 
 Package: libapache2-mod-passenger
 Architecture: any
-Depends: ${shlibs:Depends}, apache2.2-common, 
+Depends: ${shlibs:Depends}, apache2.2-common,
  passenger-common (= ${binary:Version})
 Suggests: python, rails, passenger-doc, rubygems (>= 1.0)
 Description: Rails and Rack support for Apache2

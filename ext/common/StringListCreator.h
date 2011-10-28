@@ -43,7 +43,7 @@ typedef shared_ptr<StringList> StringListPtr;
 class StringListCreator {
 public:
 	virtual ~StringListCreator() {}
-	
+
 	/** May throw arbitrary exceptions. */
 	virtual const StringListPtr getItems() const = 0;
 };
@@ -53,11 +53,11 @@ typedef shared_ptr<StringListCreator> StringListCreatorPtr;
 class SimpleStringListCreator: public StringListCreator {
 public:
 	StringListPtr items;
-	
+
 	SimpleStringListCreator() {
 		items = ptr(new StringList());
 	}
-	
+
 	SimpleStringListCreator(const StaticString &data) {
 		items = ptr(new StringList());
 		string buffer = Base64::decode(data);
@@ -70,7 +70,7 @@ public:
 			}
 		}
 	}
-	
+
 	virtual const StringListPtr getItems() const {
 		return items;
 	}

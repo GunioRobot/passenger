@@ -43,7 +43,7 @@ namespace {
 	struct backtrace_data {
 		vector<trace_point *> list;
 		spin_lock lock;
-		
+
 		backtrace_data() {
 			list.reserve(50);
 		}
@@ -72,7 +72,7 @@ namespace {
  * GCC on OpenBSD supports __thread, but any access to such a variable
  * results in a segfault.
  *
- * Solaris does support __thread, but often it's not compiled into default GCC 
+ * Solaris does support __thread, but often it's not compiled into default GCC
  * packages (not to mention it's not available for Sparc). Playing it safe...
  *
  * MacOS X doesn't support __thread at all.
@@ -80,17 +80,17 @@ namespace {
 #if OXT_GCC_VERSION >= 40102 && !defined(__FreeBSD__) && \
    !defined(__SOLARIS__) && !defined(__OpenBSD__) && !defined(__APPLE__)
 	static __thread backtrace_data *thread_specific_backtrace_data;
-	
+
 	void
 	_init_backtrace_tls() {
 		thread_specific_backtrace_data = new backtrace_data();
 	}
-	
+
 	void
 	_finalize_backtrace_tls() {
 		delete thread_specific_backtrace_data;
 	}
-	
+
 	bool
 	_get_backtrace_list_and_its_lock(vector<trace_point *> **backtrace_list, spin_lock **lock) {
 		if (OXT_LIKELY(thread_specific_backtrace_data != NULL)) {
@@ -103,7 +103,7 @@ namespace {
 	}
 #else
 	static thread_specific_ptr<backtrace_data> thread_specific_backtrace_data;
-	
+
 	void _init_backtrace_tls() {
 		/* Not implemented on purpose.
 		 *
@@ -116,15 +116,15 @@ namespace {
 		 * this time.
 		 */
 	}
-	
+
 	void _finalize_backtrace_tls() {
 		// Not implemented either.
 	}
-	
+
 	bool
 	_get_backtrace_list_and_its_lock(vector<trace_point *> **backtrace_list, spin_lock **lock) {
 		backtrace_data *data;
-		
+
 		data = thread_specific_backtrace_data.get();
 		if (OXT_UNLIKELY(data == NULL)) {
 			data = new backtrace_data();
@@ -143,10 +143,10 @@ format_backtrace(Iterable backtrace_list) {
 	} else {
 		stringstream result;
 		ReverseIterator it;
-		
+
 		for (it = backtrace_list->rbegin(); it != backtrace_list->rend(); it++) {
 			trace_point *p = *it;
-			
+
 			result << "     in '" << p->function << "'";
 			if (p->source != NULL) {
 				const char *source = strrchr(p->source, '/');

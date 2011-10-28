@@ -17,19 +17,19 @@ typedef boost::shared_ptr<Counter> CounterPtr;
  */
 struct Counter {
 	struct timeout_expired { };
-	
+
 	unsigned int value;
 	boost::mutex mutex;
 	boost::condition_variable cond;
-	
+
 	static CounterPtr create_ptr() {
 		return CounterPtr(new Counter());
 	}
-	
+
 	Counter() {
 		value = 0;
 	}
-	
+
 	/**
 	 * Wait until other threads have increment this counter to at least wanted_value.
 	 * If this doesn't happen within <tt>timeout</tt> miliseconds, then a timeout_expired
@@ -43,7 +43,7 @@ struct Counter {
 			}
 		}
 	}
-	
+
 	/** Increment the counter by one. */
 	void increment() {
 		boost::unique_lock<boost::mutex> l(mutex);

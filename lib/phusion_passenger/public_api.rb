@@ -25,22 +25,22 @@ module PhusionPassenger
 class << self
 	# Set during spawning, and set back to nil when spawning is done.
 	attr_accessor :_spawn_options
-	
+
 	@@event_starting_worker_process = []
 	@@event_stopping_worker_process = []
 	@@event_credentials = []
 	@@event_after_installing_signal_handlers = []
-	
+
 	def on_event(name, &block)
 		callback_list_for_event(name) << block
 	end
-	
+
 	def call_event(name, *args)
 		callback_list_for_event(name).each do |callback|
 			callback.call(*args)
 		end
 	end
-	
+
 	def install_framework_extensions!(*args)
 		require 'rails/version' if defined?(::Rails) && !defined?(::Rails::VERSION)
 		if defined?(::Rails) && ::Rails::VERSION::MAJOR == 3
@@ -48,7 +48,7 @@ class << self
 			Rails3Extensions.init!(_spawn_options, *args)
 		end
 	end
-	
+
 	def benchmark(env = nil, title = "Benchmarking")
 		log = lookup_analytics_log(env)
 		if log
@@ -59,7 +59,7 @@ class << self
 			yield
 		end
 	end
-	
+
 	def log_cache_hit(env, name)
 		log = lookup_analytics_log(env)
 		if log
@@ -69,7 +69,7 @@ class << self
 			return false
 		end
 	end
-	
+
 	def log_cache_miss(env, name, generation_time = nil)
 		log = lookup_analytics_log(env)
 		if log
@@ -99,7 +99,7 @@ private
 			raise ArgumentError, "Unknown event name '#{name}'"
 		end
 	end
-	
+
 	def lookup_analytics_log(env)
 		if env
 			return env[PASSENGER_ANALYTICS_WEB_LOG]

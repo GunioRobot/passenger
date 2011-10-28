@@ -21,16 +21,16 @@
    1. Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
 
-   2. The origin of this software must not be misrepresented; you must 
-      not claim that you wrote the original software.  If you use this 
-      software in a product, an acknowledgment in the product 
+   2. The origin of this software must not be misrepresented; you must
+      not claim that you wrote the original software.  If you use this
+      software in a product, an acknowledgment in the product
       documentation would be appreciated but is not required.
 
    3. Altered source versions must be plainly marked as such, and must
       not be misrepresented as being the original software.
 
-   4. The name of the author may not be used to endorse or promote 
-      products derived from this software without specific prior written 
+   4. The name of the author may not be used to endorse or promote
+      products derived from this software without specific prior written
       permission.
 
    THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
@@ -52,13 +52,13 @@
    the terms of the GNU General Public License, version 2.  See the
    COPYING file in the source distribution for details.
 
-   ---------------------------------------------------------------- 
+   ----------------------------------------------------------------
 */
 
 
 /* This file is for inclusion into client (your!) code.
 
-   You can use these macros to manipulate and query Valgrind's 
+   You can use these macros to manipulate and query Valgrind's
    execution inside your own programs.
 
    The resulting executables will still run without Valgrind, just a
@@ -142,8 +142,8 @@
    this is executed not under Valgrind.  Args are passed in a memory
    block, and so there's no intrinsic limit to the number that could
    be passed, but it's currently five.
-   
-   The macro args are: 
+
+   The macro args are:
       _zzq_rlval    result lvalue
       _zzq_default  default value (result returned when running on real CPU)
       _zzq_request  request code
@@ -169,7 +169,7 @@
 #if defined(ARCH_x86)
 
 typedef
-   struct { 
+   struct {
       unsigned int nraddr; /* where's the code? */
    }
    OrigFn;
@@ -223,7 +223,7 @@ typedef
 #if defined(ARCH_amd64)
 
 typedef
-   struct { 
+   struct {
       unsigned long long int nraddr; /* where's the code? */
    }
    OrigFn;
@@ -277,7 +277,7 @@ typedef
 #if defined(ARCH_ppc32)
 
 typedef
-   struct { 
+   struct {
       unsigned int nraddr; /* where's the code? */
    }
    OrigFn;
@@ -333,7 +333,7 @@ typedef
 #if defined(ARCH_ppc64)
 
 typedef
-   struct { 
+   struct {
       unsigned long long int nraddr; /* where's the code? */
       unsigned long long int r2;  /* what tocptr do we need? */
    }
@@ -1278,7 +1278,7 @@ typedef
    "r0", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10",   \
    "r11", "r12", "r13"
 
-/* These CALL_FN_ macros assume that on ppc32-linux, 
+/* These CALL_FN_ macros assume that on ppc32-linux,
    sizeof(unsigned long) == 4. */
 
 #define CALL_FN_W_v(lval, orig)                                   \
@@ -2256,7 +2256,7 @@ typedef
 #define VG_IS_TOOL_USERREQ(a, b, v) \
    (VG_USERREQ_TOOL_BASE(a,b) == ((v) & 0xffff0000))
 
-/* !! ABIWARNING !! ABIWARNING !! ABIWARNING !! ABIWARNING !! 
+/* !! ABIWARNING !! ABIWARNING !! ABIWARNING !! ABIWARNING !!
    This enum comprises an ABI exported by Valgrind to programs
    which use client requests.  DO NOT CHANGE THE ORDER OF THESE
    ENTRIES, NOR DELETE ANY -- add new ones at the end. */
@@ -2349,7 +2349,7 @@ VALGRIND_PRINTF(const char *format, ...)
    va_list vargs;
    va_start(vargs, format);
    VALGRIND_DO_CLIENT_REQUEST(_qzz_res, 0, VG_USERREQ__PRINTF,
-                              (unsigned long)format, (unsigned long)vargs, 
+                              (unsigned long)format, (unsigned long)vargs,
                               0, 0, 0);
    va_end(vargs);
    return (int)_qzz_res;
@@ -2364,7 +2364,7 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
    va_list vargs;
    va_start(vargs, format);
    VALGRIND_DO_CLIENT_REQUEST(_qzz_res, 0, VG_USERREQ__PRINTF_BACKTRACE,
-                              (unsigned long)format, (unsigned long)vargs, 
+                              (unsigned long)format, (unsigned long)vargs,
                               0, 0, 0);
    va_end(vargs);
    return (int)_qzz_res;
@@ -2435,8 +2435,8 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
    use '0' if not.  Adding redzones makes it more likely Valgrind will spot
    block overruns.  `is_zeroed' indicates if the memory is zeroed, as it is
    for calloc().  Put it immediately after the point where a block is
-   allocated. 
-   
+   allocated.
+
    If you're allocating memory via superblocks, and then handing out small
    chunks of each superblock, if you don't have redzones on your small
    blocks, it's worth marking the superblock with VALGRIND_MAKE_MEM_NOACCESS

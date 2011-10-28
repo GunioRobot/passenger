@@ -75,7 +75,7 @@
        char buf[1024];
        ssize_t size = recv(fd, buf, sizeof(buf));
        size_t consumed = 0;
-       
+
        // ...and process it all. We only feed data to the message object
        // that hasn't already been fed.
        while (consumed < size) {
@@ -121,19 +121,19 @@ class Uint16Message {
 private:
 	uint16_t val;
 	uint8_t  consumed;
-	
+
 public:
 	Uint16Message() {
 		consumed = 0;
 	}
-	
+
 	void reset() {
 		consumed = 0;
 	}
-	
+
 	size_t feed(const char *data, size_t size) {
 		size_t locallyConsumed;
-		
+
 		locallyConsumed = std::min(size, sizeof(uint16_t) - consumed);
 		memcpy((char *) &val + consumed, data, locallyConsumed);
 		consumed += locallyConsumed;
@@ -142,15 +142,15 @@ public:
 		}
 		return locallyConsumed;
 	}
-	
+
 	bool done() const {
 		return consumed == sizeof(uint16_t);
 	}
-	
+
 	uint16_t value() const {
 		return val;
 	}
-	
+
 	static void generate(void *buf, uint16_t val) {
 		val = htons(val);
 		memcpy(buf, &val, sizeof(val));
@@ -164,19 +164,19 @@ class Uint32Message {
 private:
 	uint32_t val;
 	uint8_t  consumed;
-	
+
 public:
 	Uint32Message() {
 		consumed = 0;
 	}
-	
+
 	void reset() {
 		consumed = 0;
 	}
-	
+
 	size_t feed(const char *data, size_t size) {
 		size_t locallyConsumed;
-		
+
 		locallyConsumed = std::min(size, sizeof(uint32_t) - consumed);
 		memcpy((char *) &val + consumed, data, locallyConsumed);
 		consumed += locallyConsumed;
@@ -185,15 +185,15 @@ public:
 		}
 		return locallyConsumed;
 	}
-	
+
 	bool done() const {
 		return consumed == sizeof(uint32_t);
 	}
-	
+
 	uint32_t value() const {
 		return val;
 	}
-	
+
 	static void generate(void *buf, uint32_t val) {
 		val = htonl(val);
 		memcpy(buf, &val, sizeof(val));
@@ -208,7 +208,7 @@ public:
 	enum Error {
 		TOO_LARGE
 	};
-	
+
 private:
 	enum State {
 		READING_HEADER,
@@ -216,7 +216,7 @@ private:
 		DONE,
 		ERROR
 	};
-	
+
 	uint16_t toReserve;
 	uint16_t maxSize;
 	Uint16Message headerReader;
@@ -224,12 +224,12 @@ private:
 	uint8_t error;
 	string buffer;
 	vector<StaticString> result;
-	
+
 	void parseBody(const char *data, size_t size) {
 		const char *start = data;
 		const char *terminator;
 		size_t rest = size;
-		
+
 		while ((terminator = (const char *) memchr(start, '\0', rest)) != NULL) {
 			size_t len = terminator - start;
 			result.push_back(StaticString(start, len));
@@ -237,23 +237,23 @@ private:
 			rest = size - (start - data);
 		}
 	}
-	
+
 public:
 	ArrayMessage() {
 		state = READING_HEADER;
 		toReserve = 0;
 		maxSize = 0;
 	}
-	
+
 	void reserve(uint16_t size) {
 		toReserve = size;
 		result.reserve(size);
 	}
-	
+
 	void setMaxSize(uint16_t size) {
 		maxSize = size;
 	}
-	
+
 	void reset() {
 		state = READING_HEADER;
 		headerReader.reset();
@@ -263,14 +263,14 @@ public:
 			result.reserve(toReserve);
 		}
 	}
-	
+
 	size_t feed(const char *data, size_t size) {
 		size_t consumed = 0;
-		
+
 		while (consumed < size && !done()) {
 			const char *current = data + consumed;
 			size_t rest = size - consumed;
-			
+
 			switch (state) {
 			case READING_HEADER:
 				consumed += headerReader.feed(current, rest);
@@ -311,23 +311,23 @@ public:
 		}
 		return consumed;
 	}
-	
+
 	bool done() const {
 		return state == DONE || state == ERROR;
 	}
-	
+
 	bool hasError() const {
 		return state == ERROR;
 	}
-	
+
 	Error errorCode() const {
 		return (Error) error;
 	}
-	
+
 	const vector<StaticString> &value() const {
 		return result;
 	}
-	
+
 	/**
 	 * Given a bunch of array items, generates an array message. The message is
 	 * generated in the form of an array of StaticStrings which must all be written
@@ -351,17 +351,17 @@ public:
 		if (OXT_UNLIKELY(outCount < outputSize(argsCount))) {
 			throw ArgumentException("outCount too small.");
 		}
-		
+
 		unsigned int size = 0;
 		unsigned int i;
-		
+
 		for (i = 0; i < argsCount; i++) {
 			size += args[i].size() + 1;
 		}
 		if (OXT_UNLIKELY(size > 0xFFFF)) {
 			throw ArgumentException("Data size exceeds maximum size for array messages.");
 		}
-		
+
 		Uint16Message::generate(headerBuf, size);
 		out[0] = StaticString(headerBuf, sizeof(uint16_t));
 		for (i = 0; i < argsCount; i++) {
@@ -369,7 +369,7 @@ public:
 			out[1 + 2 * i + 1] = StaticString("\0", 1);
 		}
 	}
-	
+
 	static unsigned int outputSize(unsigned int argsCount) {
 		return argsCount * 2 + 1;
 	}
@@ -383,7 +383,7 @@ public:
 	enum Error {
 		TOO_LARGE
 	};
-	
+
 private:
 	enum State {
 		READING_HEADER,
@@ -391,24 +391,24 @@ private:
 		DONE,
 		ERROR
 	};
-	
+
 	uint8_t state;
 	uint8_t error;
 	uint32_t maxSize;
 	Uint32Message headerReader;
 	string buffer;
 	StaticString result;
-	
+
 public:
 	ScalarMessage(uint32_t maxSize = 0) {
 		state = READING_HEADER;
 		this->maxSize = maxSize;
 	}
-	
+
 	void setMaxSize(uint32_t maxSize) {
 		this->maxSize = maxSize;
 	}
-	
+
 	/**
 	 * Resets the internal state so that this object can be used for processing
 	 * another scalar message.
@@ -425,14 +425,14 @@ public:
 		headerReader.reset();
 		buffer.clear();
 	}
-	
+
 	size_t feed(const char *data, size_t size) {
 		size_t consumed = 0;
-		
+
 		while (consumed < size && !done()) {
 			const char *current = data + consumed;
 			size_t rest = size - consumed;
-			
+
 			switch (state) {
 			case READING_HEADER:
 				consumed += headerReader.feed(current, rest);
@@ -473,30 +473,30 @@ public:
 		}
 		return consumed;
 	}
-	
+
 	bool done() const {
 		return state == DONE || state == ERROR;
 	}
-	
+
 	bool hasError() const {
 		return state == ERROR;
 	}
-	
+
 	Error errorCode() const {
 		return (Error) error;
 	}
-	
+
 	const StaticString &value() const {
 		return result;
 	}
-	
+
 	static void generate(const StaticString &data, char headerBuf[sizeof(uint32_t)],
 		StaticString output[2])
 	{
 		if (OXT_UNLIKELY(data.size() > 0xFFFFFFFF)) {
 			throw ArgumentException("Data size exceeds maximum size for scalar messages.");
 		}
-		
+
 		Uint32Message::generate(headerBuf, data.size());
 		output[0] = StaticString(headerBuf, sizeof(uint32_t));
 		output[1] = data;

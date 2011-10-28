@@ -383,7 +383,7 @@ class BufferedUpload {
 public:
 	/** The file handle. */
 	FILE *handle;
-	
+
 	/**
 	 * Create an empty upload bufer file, and open it for reading and writing.
 	 *
@@ -392,19 +392,19 @@ public:
 	BufferedUpload(const string &dir, const char *identifier = "temp") {
 		char templ[PATH_MAX];
 		int fd;
-		
+
 		snprintf(templ, sizeof(templ), "%s/%s.XXXXXX", dir.c_str(), identifier);
 		templ[sizeof(templ) - 1] = '\0';
 		fd = mkstemp(templ);
 		if (fd == -1) {
 			char message[1024];
 			int e = errno;
-			
+
 			snprintf(message, sizeof(message), "Cannot create a temporary file '%s'", templ);
 			message[sizeof(message) - 1] = '\0';
 			throw SystemException(message, e);
 		}
-		
+
 		/* We use a POSIX trick here: the file's permissions are set to "u=,g=,o="
 		 * and the file is deleted immediately from the filesystem, while we
 		 * keep its file handle open. The result is that no other processes
@@ -413,10 +413,10 @@ public:
 		 */
 		fchmod(fd, 0000);
 		unlink(templ);
-		
+
 		handle = fdopen(fd, "w+");
 	}
-	
+
 	~BufferedUpload() {
 		fclose(handle);
 	}

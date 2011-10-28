@@ -40,12 +40,12 @@ class ConsoleTextTemplate
 			self[name] = value
 		end
 	end
-	
+
 	def []=(name, value)
 		instance_variable_set("@#{name}".to_sym, value)
 		return self
 	end
-	
+
 	def result
 		return @template.result(binding)
 	end

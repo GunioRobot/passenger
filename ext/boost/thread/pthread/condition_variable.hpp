@@ -40,12 +40,12 @@ namespace boost
     {
         BOOST_VERIFY(!pthread_cond_signal(&cond));
     }
-        
+
     inline void condition_variable::notify_all()
     {
         BOOST_VERIFY(!pthread_cond_broadcast(&cond));
     }
-    
+
     class condition_variable_any
     {
         pthread_mutex_t internal_mutex;
@@ -74,7 +74,7 @@ namespace boost
             BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
             BOOST_VERIFY(!pthread_cond_destroy(&cond));
         }
-        
+
         template<typename lock_type>
         void wait(lock_type& m)
         {
@@ -99,7 +99,7 @@ namespace boost
         {
             while(!pred()) wait(m);
         }
-        
+
         template<typename lock_type>
         bool timed_wait(lock_type& m,boost::system_time const& wait_until)
         {
@@ -164,7 +164,7 @@ namespace boost
             boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
             BOOST_VERIFY(!pthread_cond_signal(&cond));
         }
-        
+
         void notify_all()
         {
             boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);

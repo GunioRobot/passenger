@@ -117,14 +117,14 @@ private:
 		virtual ~ErrorReport() { }
 		virtual int report(request_rec *r) = 0;
 	};
-	
+
 	class ReportFileSystemError: public ErrorReport {
 	private:
 		FileSystemException e;
-	
+
 	public:
 		ReportFileSystemError(const FileSystemException &ex): e(ex) { }
-		
+
 		int report(request_rec *r) {
 			r->status = 500;
 			ap_set_content_type(r, "text/html; charset=UTF-8");
@@ -145,17 +145,17 @@ private:
 			return OK;
 		}
 	};
-	
+
 	struct RequestNote {
 		DirectoryMapper mapper;
 		DirConfig *config;
 		ErrorReport *errorReport;
-		
+
 		const char *handlerBeforeModRewrite;
 		char *filenameBeforeModRewrite;
 		apr_filetype_e oldFileType;
 		const char *handlerBeforeModAutoIndex;
-		
+
 		RequestNote(const DirectoryMapper &m, DirConfig *c)
 			: mapper(m),
 			  config(c)
@@ -166,17 +166,17 @@ private:
 			oldFileType               = APR_NOFILE;
 			handlerBeforeModAutoIndex = NULL;
 		}
-		
+
 		~RequestNote() {
 			delete errorReport;
 		}
-		
+
 		static apr_status_t cleanup(void *p) {
 			delete (RequestNote *) p;
 			return APR_SUCCESS;
 		}
 	};
-	
+
 	/**
 	 * A StringListCreator which returns a list of environment variable
 	 * names and values, as found in r->subprocess_env.
@@ -189,14 +189,14 @@ private:
 		EnvironmentVariablesStringListCreator(request_rec *r) {
 			this->r = r;
 		}
-		
+
 		virtual const StringListPtr getItems() const {
 			if (!result) {
 				const apr_array_header_t *env_arr;
 				apr_table_entry_t *env_entries;
-				
+
 				result.reset(new StringList());
-				
+
 				// Some standard CGI headers.
 				result->push_back("SERVER_SOFTWARE");
 				#ifdef AP_GET_SERVER_VERSION_DEPRECATED
@@ -204,7 +204,7 @@ private:
 				#else
 					result->push_back(ap_get_server_version());
 				#endif
-				
+
 				// Subprocess environment variables.
 				env_arr = apr_table_elts(r->subprocess_env);
 				env_entries = (apr_table_entry_t *) env_arr->elts;
@@ -218,7 +218,7 @@ private:
 			return result;
 		}
 	};
-	
+
 	enum Threeway { YES, NO, UNKNOWN };
 
 	thread_specific_ptr<ApplicationPool::Client> threadSpecificApplicationPool;
@@ -226,11 +226,11 @@ private:
 	CachedFileStat cstat;
 	AgentsStarter agentsStarter;
 	AnalyticsLoggerPtr analyticsLogger;
-	
+
 	inline DirConfig *getDirConfig(request_rec *r) {
 		return (DirConfig *) ap_get_module_config(r->per_dir_config, &passenger_module);
 	}
-	
+
 	/**
 	 * The existance of a request note means that the handler should be run.
 	 */
@@ -246,7 +246,7 @@ private:
 		apr_pool_userdata_get(&u.pointer, "Phusion Passenger", r->pool);
 		return u.note;
 	}
-	
+
 	/**
 	 * Returns a usable ApplicationPool::Client object.
 	 *
@@ -280,7 +280,7 @@ private:
 		}
 		return pool;
 	}
-	
+
 	/**
 	 * Get a session from the application pool, similar to how
 	 * ApplicationPool::Interface::get() works. This method also checks whether
@@ -301,10 +301,10 @@ private:
 		} catch (const SystemException &e) {
 			if (e.code() == EPIPE) {
 				UPDATE_TRACE_POINT();
-				
+
 				// Maybe the helper server crashed. First wait 50 ms.
 				usleep(50000);
-				
+
 				// Then try to reconnect to the helper server for the
 				// next 5 seconds.
 				time_t deadline = time(NULL) + 5;
@@ -322,7 +322,7 @@ private:
 						}
 					}
 				}
-				
+
 				UPDATE_TRACE_POINT();
 				if (pool != NULL && pool->connected()) {
 					return pool->get(options);
@@ -335,7 +335,7 @@ private:
 			}
 		}
 	}
-	
+
 	bool hasModRewrite() {
 		if (m_hasModRewrite == UNKNOWN) {
 			if (ap_find_linked_module("mod_rewrite.c")) {
@@ -346,7 +346,7 @@ private:
 		}
 		return m_hasModRewrite == YES;
 	}
-	
+
 	bool hasModDir() {
 		if (m_hasModDir == UNKNOWN) {
 			if (ap_find_linked_module("mod_dir.c")) {
@@ -357,7 +357,7 @@ private:
 		}
 		return m_hasModDir == YES;
 	}
-	
+
 	bool hasModAutoIndex() {
 		if (m_hasModAutoIndex == UNKNOWN) {
 			if (ap_find_linked_module("mod_autoindex.c")) {
@@ -368,7 +368,7 @@ private:
 		}
 		return m_hasModAutoIndex == YES;
 	}
-	
+
 	bool hasModXsendfile() {
 		if (m_hasModXsendfile == UNKNOWN) {
 			if (ap_find_linked_module("mod_xsendfile.c")) {
@@ -379,20 +379,20 @@ private:
 		}
 		return m_hasModXsendfile == YES;
 	}
-	
+
 	int reportDocumentRootDeterminationError(request_rec *r) {
 		ap_set_content_type(r, "text/html; charset=UTF-8");
 		ap_rputs("<h1>Passenger error #1</h1>\n", r);
 		ap_rputs("Cannot determine the document root for the current request.", r);
 		return OK;
 	}
-	
+
 	int reportBusyException(request_rec *r) {
 		ap_custom_response(r, HTTP_SERVICE_UNAVAILABLE,
 			"This website is too busy right now.  Please try again later.");
 		return HTTP_SERVICE_UNAVAILABLE;
 	}
-	
+
 	/**
 	 * Gather some information about the request and do some preparations.
 	 *
@@ -416,7 +416,7 @@ private:
 	 */
 	bool prepareRequest(request_rec *r, DirConfig *config, const char *filename, bool coreModuleWillBeRun = false) {
 		TRACE_POINT();
-		
+
 		DirectoryMapper mapper(r, config, &cstat, config->getStatThrottleRate());
 		try {
 			if (mapper.getBaseURI() == NULL) {
@@ -447,16 +447,16 @@ private:
 				return false;
 			}
 		}
-		
+
 		// (B) is true.
-		
+
 		try {
 			FileType fileType = getFileType(filename);
 			if (fileType == FT_REGULAR) {
 				// (C) is true.
 				return false;
 			}
-			
+
 			// (C) is not true. Check whether (D) is true.
 			char *pageCacheFile;
 			/* Only GET requests may hit the page cache. This is
@@ -469,7 +469,7 @@ private:
 			if (r->method_number == M_GET) {
 				if (fileType == FT_DIRECTORY) {
 					size_t len;
-					
+
 					len = strlen(filename);
 					if (len > 0 && filename[len - 1] == '/') {
 						pageCacheFile = apr_pstrcat(r->pool, filename,
@@ -517,18 +517,18 @@ private:
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Most of the high-level logic for forwarding a request to a backend application
 	 * is contained in this method.
 	 */
 	int handleRequest(request_rec *r) {
 		/********** Step 1: preparation work **********/
-		
+
 		/* Check whether an error occured in prepareRequest() that should be reported
 		 * to the browser.
 		 */
-		
+
 		RequestNote *note = getRequestNote(r);
 		if (note == NULL) {
 			return DECLINED;
@@ -541,12 +541,12 @@ private:
 			// mod_rewrite is at work.
 			return DECLINED;
 		}
-		
+
 		TRACE_POINT();
 		DirConfig *config = note->config;
 		DirectoryMapper &mapper = note->mapper;
 		string publicDirectory, appRoot;
-		
+
 		try {
 			publicDirectory = mapper.getPublicDirectory();
 			if (publicDirectory.empty()) {
@@ -561,8 +561,8 @@ private:
 			 */
 			return ReportFileSystemError(e).report(r);
 		}
-		
-		
+
+
 		UPDATE_TRACE_POINT();
 		try {
 			AnalyticsLogPtr log;
@@ -576,14 +576,14 @@ private:
 			} else {
 				log.reset(new AnalyticsLog());
 			}
-			
+
 			/********** Step 2: handle HTTP upload data, if any **********/
-			
+
 			int httpStatus = ap_setup_client_block(r, REQUEST_CHUNKED_DECHUNK);
 	    		if (httpStatus != OK) {
 				return httpStatus;
 			}
-			
+
 			this_thread::disable_interruption di;
 			this_thread::disable_syscall_interruption dsi;
 			SessionPtr session;
@@ -591,10 +591,10 @@ private:
 			string uploadDataMemory;
 			shared_ptr<BufferedUpload> uploadDataFile;
 			const char *contentLength;
-			
+
 			expectingUploadData = ap_should_client_block(r);
 			contentLength = lookupHeader(r, "Content-Length");
-			
+
 			/* If the HTTP upload data is larger than a threshold, or if the HTTP
 			 * client sent HTTP upload data using the "chunked" transfer encoding
 			 * (which implies Content-Length == NULL), then buffer the upload
@@ -611,7 +611,7 @@ private:
 					receiveRequestBody(r, contentLength, uploadDataMemory);
 				}
 			}
-			
+
 			if (expectingUploadData) {
 				/* We'll set the Content-Length header to the length of the
 				 * received upload data. Rails requires this header for its
@@ -632,13 +632,13 @@ private:
 						toString(uploadDataMemory.size()).c_str());
 				}
 			}
-			
-			
+
+
 			/********** Step 3: forwarding the request to a backend
 			                    process from the application pool **********/
-			
+
 			AnalyticsScopeLog requestProcessingScope(log, "request processing");
-			
+
 			try {
 				AnalyticsScopeLog scope(log, "get from pool");
 				PoolOptions options(
@@ -666,7 +666,7 @@ private:
 					log->isNull() ? AnalyticsLogPtr() : log
 				);
 				options.environmentVariables = ptr(new EnvironmentVariablesStringListCreator(r));
-				
+
 				session = getSession(options);
 				P_TRACE(3, "Forwarding " << r->uri << " to PID " << session->getPid());
 				scope.success();
@@ -684,10 +684,10 @@ private:
 			} catch (const BusyException &e) {
 				return reportBusyException(r);
 			}
-			
+
 			UPDATE_TRACE_POINT();
 			AnalyticsScopeLog requestProxyingScope(log, "request proxying");
-			
+
 			{
 				AnalyticsScopeLog scope(log, "send request headers");
 				sendHeaders(r, config, session, mapper.getBaseURI(), log, appRoot);
@@ -712,28 +712,28 @@ private:
 					throw;
 				}
 			}
-			
-			
+
+
 			/********** Step 4: forwarding the response from the backend
 			                    process back to the HTTP client **********/
-			
+
 			UPDATE_TRACE_POINT();
 			apr_bucket_brigade *bb;
 			apr_bucket *b;
 			PassengerBucketStatePtr bucketState;
 			pid_t backendPid;
-			
+
 			/* Setup the bucket brigade. */
 			bucketState = ptr(new PassengerBucketState());
 			bb = apr_brigade_create(r->connection->pool, r->connection->bucket_alloc);
 			b = passenger_bucket_create(session, bucketState, r->connection->bucket_alloc);
-			
+
 			/* The bucket (b) still has a reference to the session, so the reset()
 			 * call here is guaranteed not to throw any exceptions.
 			 */
 			backendPid = session->getPid();
 			session.reset();
-			
+
 			APR_BRIGADE_INSERT_TAIL(bb, b);
 
 			b = apr_bucket_eos_create(r->connection->bucket_alloc);
@@ -742,23 +742,23 @@ private:
 			/* Now read the HTTP response header, parse it and fill relevant
 			 * information in our request_rec structure.
 			 */
-			
+
 			/* I know the required size for backendData because I read
 			 * util_script.c's source. :-(
 			 */
 			char backendData[MAX_STRING_LEN];
 			Timer timer;
 			int result = ap_scan_script_header_err_brigade(r, bb, backendData);
-			
+
 			if (result == OK) {
 				// The API documentation for ap_scan_script_err_brigade() says it
 				// returns HTTP_OK on success, but it actually returns OK.
-				
+
 				/* We were able to parse the HTTP response header sent by the
 				 * backend process! Proceed with passing the bucket brigade,
 				 * for forwarding the response body to the HTTP client.
 				 */
-				
+
 				/* Manually set the Status header because
 				 * ap_scan_script_header_err_brigade() filters it
 				 * out. Some broken HTTP clients depend on the
@@ -770,13 +770,13 @@ private:
 						r->status);
 				}
 				apr_table_setn(r->headers_out, "Status", r->status_line);
-				
+
 				bool xsendfile = hasModXsendfile() &&
 					apr_table_get(r->err_headers_out, "X-Sendfile");
-				
+
 				UPDATE_TRACE_POINT();
 				ap_pass_brigade(r->output_filters, bb);
-				
+
 				if (r->connection->aborted) {
 					P_WARN("Either the vistor clicked on the 'Stop' button in the "
 						"web browser, or the visitor's connection has stalled "
@@ -796,7 +796,7 @@ private:
 					requestProxyingScope.success();
 					requestProcessingScope.success();
 				}
-				
+
 				return OK;
 			} else if (backendData[0] == '\0') {
 				if ((long long) timer.elapsed() >= r->server->timeout / 1000) {
@@ -852,29 +852,29 @@ private:
 				apr_table_setn(r->err_headers_out, "Status", "500 Internal Server Error");
 				return HTTP_INTERNAL_SERVER_ERROR;
 			}
-			
+
 		} catch (const thread_interrupted &e) {
 			P_TRACE(3, "A system call was interrupted during an HTTP request. Apache "
 				"is probably restarting or shutting down. Backtrace:\n" <<
 				e.backtrace());
 			return HTTP_INTERNAL_SERVER_ERROR;
-			
+
 		} catch (const tracable_exception &e) {
 			P_ERROR("Unexpected error in mod_passenger: " <<
 				e.what() << "\n" << "  Backtrace:\n" << e.backtrace());
 			return HTTP_INTERNAL_SERVER_ERROR;
-		
+
 		} catch (const std::exception &e) {
 			P_ERROR("Unexpected error in mod_passenger: " <<
 				e.what() << "\n" << "  Backtrace: not available");
 			return HTTP_INTERNAL_SERVER_ERROR;
-		
+
 		} catch (...) {
 			P_ERROR("An unexpected, unknown error occured in mod_passenger.");
 			throw;
 		}
 	}
-	
+
 	unsigned int
 	escapeUri(unsigned char *dst, const unsigned char *src, size_t size) {
 		static const char hex[] = "0123456789abcdef";
@@ -896,7 +896,7 @@ private:
 		       0xffffffff, /* 1111 1111 1111 1111  1111 1111 1111 1111 */
 		       0xffffffff  /* 1111 1111 1111 1111  1111 1111 1111 1111 */
 		};
-		
+
 		if (dst == NULL) {
 			/* find the number of the characters to be escaped */
 			unsigned int n = 0;
@@ -909,7 +909,7 @@ private:
 			}
 			return n;
 		}
-		
+
 		while (size > 0) {
 			if (escape[*src >> 5] & (1 << (*src & 0x1f))) {
 				*dst++ = '%';
@@ -923,14 +923,14 @@ private:
 		}
 		return 0;
 	}
-	
+
 	/**
 	 * Convert an HTTP header name to a CGI environment name.
 	 */
 	char *httpToEnv(apr_pool_t *p, const char *headerName) {
 		char *result  = apr_pstrcat(p, "HTTP_", headerName, NULL);
 		char *current = result + sizeof("HTTP_") - 1;
-		
+
 		while (*current != '\0') {
 			if (*current == '-') {
 				*current = '_';
@@ -939,14 +939,14 @@ private:
 			}
 			current++;
 		}
-		
+
 		return result;
 	}
-	
+
 	const char *lookupInTable(apr_table_t *table, const char *name) {
 		const apr_array_header_t *headers = apr_table_elts(table);
 		apr_table_entry_t *elements = (apr_table_entry_t *) headers->elts;
-		
+
 		for (int i = 0; i < headers->nelts; i++) {
 			if (elements[i].key != NULL && strcasecmp(elements[i].key, name) == 0) {
 				return elements[i].val;
@@ -954,21 +954,21 @@ private:
 		}
 		return NULL;
 	}
-	
+
 	const char *lookupHeader(request_rec *r, const char *name) {
 		return lookupInTable(r->headers_in, name);
 	}
-	
+
 	const char *lookupEnv(request_rec *r, const char *name) {
 		return lookupInTable(r->subprocess_env, name);
 	}
-	
+
 	void inline addHeader(apr_table_t *table, const char *name, const char *value) {
 		if (name != NULL && value != NULL) {
 			apr_table_addn(table, name, value);
 		}
 	}
-	
+
 	apr_status_t sendHeaders(request_rec *r, DirConfig *config, SessionPtr &session,
 		const char *baseURI, const AnalyticsLogPtr &log, const string &appRoot)
 	{
@@ -977,7 +977,7 @@ private:
 		if (headers == NULL) {
 			return APR_ENOMEM;
 		}
-		
+
 		/*
 		 * Apache unescapes URI's before passing them to Phusion Passenger,
 		 * but backend processes expect the escaped version.
@@ -988,8 +988,8 @@ private:
 		char escapedUri[uriLen + 2 * escaped + 1];
 		escapeUri((unsigned char *) escapedUri, (const unsigned char *) r->uri, uriLen);
 		escapedUri[uriLen + 2 * escaped] = '\0';
-		
-		
+
+
 		// Set standard CGI variables.
 		addHeader(headers, "SERVER_SOFTWARE", ap_get_server_version());
 		addHeader(headers, "SERVER_PROTOCOL", r->protocol);
@@ -1005,7 +1005,7 @@ private:
 		addHeader(headers, "HTTPS",           lookupEnv(r, "HTTPS"));
 		addHeader(headers, "CONTENT_TYPE",    lookupHeader(r, "Content-type"));
 		addHeader(headers, "DOCUMENT_ROOT",   ap_document_root(r));
-		
+
 		if (config->allowsEncodedSlashes()) {
 			/*
 			 * Apache decodes encoded slashes in r->uri, so we must use r->unparsed_uri
@@ -1026,7 +1026,7 @@ private:
 			}
 			addHeader(headers, "REQUEST_URI", request_uri);
 		}
-		
+
 		if (strcmp(baseURI, "/") == 0) {
 			addHeader(headers, "SCRIPT_NAME", "");
 			addHeader(headers, "PATH_INFO", escapedUri);
@@ -1034,12 +1034,12 @@ private:
 			addHeader(headers, "SCRIPT_NAME", baseURI);
 			addHeader(headers, "PATH_INFO", escapedUri + strlen(baseURI));
 		}
-		
+
 		// Set HTTP headers.
 		const apr_array_header_t *hdrs_arr;
 		apr_table_entry_t *hdrs;
 		int i;
-		
+
 		hdrs_arr = apr_table_elts(r->headers_in);
 		hdrs = (apr_table_entry_t *) hdrs_arr->elts;
 		for (i = 0; i < hdrs_arr->nelts; ++i) {
@@ -1047,27 +1047,27 @@ private:
 				addHeader(headers, httpToEnv(r->pool, hdrs[i].key), hdrs[i].val);
 			}
 		}
-		
+
 		// Add other environment variables.
 		const apr_array_header_t *env_arr;
 		apr_table_entry_t *env;
-		
+
 		env_arr = apr_table_elts(r->subprocess_env);
 		env = (apr_table_entry_t*) env_arr->elts;
 		for (i = 0; i < env_arr->nelts; ++i) {
 			addHeader(headers, env[i].key, env[i].val);
 		}
-		
+
 		if (config->useUnionStation()) {
 			addHeader(headers, "PASSENGER_GROUP_NAME",
 				config->getAppGroupName(appRoot).c_str());
 			addHeader(headers, "PASSENGER_TXN_ID", log->getTxnId().c_str());
 			addHeader(headers, "PASSENGER_UNION_STATION_KEY", config->unionStationKey.c_str());
 		}
-		
+
 		// Now send the headers.
 		string buffer;
-		
+
 		hdrs_arr = apr_table_elts(headers);
     		hdrs = (apr_table_entry_t*) hdrs_arr->elts;
     		buffer.reserve(1024 * 4);
@@ -1077,15 +1077,15 @@ private:
 			buffer.append(hdrs[i].val);
 			buffer.append(1, '\0');
 		}
-		
+
 		buffer.append("PASSENGER_CONNECT_PASSWORD");
 		buffer.append(1, '\0');
 		buffer.append(session->getConnectPassword());
 		buffer.append(1, '\0');
-		
+
 		/*********************/
 		/*********************/
-		
+
 		/*
 		 * If the last header value is an empty string, then the buffer
 		 * will end with "\0\0". For example, if 'SSLOptions +ExportCertData'
@@ -1111,11 +1111,11 @@ private:
 		 * happening.
 		 */
 		buffer.append("_\0_\0", 4);
-		
+
 		session->sendHeaders(buffer);
 		return APR_SUCCESS;
 	}
-	
+
 	void throwUploadBufferingException(request_rec *r, int code) {
 		DirConfig *config = getDirConfig(r);
 		string message("An error occured while "
@@ -1123,7 +1123,7 @@ private:
 			"a temporary file in ");
 		ServerInstanceDir::GenerationPtr generation = agentsStarter.getGeneration();
 		message.append(config->getUploadBufferDir(generation));
-		
+
 		switch (code) {
 		case ENOSPC:
 			message.append(". Disk directory doesn't have enough disk space, "
@@ -1169,7 +1169,7 @@ private:
 			break;
 		}
 	}
-	
+
 	/**
 	 * Reads the next chunk of the request body and put it into a buffer.
 	 *
@@ -1189,7 +1189,7 @@ private:
 	unsigned long readRequestBodyFromApache(request_rec *r, char *buffer, apr_size_t bufsiz) {
 		apr_status_t rv;
 		apr_bucket_brigade *bb;
-		
+
 		if (r->remaining < 0 || (!r->read_chunked && r->remaining == 0)) {
 			return 0;
 		}
@@ -1201,10 +1201,10 @@ private:
 				"unable to create a bucket brigade. Maybe the system doesn't have "
 				"enough free memory.");
 		}
-		
+
 		rv = ap_get_brigade(r->input_filters, bb, AP_MODE_READBYTES,
 		                    APR_BLOCK_READ, bufsiz);
-			
+
 		/* We lose the failure code here.  This is why ap_get_client_block should
 		 * not be used.
 		 */
@@ -1214,7 +1214,7 @@ private:
 			 */
 			r->connection->keepalive = AP_CONN_CLOSE;
 			apr_brigade_destroy(bb);
-			
+
 			char buf[150], *errorString, message[1024];
 			errorString = apr_strerror(rv, buf, sizeof(buf));
 			if (errorString != NULL) {
@@ -1229,7 +1229,7 @@ private:
 			message[sizeof(message) - 1] = '\0';
 			throw RuntimeException(message);
 		}
-		
+
 		/* If this fails, it means that a filter is written incorrectly and that
 		 * it needs to learn how to properly handle APR_BLOCK_READ requests by
 		 * returning data when requested.
@@ -1257,7 +1257,7 @@ private:
 		rv = apr_brigade_flatten(bb, buffer, &bufsiz);
 		if (rv != APR_SUCCESS) {
 			apr_brigade_destroy(bb);
-			
+
 			char buf[150], *errorString, message[1024];
 			errorString = apr_strerror(rv, buf, sizeof(buf));
 			if (errorString != NULL) {
@@ -1272,14 +1272,14 @@ private:
 			message[sizeof(message) - 1] = '\0';
 			throw IOException(message);
 		}
-		
+
 		/* XXX yank me? */
 		r->read_length += bufsiz;
-		
+
 		apr_brigade_destroy(bb);
 		return bufsiz;
 	}
-	
+
 	/**
 	 * Receive the HTTP upload data and buffer it into a BufferedUpload temp file.
 	 *
@@ -1299,11 +1299,11 @@ private:
 		} catch (const SystemException &e) {
 			throwUploadBufferingException(r, e.code());
 		}
-		
+
 		char buf[1024 * 32];
 		apr_off_t len;
 		size_t total_written = 0;
-		
+
 		while ((len = readRequestBodyFromApache(r, buf, sizeof(buf))) > 0) {
 			size_t written = 0;
 			do {
@@ -1317,7 +1317,7 @@ private:
 		}
 		return tempFile;
 	}
-	
+
 	/**
 	 * Receive the HTTP upload data and buffer it into a string.
 	 *
@@ -1335,31 +1335,31 @@ private:
 		unsigned long l_contentLength = 0;
 		char buf[1024 * 32];
 		apr_off_t len;
-		
+
 		buffer.clear();
 		if (contentLength != NULL) {
 			l_contentLength = atol(contentLength);
 			buffer.reserve(l_contentLength);
 		}
-		
+
 		while ((len = readRequestBodyFromApache(r, buf, sizeof(buf))) > 0) {
 			buffer.append(buf, len);
 		}
 	}
-	
+
 	void sendRequestBody(request_rec *r, SessionPtr &session, shared_ptr<BufferedUpload> &uploadData) {
 		TRACE_POINT();
 		rewind(uploadData->handle);
 		while (!feof(uploadData->handle)) {
 			char buf[1024 * 32];
 			size_t size;
-			
+
 			size = fread(buf, 1, sizeof(buf), uploadData->handle);
-			
+
 			session->sendBodyBlock(buf, size);
 		}
 	}
-	
+
 	void sendRequestBody(request_rec *r, SessionPtr &session, const string &buffer) {
 		session->sendBodyBlock(buffer.c_str(), buffer.size());
 	}
@@ -1378,17 +1378,17 @@ public:
 		m_hasModDir = UNKNOWN;
 		m_hasModAutoIndex = UNKNOWN;
 		m_hasModXsendfile = UNKNOWN;
-		
+
 		P_DEBUG("Initializing Phusion Passenger...");
 		ap_add_version_component(pconf, "Phusion_Passenger/" PASSENGER_VERSION);
-		
+
 		if (serverConfig.root == NULL) {
 			throw ConfigurationException("The 'PassengerRoot' configuration option "
 				"is not specified. This option is required, so please specify it. "
 				"TIP: The correct value for this option was given to you by "
 				"'passenger-install-apache2-module'.");
 		}
-		
+
 		agentsStarter.start(serverConfig.logLevel,
 			(serverConfig.debugLogFile == NULL) ? "" : serverConfig.debugLogFile,
 			getpid(), serverConfig.tempDir,
@@ -1404,15 +1404,15 @@ public:
 			serverConfig.unionStationGatewayPort,
 			serverConfig.unionStationGatewayCert,
 			serverConfig.prestartURLs);
-		
+
 		analyticsLogger = ptr(new AnalyticsLogger(agentsStarter.getLoggingSocketAddress(),
 			"logging", agentsStarter.getLoggingSocketPassword()));
-		
+
 		// Store some relevant information in the generation directory.
 		string generationPath = agentsStarter.getGeneration()->getPath();
 		server_rec *server;
 		string configFiles;
-		
+
 		#ifdef AP_GET_SERVER_VERSION_DEPRECATED
 			createFile(generationPath + "/web_server.txt",
 				ap_get_server_description());
@@ -1420,7 +1420,7 @@ public:
 			createFile(generationPath + "/web_server.txt",
 				ap_get_server_version());
 		#endif
-		
+
 		for (server = s; server != NULL; server = server->next) {
 			if (server->defn_name != NULL) {
 				configFiles.append(server->defn_name);
@@ -1429,11 +1429,11 @@ public:
 		}
 		createFile(generationPath + "/config_files.txt", configFiles);
 	}
-	
+
 	void childInit(apr_pool_t *pchild, server_rec *s) {
 		agentsStarter.detach();
 	}
-	
+
 	int prepareRequestWhenInHighPerformanceMode(request_rec *r) {
 		DirConfig *config = getDirConfig(r);
 		if (config->isEnabled() && config->highPerformanceMode()) {
@@ -1446,21 +1446,21 @@ public:
 			return DECLINED;
 		}
 	}
-	
+
 	/**
 	 * This is the hook method for the map_to_storage hook. Apache's final map_to_storage hook
 	 * method (defined in core.c) will do the following:
 	 *
 	 * If r->filename doesn't exist, then it will change the filename to the
 	 * following form:
-	 *    
+	 *
 	 *     A/B
-	 *    
+	 *
 	 * A is top-most directory that exists. B is the first filename piece that
 	 * normally follows A. For example, suppose that a website's DocumentRoot
 	 * is /website, on server http://test.com/. Suppose that there's also a
 	 * directory /website/images. No other files or directories exist in /website.
-	 * 
+	 *
 	 * If we access:                    then r->filename will be:
 	 * http://test.com/foo/bar          /website/foo
 	 * http://test.com/foo/bar/baz      /website/foo
@@ -1474,7 +1474,7 @@ public:
 		apr_table_set(r->notes, "Phusion Passenger: original filename", r->filename);
 		return DECLINED;
 	}
-	
+
 	int prepareRequestWhenNotInHighPerformanceMode(request_rec *r) {
 		DirConfig *config = getDirConfig(r);
 		if (config->isEnabled()) {
@@ -1504,7 +1504,7 @@ public:
 			return DECLINED;
 		}
 	}
-	
+
 	/**
 	 * The default .htaccess provided by on Rails on Rails (that is, before version 2.1.0)
 	 * has the following mod_rewrite rules in it:
@@ -1537,7 +1537,7 @@ public:
 		if (note == 0 || !hasModRewrite()) {
 			return DECLINED;
 		}
-		
+
 		if (r->handler != NULL && strcmp(r->handler, "redirect-handler") == 0) {
 			// Check whether r->filename looks like "redirect:.../dispatch.(f)cgi"
 			size_t len = strlen(r->filename);
@@ -1554,7 +1554,7 @@ public:
 		}
 		return DECLINED;
 	}
-	
+
 	/**
 	 * mod_dir does the following:
 	 * If r->filename is a directory, and the URI doesn't end with a slash,
@@ -1578,7 +1578,7 @@ public:
 		}
 		return DECLINED;
 	}
-	
+
 	int endBlockingModDir(request_rec *r) {
 		RequestNote *note = getRequestNote(r);
 		if (note != 0 && hasModDir()) {
@@ -1586,7 +1586,7 @@ public:
 		}
 		return DECLINED;
 	}
-	
+
 	/**
 	 * mod_autoindex will try to display a directory index for URIs that map to a directory.
 	 * This is undesired because of page caching semantics. Suppose that a Rails application
@@ -1606,7 +1606,7 @@ public:
 		}
 		return DECLINED;
 	}
-	
+
 	int endBlockingModAutoIndex(request_rec *r) {
 		RequestNote *note = getRequestNote(r);
 		if (note != 0 && hasModAutoIndex()) {
@@ -1614,7 +1614,7 @@ public:
 		}
 		return DECLINED;
 	}
-	
+
 	int handleRequestWhenInHighPerformanceMode(request_rec *r) {
 		DirConfig *config = getDirConfig(r);
 		if (config->highPerformanceMode()) {
@@ -1623,7 +1623,7 @@ public:
 			return DECLINED;
 		}
 	}
-	
+
 	int handleRequestWhenNotInHighPerformanceMode(request_rec *r) {
 		DirConfig *config = getDirConfig(r);
 		if (config->highPerformanceMode()) {
@@ -1695,17 +1695,17 @@ init_module(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *ptemp, server_rec *
 			destroy_hooks,
 			apr_pool_cleanup_null);
 		return OK;
-	
+
 	} catch (const thread_interrupted &e) {
 		P_TRACE(2, "A system call was interrupted during mod_passenger "
 			"initialization. Apache might be restarting or shutting "
 			"down. Backtrace:\n" << e.backtrace());
 		return DECLINED;
-	
+
 	} catch (const thread_resource_error &e) {
 		struct rlimit lim;
 		string pthread_threads_max;
-		
+
 		lim.rlim_cur = 0;
 		lim.rlim_max = 0;
 
@@ -1713,7 +1713,7 @@ init_module(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *ptemp, server_rec *
 #ifdef RLIMIT_NPROC
 		getrlimit(RLIMIT_NPROC, &lim);
 #else
-		lim.rlim_cur = lim.rlim_max = RLIM_INFINITY; 
+		lim.rlim_cur = lim.rlim_max = RLIM_INFINITY;
 #endif
 
 		#ifdef PTHREAD_THREADS_MAX
@@ -1721,7 +1721,7 @@ init_module(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *ptemp, server_rec *
 		#else
 			pthread_threads_max = "unknown";
 		#endif
-		
+
 		ap_log_error(APLOG_MARK, APLOG_ERR, 0, s,
 			"*** Passenger could not be initialize because a "
 			"threading resource could not be allocated or initialized. "
@@ -1735,17 +1735,17 @@ init_module(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *ptemp, server_rec *
 			e.what(),
 			(int) lim.rlim_cur, (int) lim.rlim_max,
 			pthread_threads_max.c_str());
-		
+
 		fprintf(stderr, "Output of 'uname -a' follows:\n");
 		fflush(stderr);
 		system("uname -a >&2");
-		
+
 		fprintf(stderr, "\nOutput of 'ulimit -a' follows:\n");
 		fflush(stderr);
 		system("ulimit -a >&2");
-		
+
 		return DECLINED;
-		
+
 	} catch (const std::exception &e) {
 		ap_log_error(APLOG_MARK, APLOG_ERR, 0, s,
 			"*** Passenger could not be initialized because of this error: %s",
@@ -1792,21 +1792,21 @@ passenger_register_hooks(apr_pool_t *p) {
 	static const char * const rewrite_module[] = { "mod_rewrite.c", NULL };
 	static const char * const dir_module[] = { "mod_dir.c", NULL };
 	static const char * const autoindex_module[] = { "mod_autoindex.c", NULL };
-	
+
 	ap_hook_post_config(init_module, NULL, NULL, APR_HOOK_MIDDLE);
 	ap_hook_child_init(child_init, NULL, NULL, APR_HOOK_MIDDLE);
-	
+
 	// The hooks here are defined in the order that they're called.
-	
+
 	ap_hook_map_to_storage(prepare_request_when_in_high_performance_mode, NULL, NULL, APR_HOOK_FIRST);
 	ap_hook_map_to_storage(save_original_filename, NULL, NULL, APR_HOOK_LAST);
-	
+
 	ap_hook_fixups(prepare_request_when_not_in_high_performance_mode, NULL, rewrite_module, APR_HOOK_FIRST);
 	ap_hook_fixups(save_state_before_rewrite_rules, NULL, rewrite_module, APR_HOOK_LAST);
 	ap_hook_fixups(undo_redirection_to_dispatch_cgi, rewrite_module, NULL, APR_HOOK_FIRST);
 	ap_hook_fixups(start_blocking_mod_dir, NULL, dir_module, APR_HOOK_LAST);
 	ap_hook_fixups(end_blocking_mod_dir, dir_module, NULL, APR_HOOK_LAST);
-	
+
 	ap_hook_handler(handle_request_when_in_high_performance_mode, NULL, NULL, APR_HOOK_FIRST);
 	ap_hook_handler(start_blocking_mod_autoindex, NULL, autoindex_module, APR_HOOK_LAST);
 	ap_hook_handler(end_blocking_mod_autoindex, autoindex_module, NULL, APR_HOOK_FIRST);

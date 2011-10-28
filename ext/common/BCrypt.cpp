@@ -14,7 +14,7 @@
  *
  *   - Changed bcrypt_gensalt to accept a random seed as a parameter,
  *     to remove the code's dependency on arc4random(), which isn't
- *     available on Linux. 
+ *     available on Linux.
  */
 
 /*

@@ -54,21 +54,21 @@ public:
 	static const int DIR_STRUCTURE_MINOR_VERSION = 0;
 	static const int GENERATION_STRUCTURE_MAJOR_VERSION = 1;
 	static const int GENERATION_STRUCTURE_MINOR_VERSION = 0;
-	
+
 	class Generation: public noncopyable {
 	private:
 		friend class ServerInstanceDir;
-		
+
 		string path;
 		unsigned int number;
 		bool owner;
-		
+
 		Generation(const string &serverInstanceDir, unsigned int number) {
 			path = serverInstanceDir + "/generation-" + toString(number);
 			this->number = number;
 			owner = false;
 		}
-		
+
 		void create(bool userSwitching, const string &defaultUser,
 		            const string &defaultGroup, uid_t webServerWorkerUid,
 		            gid_t webServerWorkerGid)
@@ -79,7 +79,7 @@ public:
 			struct group  *defaultGroupEntry;
 			uid_t defaultUid;
 			gid_t defaultGid;
-			
+
 			defaultUserEntry = getpwnam(defaultUser.c_str());
 			if (defaultUserEntry == NULL) {
 				throw NonExistentUserException("Default user '" + defaultUser +
@@ -92,21 +92,21 @@ public:
 					"' does not exist.");
 			}
 			defaultGid = defaultGroupEntry->gr_gid;
-			
+
 			/* We set a very tight permission here: no read or write access for
 			 * anybody except the owner. The individual files and subdirectories
 			 * decide for themselves whether they're readable by anybody.
 			 */
 			makeDirTree(path, "u=rwxs,g=x,o=x");
-			
+
 			/* Write structure version file. */
 			string structureVersionFile = path + "/structure_version.txt";
 			createFile(structureVersionFile,
 				toString(GENERATION_STRUCTURE_MAJOR_VERSION) + "." +
 				toString(GENERATION_STRUCTURE_MINOR_VERSION),
 				S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-			
-			
+
+
 			/* We want the upload buffer directory to be only writable by the web
 			 * server's worker processs. Other users may not have any access to this
 			 * directory.
@@ -117,7 +117,7 @@ public:
 			} else {
 				makeDirTree(path + "/buffered_uploads", "u=rwxs,g=,o=");
 			}
-			
+
 			/* The web server must be able to directly connect to a backend. */
 			if (runningAsRoot) {
 				if (userSwitching) {
@@ -144,7 +144,7 @@ public:
 				 */
 				makeDirTree(path + "/backends", "u=rwxs,g=,o=");
 			}
-			
+
 			/* The helper server (containing the application pool) must be able to access
 			 * the spawn server's socket.
 			 */
@@ -164,43 +164,43 @@ public:
 			} else {
 				makeDirTree(path + "/spawn-server", "u=rwxs,g=,o=");
 			}
-			
+
 			owner = true;
 		}
-	
+
 	public:
 		~Generation() {
 			if (owner) {
 				removeDirTree(path);
 			}
 		}
-		
+
 		unsigned int getNumber() const {
 			return number;
 		}
-		
+
 		string getPath() const {
 			return path;
 		}
-		
+
 		void detach() {
 			owner = false;
 		}
 	};
-	
+
 	typedef shared_ptr<Generation> GenerationPtr;
-	
+
 private:
 	string path;
 	bool owner;
-	
+
 	friend class Generation;
-	
+
 	void initialize(const string &path, bool owner) {
 		TRACE_POINT();
 		this->path  = path;
 		this->owner = owner;
-		
+
 		/* Create the server instance directory. We only need to write to this
 		 * directory for these reasons:
 		 * 1. Initial population of structure files (structure_version.txt, instance.pid).
@@ -219,7 +219,7 @@ private:
 		 */
 		makeDirTree(path, "u=rwxs,g=rx,o=rx");
 	}
-	
+
 	bool isDirectory(const string &dir, struct dirent *entry) const {
 		#ifdef DT_DIR
 			if (entry->d_type == DT_DIR) {
@@ -234,17 +234,17 @@ private:
 		path.append(entry->d_name);
 		return getFileType(path) == FT_DIRECTORY;
 	}
-	
+
 public:
 	ServerInstanceDir(pid_t webServerPid, const string &parentDir = "", bool owner = true) {
 		string theParentDir;
-		
+
 		if (parentDir.empty()) {
 			theParentDir = getSystemTempDir();
 		} else {
 			theParentDir = parentDir;
 		}
-		
+
 		/* We embed the super structure version in the server instance directory name
 		 * because it's possible to upgrade Phusion Passenger without changing the
 		 * web server's PID. This way each incompatible upgrade will use its own
@@ -255,13 +255,13 @@ public:
 			toString(DIR_STRUCTURE_MINOR_VERSION) + "." +
 			toString<unsigned long long>(webServerPid),
 			owner);
-		
+
 	}
-	
+
 	ServerInstanceDir(const string &path, bool owner = true) {
 		initialize(path, owner);
 	}
-	
+
 	~ServerInstanceDir() {
 		if (owner) {
 			GenerationPtr newestGeneration;
@@ -279,15 +279,15 @@ public:
 			}
 		}
 	}
-	
+
 	string getPath() const {
 		return path;
 	}
-	
+
 	void detach() {
 		owner = false;
 	}
-	
+
 	GenerationPtr newGeneration(bool userSwitching, const string &defaultUser,
 	                            const string &defaultGroup, uid_t webServerWorkerUid,
 	                            gid_t webServerWorkerGid)
@@ -299,22 +299,22 @@ public:
 		} else {
 			newNumber = 0;
 		}
-		
+
 		GenerationPtr generation(new Generation(path, newNumber));
 		generation->create(userSwitching, defaultUser, defaultGroup,
 			webServerWorkerUid, webServerWorkerGid);
 		return generation;
 	}
-	
+
 	GenerationPtr getGeneration(unsigned int number) const {
 		return ptr(new Generation(path, number));
 	}
-	
+
 	GenerationPtr getNewestGeneration() const {
 		DIR *dir = opendir(path.c_str());
 		struct dirent *entry;
 		int result = -1;
-		
+
 		if (dir == NULL) {
 			int e = errno;
 			throw FileSystemException("Cannot open directory " + path,
@@ -331,7 +331,7 @@ public:
 			}
 		}
 		closedir(dir);
-		
+
 		if (result == -1) {
 			return GenerationPtr();
 		} else {

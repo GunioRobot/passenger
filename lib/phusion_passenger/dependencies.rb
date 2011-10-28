@@ -42,22 +42,22 @@ class Dependency # :nodoc: all
 	[:name, :install_command, :install_instructions, :install_comments,
 	 :website, :website_comments, :provides].each do |attr_name|
 		attr_writer attr_name
-		
+
 		define_method(attr_name) do
 			call_init_block
 			return instance_variable_get("@#{attr_name}")
 		end
 	end
-	
+
 	def initialize(&block)
 		@included_by = []
 		@init_block = block
 	end
-	
+
 	def define_checker(&block)
 		@checker = block
 	end
-	
+
 	def check
 		call_init_block
 		result = Result.new
@@ -74,15 +74,15 @@ private
 				@found = args.first
 			end
 		end
-		
+
 		def not_found
 			found(false)
 		end
-		
+
 		def found?
 			return !@found.nil? && @found
 		end
-		
+
 		def found_at
 			if @found.is_a?(TrueClass) || @found.is_a?(FalseClass)
 				return nil
@@ -109,7 +109,7 @@ module Dependencies # :nodoc: all
 	def self.fastthread_required?
 		return (!defined?(RUBY_ENGINE) || RUBY_ENGINE == "ruby") && RUBY_VERSION < "1.8.7"
 	end
-	
+
 	# Returns whether asciidoc is required in order to be able to package all files
 	# in the packaging list.
 	def self.asciidoc_required?
@@ -144,7 +144,7 @@ module Dependencies # :nodoc: all
 		end
 		dep.website = "http://gcc.gnu.org/"
 	end
-	
+
 	Make = Dependency.new do |dep|
 		dep.name = "The 'make' tool"
 		dep.define_checker do |result|
@@ -167,7 +167,7 @@ module Dependencies # :nodoc: all
 		end
 		dep.website = "http://www.gnu.org/software/make/"
 	end
-	
+
 	GnuMake = Dependency.new do |dep|
 		dep.name = "GNU make"
 		dep.define_checker do |result|
@@ -190,7 +190,7 @@ module Dependencies # :nodoc: all
 		end
 		dep.website = "http://www.gnu.org/software/make/"
 	end
-	
+
 	DownloadTool = Dependency.new do |dep|
 		dep.name = "A download tool like 'wget' or 'curl'"
 		dep.define_checker do |result|
@@ -217,7 +217,7 @@ module Dependencies # :nodoc: all
 			dep.install_instructions = "Please install either wget (http://www.gnu.org/software/wget/) or curl (http://curl.haxx.se/)."
 		end
 	end
-	
+
 	Ruby_DevHeaders = Dependency.new do |dep|
 		dep.name = "Ruby development headers"
 		dep.define_checker do |result|
@@ -250,7 +250,7 @@ module Dependencies # :nodoc: all
 		dep.website = "http://www.ruby-lang.org/"
 		dep.install_instructions = "Please reinstall Ruby by downloading it from <b>#{dep.website}</b>"
 	end
-	
+
 	Ruby_OpenSSL = Dependency.new do |dep|
 		dep.name = "OpenSSL support for Ruby"
 		dep.define_checker do |result|
@@ -273,7 +273,7 @@ module Dependencies # :nodoc: all
 				"support by downloading it from <b>#{dep.website}</b>."
 		end
 	end
-	
+
 	RubyGems = Dependency.new do |dep|
 		dep.name = "RubyGems"
 		dep.define_checker do |result|
@@ -288,7 +288,7 @@ module Dependencies # :nodoc: all
 		dep.install_instructions = "Please download it from <b>#{dep.website}</b>. " <<
 			"Extract the tarball, and run <b>ruby setup.rb</b>"
 	end
-	
+
 	Rake = Dependency.new do |dep|
 		dep.name = "Rake"
 		dep.define_checker do |result|
@@ -301,7 +301,7 @@ module Dependencies # :nodoc: all
 		dep.website = "http://rake.rubyforge.org/"
 		dep.install_instructions = "Please install RubyGems first, then run <b>#{PlatformInfo.gem_command || "gem"} install rake</b>"
 	end
-	
+
 	Apache2 = Dependency.new do |dep|
 		dep.name = "Apache 2"
 		dep.define_checker do |result|
@@ -328,7 +328,7 @@ module Dependencies # :nodoc: all
 		end
 		dep.website = "http://httpd.apache.org/"
 	end
-	
+
 	Apache2_DevHeaders = Dependency.new do |dep|
 		dep.name = "Apache 2 development headers"
 		dep.define_checker do |result|
@@ -358,7 +358,7 @@ module Dependencies # :nodoc: all
 		end
 		dep.website = "http://httpd.apache.org/"
 	end
-	
+
 	APR_DevHeaders = Dependency.new do |dep|
 		dep.name = "Apache Portable Runtime (APR) development headers"
 		dep.define_checker do |result|
@@ -414,7 +414,7 @@ module Dependencies # :nodoc: all
 		dep.website = "http://httpd.apache.org/"
 		dep.website_comments = "APR Utility is an integrated part of Apache."
 	end
-	
+
 	FastThread = Dependency.new do |dep|
 		dep.name = "fastthread"
 		dep.define_checker do |result|
@@ -448,7 +448,7 @@ module Dependencies # :nodoc: all
 		end
 		dep.install_instructions = "Please install RubyGems first, then run <b>#{PlatformInfo.gem_command || "gem"} install rack</b>"
 	end
-	
+
 	Curl_Dev = Dependency.new do |dep|
 		dep.name = "Curl development headers with SSL support"
 		dep.define_checker do |result|
@@ -472,7 +472,7 @@ module Dependencies # :nodoc: all
 						found = false
 					end
 				end
-				
+
 				if found && !PlatformInfo.curl_supports_ssl?
 					dep.install_comments = "Curl was found, but it doesn't support SSL."
 					found = false
@@ -506,7 +506,7 @@ module Dependencies # :nodoc: all
 			end
 		end
 	end
-	
+
 	OpenSSL_Dev = Dependency.new do |dep|
 		dep.name = "OpenSSL development headers"
 		dep.define_checker do |result|
@@ -538,7 +538,7 @@ module Dependencies # :nodoc: all
 		end
 		dep.website = "http://www.openssl.org/"
 	end
-	
+
 	Zlib_Dev = Dependency.new do |dep|
 		dep.name = "Zlib development headers"
 		dep.define_checker do |result|
@@ -570,7 +570,7 @@ module Dependencies # :nodoc: all
 		end
 		dep.website = "http://www.zlib.net/"
 	end
-	
+
 	File_Tail = Dependency.new do |dep|
 		dep.name = "file-tail"
 		dep.define_checker do |result|
@@ -587,7 +587,7 @@ module Dependencies # :nodoc: all
 		end
 		dep.install_instructions = "Please install RubyGems first, then run <b>#{PlatformInfo.gem_command || "gem"} install file-tail</b>"
 	end
-	
+
 	Daemon_Controller = Dependency.new do |dep|
 		dep.name = "daemon_controller >= 0.2.5"
 		dep.install_instructions = "Please install RubyGems first, then run " <<
@@ -619,7 +619,7 @@ module Dependencies # :nodoc: all
 			end
 		end
 	end
-	
+
 	AsciiDoc = Dependency.new do |dep|
 		dep.name = "Asciidoc"
 		dep.define_checker do |result|

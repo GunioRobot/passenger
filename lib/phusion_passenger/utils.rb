@@ -45,7 +45,7 @@ protected
 		metaclass = class << self; self; end
 		metaclass.send(:private, name)
 	end
-	
+
 	# Return the canonicalized version of +path+. This path is guaranteed to
 	# to be "normal", i.e. it doesn't contain stuff like ".." or "/",
 	# and it fully resolves symbolic links.
@@ -59,35 +59,35 @@ protected
 	rescue Errno::ENOENT => e
 		raise InvalidPath, e.message
 	end
-	
+
 	# Assert that +path+ is a directory. Raises +InvalidPath+ if it isn't.
 	def assert_valid_directory(path)
 		if !File.directory?(path)
 			raise InvalidPath, "'#{path}' is not a valid directory."
 		end
 	end
-	
+
 	# Assert that +path+ is a file. Raises +InvalidPath+ if it isn't.
 	def assert_valid_file(path)
 		if !File.file?(path)
 			raise InvalidPath, "'#{path}' is not a valid file."
 		end
 	end
-	
+
 	# Assert that +username+ is a valid username. Raises
 	# ArgumentError if that is not the case.
 	def assert_valid_username(username)
 		# If username does not exist then getpwnam() will raise an ArgumentError.
 		username && Etc.getpwnam(username)
 	end
-	
+
 	# Assert that +groupname+ is a valid group name. Raises
 	# ArgumentError if that is not the case.
 	def assert_valid_groupname(groupname)
 		# If groupname does not exist then getgrnam() will raise an ArgumentError.
 		groupname && Etc.getgrnam(groupname)
 	end
-	
+
 	# Generate a long, cryptographically secure random ID string, which
 	# is also a valid filename.
 	def generate_random_id(method)
@@ -105,7 +105,7 @@ protected
 			raise ArgumentError, "Invalid method #{method.inspect}"
 		end
 	end
-	
+
 	def close_all_io_objects_for_fds(file_descriptors_to_leave_open)
 		ObjectSpace.each_object(IO) do |io|
 			begin
@@ -116,7 +116,7 @@ protected
 			end
 		end
 	end
-	
+
 	def marshal_exception(exception)
 		data = {
 			:message => exception.message,
@@ -143,7 +143,7 @@ protected
 		end
 		return Marshal.dump(data)
 	end
-	
+
 	def unmarshal_exception(data)
 		hash = Marshal.load(data)
 		if hash[:is_initialization_error]
@@ -152,7 +152,7 @@ protected
 			else
 				child_exception = nil
 			end
-			
+
 			exception = Marshal.load(hash[:exception])
 			exception.child_exception = child_exception
 			return exception
@@ -164,7 +164,7 @@ protected
 			end
 		end
 	end
-	
+
 	# Print the given exception, including the stack trace, to STDERR.
 	#
 	# +current_location+ is a string which describes where the code is
@@ -181,7 +181,7 @@ protected
 			end
 		end
 	end
-	
+
 	# Prepare an application process using rules for the given spawn options.
 	# This method is to be called before loading the application code.
 	#
@@ -194,7 +194,7 @@ protected
 	def prepare_app_process(startup_file, options)
 		options["app_root"] = canonicalize_path(options["app_root"])
 		Dir.chdir(options["app_root"])
-		
+
 		lower_privilege(startup_file, options)
 		path, is_parent = check_directory_tree_permissions(options["app_root"])
 		if path
@@ -217,15 +217,15 @@ protected
 			end
 			raise(message)
 		end
-		
+
 		ENV["RAILS_ENV"] = ENV["RACK_ENV"] = options["environment"]
-		
+
 		base_uri = options["base_uri"]
 		if base_uri && !base_uri.empty? && base_uri != "/"
 			ENV["RAILS_RELATIVE_URL_ROOT"] = base_uri
 			ENV["RACK_BASE_URI"] = base_uri
 		end
-		
+
 		encoded_environment_variables = options["environment_variables"]
 		if encoded_environment_variables
 			env_vars_string = encoded_environment_variables.unpack("m").first
@@ -236,16 +236,16 @@ protected
 				ENV[key] = value
 			end
 		end
-		
+
 		# Instantiate the analytics logger if requested. Can be nil.
 		require 'phusion_passenger/analytics_logger'
 		options["analytics_logger"] = AnalyticsLogger.new_from_options(options)
-		
+
 		# Make sure RubyGems uses any new environment variable values
 		# that have been set now (e.g. $HOME, $GEM_HOME, etc) and that
 		# it is able to detect newly installed gems.
 		Gem.clear_paths
-		
+
 		# Because spawned app processes exit using #exit!, #at_exit
 		# blocks aren't called. Here we ninja patch Kernel so that
 		# we can call #at_exit blocks during app process shutdown.
@@ -256,7 +256,7 @@ protected
 					block.call
 				end
 			end
-			
+
 			def passenger_at_exit(&block)
 				@passenger_at_exit_blocks ||= []
 				@passenger_at_exit_blocks << block
@@ -268,8 +268,8 @@ protected
 				return Kernel.passenger_at_exit(&block)
 			end
 		end
-		
-		
+
+
 		# Rack::ApplicationSpawner depends on the 'rack' library, but the app
 		# might want us to use a bundled version instead of a
 		# gem/apt-get/yum/whatever-installed version. Therefore we must setup
@@ -289,23 +289,23 @@ protected
 		#   These apps call Bundler.setup in their preinitializer.rb.
 		#
 		# So the strategy is as follows:
-		
+
 		# Our strategy might be completely unsuitable for the app or the
 		# developer is using something other than Bundler, so we let the user
 		# manually specify a load path setup file.
 		if options["load_path_setup_file"]
 			require File.expand_path(options["load_path_setup_file"])
-		
+
 		# The app developer may also override our strategy with this magic file.
 		elsif File.exist?('config/setup_load_paths.rb')
 			require File.expand_path('config/setup_load_paths')
-		
+
 		# If the Bundler lock environment file exists then load that. If it
 		# exists then there's a 99.9% chance that loading it is the correct
 		# thing to do.
 		elsif File.exist?('.bundle/environment.rb')
 			require File.expand_path('.bundle/environment')
-		
+
 		# If the Bundler environment file doesn't exist then there are two
 		# possibilities:
 		# 1. Bundler is not used, in which case we don't have to do anything.
@@ -325,7 +325,7 @@ protected
 			require 'bundler'
 			Bundler.setup
 		end
-		
+
 		# Bundler might remove Phusion Passenger from the load path in its zealous
 		# attempt to un-require RubyGems, so here we put Phusion Passenger back
 		# into the load path. This must be done before loading the app's startup
@@ -334,12 +334,12 @@ protected
 			$LOAD_PATH.unshift(LIBDIR)
 			$LOAD_PATH.uniq!
 		end
-		
-		
+
+
 		# !!! NOTE !!!
 		# If the app is using Bundler then any dependencies required past this
 		# point must be specified in the Gemfile. Like ruby-debug if debugging is on...
-		
+
 		if options["debugger"]
 			require 'ruby-debug'
 			if !Debugger.respond_to?(:ctrl_port)
@@ -348,10 +348,10 @@ protected
 			Debugger.start_remote('127.0.0.1', [0, 0])
 			Debugger.start
 		end
-		
+
 		PhusionPassenger._spawn_options = options
 	end
-	
+
 	# This method is to be called after loading the application code but
 	# before forking a worker process.
 	def after_loading_app_code(options)
@@ -363,7 +363,7 @@ protected
 			$LOAD_PATH.unshift(LIBDIR)
 			$LOAD_PATH.uniq!
 		end
-		
+
 		# Post-install framework extensions. Possibly preceded by a call to
 		# PhusionPassenger.install_framework_extensions!
 		require 'rails/version' if defined?(::Rails) && !defined?(::Rails::VERSION)
@@ -373,10 +373,10 @@ protected
 			# Rails 3 extensions are installed by
 			# PhusionPassenger.install_framework_extensions!
 		end
-		
+
 		PhusionPassenger._spawn_options = nil
 	end
-	
+
 	# To be called before the request handler main loop is entered, but after the app
 	# startup file has been loaded. This function will fire off necessary events
 	# and perform necessary preparation tasks.
@@ -388,7 +388,7 @@ protected
 		if forked && options["analytics_logger"]
 			options["analytics_logger"].clear_connection
 		end
-		
+
 		# If we were forked from a preloader process then clear or
 		# re-establish ActiveRecord database connections. This prevents
 		# child processes from concurrently accessing the same
@@ -403,7 +403,7 @@ protected
 				::ActiveRecord::Base.establish_connection
 			end
 		end
-		
+
 		# Fire off events.
 		PhusionPassenger.call_event(:starting_worker_process, forked)
 		if options["pool_account_username"] && options["pool_account_password_base64"]
@@ -414,14 +414,14 @@ protected
 			PhusionPassenger.call_event(:credentials, nil, nil)
 		end
 	end
-	
+
 	# To be called after the request handler main loop is exited. This function
 	# will fire off necessary events perform necessary cleanup tasks.
 	def after_handling_requests
 		PhusionPassenger.call_event(:stopping_worker_process)
 		Kernel.passenger_call_at_exit_blocks
 	end
-	
+
 	def get_socket_address_type(address)
 		if address =~ %r{^unix:.}
 			return :unix
@@ -431,7 +431,7 @@ protected
 			return :unknown
 		end
 	end
-	
+
 	def connect_to_server(address)
 		case get_socket_address_type(address)
 		when :unix
@@ -444,7 +444,7 @@ protected
 			raise ArgumentError, "Unknown socket address type for '#{address}'."
 		end
 	end
-	
+
 	def local_socket_address?(address)
 		case get_socket_address_type(address)
 		when :unix
@@ -456,7 +456,7 @@ protected
 			raise ArgumentError, "Unknown socket address type for '#{address}'."
 		end
 	end
-	
+
 	# Fork a new process and run the given block inside the child process, just like
 	# fork(). Unlike fork(), this method is safe, i.e. there's no way for the child
 	# process to escape the block. Any uncaught exceptions in the child process will
@@ -497,7 +497,7 @@ protected
 			end
 		end
 	end
-	
+
 	# Checks whether the given process exists.
 	def process_is_alive?(pid)
 		begin
@@ -510,7 +510,7 @@ protected
 		end
 	end
 	module_function :process_is_alive?
-	
+
 	# Wraps another IO object. Everything written to the PseudoIO will
 	# not only be immediately forwarded to the underlying IO object but
 	# will also be captured in a buffer. The contents of the buffer
@@ -520,27 +520,27 @@ protected
 			@sink = sink || File.open("/dev/null", "w")
 			@buffer = StringIO.new
 		end
-		
+
 		def done!
 			result = @buffer.string
 			@buffer = nil
 			return result
 		end
-		
+
 		def to_io
 			return self
 		end
-		
+
 		def method_missing(*args, &block)
 			@buffer.send(*args, &block) if @buffer && args.first != :reopen
 			return @sink.send(*args, &block)
 		end
-		
+
 		def respond_to?(symbol, include_private = false)
 			return @sink.respond_to?(symbol, include_private)
 		end
 	end
-	
+
 	# Run the given block. A message will be sent through +channel+ (a
 	# MessageChannel object), telling the remote side whether the block
 	# raised an exception, called exit(), or succeeded.
@@ -550,7 +550,7 @@ protected
 	# then all operations on $stderr/STDERR inside the block will be
 	# silently discarded, i.e. if one writes to $stderr/STDERR then nothing
 	# will be actually written to the console.
-	# 
+	#
 	# Returns whether the block succeeded, i.e. whether it didn't raise an
 	# exception.
 	#
@@ -562,12 +562,12 @@ protected
 			old_global_stderr = $stderr
 			old_stderr = STDERR
 			stderr_output = ""
-			
+
 			pseudo_stderr = PseudoIO.new(sink)
 			Object.send(:remove_const, 'STDERR') rescue nil
 			Object.const_set('STDERR', pseudo_stderr)
 			$stderr = pseudo_stderr
-			
+
 			begin
 				yield
 			ensure
@@ -576,7 +576,7 @@ protected
 				$stderr = old_global_stderr
 				stderr_output = pseudo_stderr.done!
 			end
-			
+
 			channel.write('success')
 			return true
 		rescue StandardError, ScriptError, NoMemoryError => e
@@ -591,7 +591,7 @@ protected
 			raise
 		end
 	end
-	
+
 	# Receive status information that was sent to +channel+ by
 	# report_app_init_status. If an error occured according to the
 	# received information, then an appropriate exception will be
@@ -637,7 +637,7 @@ protected
 		else
 			exception = nil
 		end
-		
+
 		if print_exception && exception
 			if print_exception.respond_to?(:puts)
 				print_exception(self.class.to_s, child_exception, print_exception)
@@ -652,17 +652,17 @@ protected
 		end
 		raise exception if exception
 	end
-	
+
 	# No-op, hook for unit tests.
 	def self.lower_privilege_called
 	end
-	
+
 	# Lowers the current process's privilege based on the documented rules for
 	# the "user", "group", "default_user" and "default_group" options.
 	def lower_privilege(startup_file, options)
 		Utils.lower_privilege_called
 		return if Process.euid != 0
-		
+
 		if options["default_user"] && !options["default_user"].empty?
 			default_user = options["default_user"]
 		else
@@ -739,7 +739,7 @@ protected
 		ENV['USER'] = user_info.name
 		ENV['HOME'] = user_info.dir
 	end
-	
+
 	# Checks the permissions of all parent directories of +dir+ as
 	# well as +dir+ itself.
 	#
@@ -749,7 +749,7 @@ protected
 	# +dir+ to be inaccessible by the current process, then this function
 	# returns [path, true] where +path+ is the path of the top-most
 	# directory with wrong permissions.
-	# 
+	#
 	# If +dir+ itself is not executable by the current process then
 	# this function returns [dir, false].
 	#
@@ -778,7 +778,7 @@ protected
 			return [dir, false]
 		end
 	end
-	
+
 	# Returns a string which reports the backtraces for all threads,
 	# or if that's not supported the backtrace for the current thread.
 	def global_backtrace_report
@@ -807,11 +807,11 @@ protected
 		end
 		return output
 	end
-	
+
 	def to_boolean(value)
 		return !(value.nil? || value == false || value == "false")
 	end
-	
+
 	def sanitize_spawn_options(options)
 		defaults = {
 			"app_type"         => "rails",
@@ -830,17 +830,17 @@ protected
 		end
 		# Force this to be a boolean for easy use with Utils#unmarshal_and_raise_errors.
 		options["print_exceptions"]          = to_boolean(options["print_exceptions"])
-		
+
 		options["analytics"]                 = to_boolean(options["analytics"])
 		options["show_version_in_header"]    = to_boolean(options["show_version_in_header"])
-		
+
 		# Smart spawning is not supported when using ruby-debug.
 		options["debugger"]     = to_boolean(options["debugger"])
 		options["spawn_method"] = "conservative" if options["debugger"]
-		
+
 		return options
 	end
-	
+
 	if defined?(PhusionPassenger::NativeSupport)
 		# Split the given string into an hash. Keys and values are obtained by splitting the
 		# string using the null character as the delimitor.
@@ -849,14 +849,14 @@ protected
 		end
 	else
 		NULL = "\0".freeze
-		
+
 		def split_by_null_into_hash(data)
 			args = data.split(NULL, -1)
 			args.pop
 			return Hash[*args]
 		end
 	end
-	
+
 	####################################
 end
 
@@ -921,7 +921,7 @@ class ConditionVariable
 	rescue Timeout::Error
 		return false
 	end
-	
+
 	# This is like ConditionVariable.wait(), but allows one to wait a maximum
 	# amount of time. Raises Timeout::Error if the timeout has elapsed.
 	def timed_wait!(mutex, secs)
@@ -978,7 +978,7 @@ class IO
 		def writev(components)
 			return PhusionPassenger::NativeSupport.writev(fileno, components)
 		end
-		
+
 		# Like #writev, but accepts two arrays. The data is written in the given order.
 		#
 		#   io.writev2(["hello ", "world", "\n"], ["another ", "message\n"])
@@ -986,7 +986,7 @@ class IO
 			return PhusionPassenger::NativeSupport.writev2(fileno,
 				components, components2)
 		end
-		
+
 		# Like #writev, but accepts three arrays. The data is written in the given order.
 		#
 		#   io.writev3(["hello ", "world", "\n"],
@@ -997,7 +997,7 @@ class IO
 				components, components2, components3)
 		end
 	end
-	
+
 	if defined?(Fcntl::F_SETFD)
 		def close_on_exec!
 			fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
@@ -1028,16 +1028,16 @@ module Signal
 		else
 			result = Signal.list
 		end
-		
+
 		# Don't touch SIGCHLD no matter what! On OS X waitpid() will
 		# malfunction if SIGCHLD doesn't have a correct handler.
 		result.delete("CLD")
 		result.delete("CHLD")
-		
+
 		# Other stuff that we don't want to trap no matter which
 		# Ruby engine.
 		result.delete("STOP")
-		
+
 		return result
 	end
 end
@@ -1070,7 +1070,7 @@ if ruby_engine == "ruby" && defined?(PhusionPassenger::NativeSupport) && (
 		def recv_io(klass = IO)
 			return klass.for_fd(PhusionPassenger::NativeSupport.recv_fd(self.fileno))
 		end
-		
+
 		def send_io(io)
 			PhusionPassenger::NativeSupport.send_fd(self.fileno, io.fileno)
 		end

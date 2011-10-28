@@ -218,9 +218,9 @@ passenger_config_merge_dir(apr_pool_t *p, void *basev, void *addv) {
 	DirConfig *config = create_dir_config_struct(p);
 	DirConfig *base = (DirConfig *) basev;
 	DirConfig *add = (DirConfig *) addv;
-	
+
 	config->enabled = (add->enabled == DirConfig::UNSET) ? base->enabled : add->enabled;
-	
+
 	config->railsBaseURIs = base->railsBaseURIs;
 	for (set<string>::const_iterator it(add->railsBaseURIs.begin()); it != add->railsBaseURIs.end(); it++) {
 		config->railsBaseURIs.insert(*it);
@@ -229,7 +229,7 @@ passenger_config_merge_dir(apr_pool_t *p, void *basev, void *addv) {
 	for (set<string>::const_iterator it(add->rackBaseURIs.begin()); it != add->rackBaseURIs.end(); it++) {
 		config->rackBaseURIs.insert(*it);
 	}
-	
+
 	MERGE_THREEWAY_CONFIG(autoDetectRails);
 	MERGE_THREEWAY_CONFIG(autoDetectRack);
 	MERGE_THREEWAY_CONFIG(autoDetectWSGI);
@@ -372,7 +372,7 @@ cmd_rails_framework_spawner_idle_time(cmd_parms *cmd, void *pcfg, const char *ar
 	DirConfig *config = (DirConfig *) pcfg;
 	char *end;
 	long int result;
-	
+
 	result = strtol(arg, &end, 10);
 	if (*end != '\0') {
 		return "Invalid number specified for RailsFrameworkSpawnerIdleTime.";
@@ -389,7 +389,7 @@ cmd_rails_app_spawner_idle_time(cmd_parms *cmd, void *pcfg, const char *arg) {
 	DirConfig *config = (DirConfig *) pcfg;
 	char *end;
 	long int result;
-	
+
 	result = strtol(arg, &end, 10);
 	if (*end != '\0') {
 		return "Invalid number specified for RailsAppSpawnerIdleTime.";
@@ -649,7 +649,7 @@ const command_rec passenger_commands[] = {
 		NULL,
 		OR_OPTIONS | ACCESS_CONF | RSRC_CONF,
 		"Whether to enable logging through Union Station."),
-	
+
 	/*****************************/
 
 	// Rails-specific settings.
@@ -678,7 +678,7 @@ const command_rec passenger_commands[] = {
 		NULL,
 		RSRC_CONF,
 		"The maximum number of seconds that an application spawner may be idle before it is shutdown."),
-	
+
 	// Rack-specific settings.
 	AP_INIT_TAKE1("RackBaseURI",
 		(Take1Func) cmd_rack_base_uri,
@@ -695,14 +695,14 @@ const command_rec passenger_commands[] = {
 		NULL,
 		OR_OPTIONS | ACCESS_CONF | RSRC_CONF,
 		"The environment under which a Rack app must run."),
-	
+
 	// WSGI-specific settings.
 	AP_INIT_FLAG("PassengerWSGIAutoDetect",
 		(FlagFunc) cmd_wsgi_auto_detect,
 		NULL,
 		RSRC_CONF,
 		"Whether auto-detection of WSGI applications should be enabled."),
-	
+
 	// Backwards compatibility options.
 	AP_INIT_TAKE1("RailsRuby",
 		(Take1Func) cmd_passenger_ruby,
@@ -739,7 +739,7 @@ const command_rec passenger_commands[] = {
 		NULL,
 		RSRC_CONF,
 		"Deprecated option."),
-	
+
 	// Obsolete options.
 	AP_INIT_TAKE1("RailsSpawnServer",
 		(Take1Func) cmd_rails_spawn_server,
@@ -751,7 +751,7 @@ const command_rec passenger_commands[] = {
 		NULL,
 		RSRC_CONF,
 		"Whether custom mod_rewrite rules should be allowed."),
-	
+
 	{ NULL }
 };
 

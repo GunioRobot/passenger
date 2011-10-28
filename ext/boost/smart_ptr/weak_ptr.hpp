@@ -225,6 +225,6 @@ template<class T> void swap(weak_ptr<T> & a, weak_ptr<T> & b)
 
 #ifdef BOOST_MSVC
 # pragma warning(pop)
-#endif    
+#endif
 
 #endif  // #ifndef BOOST_SMART_PTR_WEAK_PTR_HPP_INCLUDED

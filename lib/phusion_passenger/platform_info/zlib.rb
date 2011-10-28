@@ -29,7 +29,7 @@ module PlatformInfo
 	def self.zlib_flags
 		return nil
 	end
-	
+
 	def self.zlib_libs
 		return '-lz'
 	end

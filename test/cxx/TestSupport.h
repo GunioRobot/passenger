@@ -152,7 +152,7 @@ public:
 			throw FileSystemException(message, e, name);
 		}
 	}
-	
+
 	~TempDir() {
 		removeDirTree(name);
 	}
@@ -170,13 +170,13 @@ public:
 	TempDirCopy(const string &source, const string &dest) {
 		dir = dest;
 		removeDirTree(dest);
-		
+
 		char command[1024];
 		snprintf(command, sizeof(command), "cp -pR \"%s\" \"%s\"",
 			source.c_str(), dest.c_str());
 		system(command);
 	}
-	
+
 	~TempDirCopy() {
 		removeDirTree(dir);
 	}
@@ -193,7 +193,7 @@ public:
 	DeleteFileEventually(const string &filename) {
 		this->filename = filename;
 	}
-	
+
 	~DeleteFileEventually() {
 		unlink(filename.c_str());
 	}
@@ -207,11 +207,11 @@ public:
 class TempThread {
 public:
 	oxt::thread thread;
-	
+
 	TempThread(boost::function<void ()> func)
 		: thread(func)
 		{ }
-	
+
 	~TempThread() {
 		thread.interrupt_and_join();
 	}
@@ -226,22 +226,22 @@ public:
 	AtomicInt() {
 		val = 0;
 	}
-	
+
 	int get() const {
 		lock_guard<boost::mutex> l(lock);
 		return val;
 	}
-	
+
 	void set(int value) {
 		lock_guard<boost::mutex> l(lock);
 		val = value;
 	}
-	
+
 	AtomicInt &operator=(int value) {
 		set(value);
 		return *this;
 	}
-	
+
 	operator int() const {
 		return get();
 	}

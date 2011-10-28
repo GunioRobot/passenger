@@ -29,22 +29,22 @@ module Standalone
 class AppFinder
 	attr_accessor :dirs
 	attr_reader :apps
-	
+
 	def self.looks_like_app_directory?(dir)
 		return File.exist?("#{dir}/config.ru") ||
 			File.exist?("#{dir}/config/environment.rb") ||
 			File.exist?("#{dir}/passenger_wsgi.py")
 	end
-	
+
 	def initialize(dirs, options = {})
 		@dirs = dirs
 		@options = options
 	end
-	
+
 	def scan
 		apps = []
 		watchlist = []
-		
+
 		app_root = find_app_root
 		apps << {
 			:server_names => ["_"],
@@ -53,7 +53,7 @@ class AppFinder
 		watchlist << app_root
 		watchlist << "#{app_root}/config" if File.exist?("#{app_root}/config")
 		watchlist << "#{app_root}/passenger.conf" if File.exist?("#{app_root}/passenger.conf")
-		
+
 		apps.sort! do |a, b|
 			a[:root] <=> b[:root]
 		end
@@ -68,20 +68,20 @@ class AppFinder
 				@options.merge(app)
 			end
 		end
-		
+
 		@apps = apps
 		@watchlist = watchlist
 		return apps
 	end
-	
+
 	def monitor(termination_pipe)
 		raise "You must call #scan first" if !@apps
-		
+
 		watcher = PhusionPassenger::Utils::FileSystemWatcher.new(@watchlist, termination_pipe)
 		if wait_on_io(termination_pipe, 3)
 			return
 		end
-		
+
 		while true
 			changed = watcher.wait_for_change
 			watcher.close
@@ -92,13 +92,13 @@ class AppFinder
 				if wait_on_io(termination_pipe, 0.25)
 					return
 				end
-				
+
 				new_apps = scan
 				watcher = PhusionPassenger::Utils::FileSystemWatcher.new(@watchlist, termination_pipe)
 				if old_apps != new_apps
 					yield(new_apps)
 				end
-				
+
 				# Don't process change events again for a short while,
 				# but do detect changes while waiting.
 				if wait_on_io(termination_pipe, 3)
@@ -111,7 +111,7 @@ class AppFinder
 	ensure
 		watcher.close if watcher
 	end
-	
+
 	##################
 
 private
@@ -122,16 +122,16 @@ private
 			return File.expand_path(@dirs[0])
 		end
 	end
-	
+
 	def load_config_file(context, filename)
 		require 'phusion_passenger/standalone/config_file' unless defined?(ConfigFile)
 		return ConfigFile.new(context, filename).options
 	end
-	
+
 	def looks_like_app_directory?(dir)
 		return AppFinder.looks_like_app_directory?(dir)
 	end
-	
+
 	def filename_to_server_names(filename)
 		basename = File.basename(filename)
 		names = [basename]
@@ -140,7 +140,7 @@ private
 		end
 		return names
 	end
-	
+
 	# Wait until the given IO becomes readable, or until the timeout has
 	# been reached. Returns true if the IO became readable, false if the
 	# timeout has been reached.

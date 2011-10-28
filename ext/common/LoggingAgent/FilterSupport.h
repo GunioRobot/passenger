@@ -75,23 +75,23 @@ public:
 		IDENTIFIER,
 		END_OF_DATA
 	};
-	
+
 	enum TokenOptions {
 		NO_OPTIONS = 0,
 		REGEXP_OPTION_CASE_INSENSITIVE = 1
 	};
-	
+
 	struct Token {
 		TokenType type;
 		int options;
 		unsigned int pos;
 		unsigned int size;
 		StaticString rawValue;
-		
+
 		Token() {
 			type = NONE;
 		}
-		
+
 		Token(TokenType _type, unsigned int _pos, unsigned int _size, const StaticString &_rawValue)
 			: type(_type),
 			  options(NO_OPTIONS),
@@ -99,7 +99,7 @@ public:
 			  size(_size),
 			  rawValue(_rawValue)
 			{ }
-		
+
 		string toString() const {
 			return Tokenizer::typeToString(type);
 		}
@@ -109,47 +109,47 @@ private:
 	StaticString data;
 	bool debug;
 	unsigned int pos;
-	
+
 	static bool isWhitespace(char ch) {
 		return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
 	}
-	
+
 	void skipWhitespaces() {
 		while (pos < data.size() && isWhitespace(data[pos])) {
 			pos++;
 		}
 	}
-	
+
 	unsigned int available() const {
 		return data.size() - pos;
 	}
-	
+
 	char current() const {
 		return data[pos];
 	}
-	
+
 	char next() const {
 		return data[pos + 1];
 	}
-	
+
 	static bool isIdentifierChar(char ch) {
 		return (ch >= 'a' && ch <= 'z')
 			|| (ch >= 'A' && ch <= 'Z')
 			|| (ch >= '0' && ch <= '9')
 			|| ch == '_';
 	}
-	
+
 	static bool isDigit(char ch) {
 		return ch >= '0' && ch <= '9';
 	}
-	
+
 	Token logToken(const Token &token) const {
 		if (debug) {
 			printf("# Token: %s\n", token.toString().c_str());
 		}
 		return token;
 	}
-	
+
 	void raiseSyntaxError(const string &message = "") {
 		string msg = "Syntax error at character " + toString(pos + 1);
 		if (!message.empty()) {
@@ -158,14 +158,14 @@ private:
 		}
 		throw SyntaxError(msg);
 	}
-	
+
 	void expectingAtLeast(unsigned int size) {
 		if (available() < size) {
 			raiseSyntaxError("at least " + toString(size) +
 				" more characters expected");
 		}
 	}
-	
+
 	void expectingNextChar(char ch) {
 		expectingAtLeast(2);
 		if (next() != ch) {
@@ -174,13 +174,13 @@ private:
 				"'");
 		}
 	}
-	
+
 	Token matchToken(TokenType type, unsigned int size = 0) {
 		unsigned int oldPos = pos;
 		pos += size;
 		return Token(type, oldPos, size, data.substr(oldPos, size));
 	}
-	
+
 	Token matchTokensStartingWithNegation() {
 		expectingAtLeast(2);
 		switch (next()) {
@@ -193,17 +193,17 @@ private:
 			return Token(); // Shut up compiler warning.
 		};
 	}
-	
+
 	Token matchAnd() {
 		expectingNextChar('&');
 		return matchToken(AND, 2);
 	}
-	
+
 	Token matchOr() {
 		expectingNextChar('|');
 		return matchToken(OR, 2);
 	}
-	
+
 	Token matchTokensStartingWithEquals() {
 		expectingAtLeast(2);
 		switch (next()) {
@@ -216,7 +216,7 @@ private:
 			return Token(); // Shut up compiler warning.
 		}
 	}
-	
+
 	Token matchTokensStartingWithGreaterThan() {
 		if (available() == 0 || next() != '=') {
 			return matchToken(GREATER_THAN, 1);
@@ -224,7 +224,7 @@ private:
 			return matchToken(GREATER_THAN_OR_EQUALS, 2);
 		}
 	}
-	
+
 	Token matchTokensStartingWithLessThan() {
 		if (available() == 0 || next() != '=') {
 			return matchToken(LESS_THAN, 1);
@@ -232,14 +232,14 @@ private:
 			return matchToken(LESS_THAN_OR_EQUALS, 2);
 		}
 	}
-	
+
 	Token matchRegexp(char terminator) {
 		unsigned int start = pos;
 		bool endFound = false;
-		
+
 		// Match initial quote slash.
 		pos++;
-		
+
 		// Match rest of regexp including terminating slash.
 		while (pos < data.size() && !endFound) {
 			char ch = current();
@@ -257,10 +257,10 @@ private:
 				pos++;
 			}
 		}
-		
+
 		if (endFound) {
 			Token t(REGEXP, start, pos - start, data.substr(start, pos - start));
-			
+
 			// Match regexp options.
 			endFound = false;
 			while (pos < data.size() && !endFound) {
@@ -272,21 +272,21 @@ private:
 				}
 				pos++;
 			}
-			
+
 			return t;
 		} else {
 			raiseSyntaxError("unterminated regular expression");
 			return Token(); // Shut up compiler warning.
 		}
 	}
-	
+
 	Token matchString(char terminator) {
 		unsigned int start = pos;
 		bool endFound = false;
-		
+
 		// Match initial quote character.
 		pos++;
-		
+
 		// Match rest of string including terminating quote.
 		while (pos < data.size() && !endFound) {
 			char ch = current();
@@ -304,7 +304,7 @@ private:
 				pos++;
 			}
 		}
-		
+
 		if (endFound) {
 			return Token(STRING, start, pos - start, data.substr(start, pos - start));
 		} else {
@@ -312,20 +312,20 @@ private:
 			return Token(); // Shut up compiler warning.
 		}
 	}
-	
+
 	Token matchInteger() {
 		unsigned int start = pos;
-		
+
 		// Accept initial minus or digit.
 		pos++;
-		
+
 		while (pos < data.size() && isDigit(data[pos])) {
 			pos++;
 		}
-		
+
 		return Token(INTEGER, start, pos - start, data.substr(start, pos - start));
 	}
-	
+
 	Token matchIdentifier() {
 		char ch = current();
 		if ((ch >= 'a' && ch <= 'z') ||
@@ -336,7 +336,7 @@ private:
 			while (pos < data.size() && isIdentifierChar(current())) {
 				pos++;
 			}
-			
+
 			StaticString val = data.substr(start, pos - start);
 			if (val == "true") {
 				return Token(TRUE_LIT, start, pos - start, val);
@@ -357,13 +357,13 @@ public:
 		this->debug = debug;
 		pos = 0;
 	}
-	
+
 	Token getNext() {
 		skipWhitespaces();
 		if (pos >= data.size()) {
 			return logToken(Token(END_OF_DATA, data.size(), 0, ""));
 		}
-		
+
 		switch (current()) {
 		case '!':
 			return logToken(matchTokensStartingWithNegation());
@@ -407,7 +407,7 @@ public:
 			}
 		}
 	}
-	
+
 	static string typeToString(TokenType type) {
 		switch (type) {
 		case NONE:
@@ -477,14 +477,14 @@ public:
 		CONTROLLER,
 		RESPONSE_TIME
 	};
-	
+
 	virtual ~Context() { }
-	
+
 	virtual string getURI() const = 0;
 	virtual string getController() const = 0;
 	virtual int getResponseTime() const = 0;
 	virtual bool hasHint(const string &name) const = 0;
-	
+
 	string queryStringField(FieldIdentifier id) const {
 		switch (id) {
 		case URI:
@@ -497,7 +497,7 @@ public:
 			return "";
 		}
 	}
-	
+
 	int queryIntField(FieldIdentifier id) const {
 		switch (id) {
 		case RESPONSE_TIME:
@@ -506,7 +506,7 @@ public:
 			return 0;
 		}
 	}
-	
+
 	bool queryBoolField(FieldIdentifier id) const {
 		switch (id) {
 		case URI:
@@ -519,7 +519,7 @@ public:
 			return false;
 		}
 	}
-	
+
 	static ValueType getFieldType(FieldIdentifier id) {
 		switch (id) {
 		case URI:
@@ -539,23 +539,23 @@ public:
 	string controller;
 	int responseTime;
 	set<string> hints;
-	
+
 	SimpleContext() {
 		responseTime = 0;
 	}
-	
+
 	virtual string getURI() const {
 		return uri;
 	}
-	
+
 	virtual string getController() const {
 		return controller;
 	}
-	
+
 	virtual int getResponseTime() const {
 		return responseTime;
 	}
-	
+
 	virtual bool hasHint(const string &name) const {
 		return hints.find(name) != hints.end();
 	}
@@ -565,12 +565,12 @@ class ContextFromLog: public Context {
 private:
 	StaticString logData;
 	mutable SimpleContext *parsedData;
-	
+
 	struct ParseState {
 		unsigned long long requestProcessingStart;
 		unsigned long long requestProcessingEnd;
 	};
-	
+
 	static void parseLine(const StaticString &txnId, unsigned long long timestamp,
 		const StaticString &data, SimpleContext &ctx, ParseState &state)
 	{
@@ -589,12 +589,12 @@ private:
 			}
 		}
 	}
-	
+
 	static void reallyParse(const StaticString &data, SimpleContext &ctx) {
 		const char *current = data.data();
 		const char *end     = data.data() + data.size();
 		ParseState state;
-		
+
 		memset(&state, 0, sizeof(state));
 		while (current < end) {
 			current = skipNewlines(current, end);
@@ -606,7 +606,7 @@ private:
 					unsigned long long timestamp;
 					unsigned int writeCount;
 					StaticString lineData;
-					
+
 					// If we want to do more complicated analysis we should sort
 					// the lines but for the purposes of ContextFromLog
 					// analyzing the data without sorting is good enough.
@@ -618,13 +618,13 @@ private:
 				current = endOfLine;
 			}
 		}
-		
+
 		if (state.requestProcessingEnd != 0) {
 			ctx.responseTime = int(state.requestProcessingEnd -
 				state.requestProcessingStart);
 		}
 	}
-	
+
 	static bool splitLine(const StaticString &line, StaticString &txnId,
 		unsigned long long &timestamp, unsigned int &writeCount,
 		StaticString &data)
@@ -633,17 +633,17 @@ private:
 		if (firstDelim == string::npos) {
 			return false;
 		}
-		
+
 		size_t secondDelim = line.find(' ', firstDelim + 1);
 		if (secondDelim == string::npos) {
 			return false;
 		}
-		
+
 		size_t thirdDelim = line.find(' ', secondDelim + 1);
 		if (thirdDelim == string::npos) {
 			return false;
 		}
-		
+
 		txnId = line.substr(0, firstDelim);
 		timestamp = hexatriToULL(line.substr(firstDelim + 1, secondDelim - firstDelim - 1));
 		writeCount = (unsigned int) hexatriToULL(line.substr(secondDelim + 1,
@@ -651,7 +651,7 @@ private:
 		data = line.substr(thirdDelim + 1);
 		return true;
 	}
-	
+
 	static unsigned long long extractEventTimestamp(const StaticString &data) {
 		size_t pos = data.find('(');
 		if (pos == string::npos) {
@@ -669,29 +669,29 @@ private:
 			}
 		}
 	}
-	
+
 	static bool isNewline(char ch) {
 		return ch == '\n' || ch == '\r';
 	}
-	
+
 	static bool isDigit(char ch) {
 		return ch >= '0' && ch <= '9';
 	}
-	
+
 	static const char *skipNewlines(const char *current, const char *end) {
 		while (current < end && isNewline(*current)) {
 			current++;
 		}
 		return current;
 	}
-	
+
 	static const char *findEndOfLine(const char *current, const char *end) {
 		while (current < end && !isNewline(*current)) {
 			current++;
 		}
 		return current;
 	}
-	
+
 	SimpleContext *parse() const {
 		if (parsedData == NULL) {
 			auto_ptr<SimpleContext> ctx(new SimpleContext());
@@ -700,29 +700,29 @@ private:
 		}
 		return parsedData;
 	}
-	
+
 public:
 	ContextFromLog(const StaticString &logData) {
 		this->logData = logData;
 		parsedData = NULL;
 	}
-	
+
 	~ContextFromLog() {
 		delete parsedData;
 	}
-	
+
 	virtual string getURI() const {
 		return parse()->uri;
 	}
-	
+
 	virtual string getController() const {
 		return parse()->getController();
 	}
-	
+
 	virtual int getResponseTime() const {
 		return parse()->getResponseTime();
 	}
-	
+
 	virtual bool hasHint(const string &name) const {
 		return parse()->hasHint(name);
 	}
@@ -733,7 +733,7 @@ class Filter {
 private:
 	typedef Tokenizer::Token Token;
 	typedef Tokenizer::TokenType TokenType;
-	
+
 	struct BooleanComponent;
 	struct MultiExpression;
 	struct Comparison;
@@ -742,17 +742,17 @@ private:
 	typedef shared_ptr<MultiExpression> MultiExpressionPtr;
 	typedef shared_ptr<Comparison> ComparisonPtr;
 	typedef shared_ptr<FunctionCall> FunctionCallPtr;
-	
+
 	struct BooleanComponent {
 		virtual ~BooleanComponent() { }
 		virtual bool evaluate(const Context &ctx) = 0;
 	};
-	
+
 	enum LogicalOperator {
 		AND,
 		OR
 	};
-	
+
 	enum Comparator {
 		MATCHES,
 		NOT_MATCHES,
@@ -764,21 +764,21 @@ private:
 		LESS_THAN_OR_EQUALS,
 		UNKNOWN_COMPARATOR
 	};
-	
+
 	struct MultiExpression: public BooleanComponent {
 		struct Part {
 			LogicalOperator theOperator;
 			BooleanComponentPtr expression;
 		};
-		
+
 		BooleanComponentPtr firstExpression;
 		vector<Part> rest;
-		
+
 		virtual bool evaluate(const Context &ctx) {
 			bool result = firstExpression->evaluate(ctx);
 			unsigned int i = 0;
 			bool done = i == rest.size();
-			
+
 			while (!done) {
 				Part &nextPart = rest[i];
 				if (nextPart.theOperator == AND) {
@@ -790,23 +790,23 @@ private:
 				i++;
 				done = done || i == rest.size();
 			}
-			
+
 			return result;
 		}
 	};
-	
+
 	struct Negation: public BooleanComponent {
 		BooleanComponentPtr expr;
-		
+
 		Negation(const BooleanComponentPtr &e)
 			: expr(e)
 			{ }
-		
+
 		virtual bool evaluate(const Context &ctx) {
 			return !expr->evaluate(ctx);
 		}
 	};
-	
+
 	struct Value {
 		enum Source {
 			REGEXP_LITERAL,
@@ -815,7 +815,7 @@ private:
 			BOOLEAN_LITERAL,
 			CONTEXT_FIELD_IDENTIFIER
 		};
-		
+
 		Source source;
 		union {
 			struct {
@@ -829,16 +829,16 @@ private:
 			bool boolValue;
 			Context::FieldIdentifier contextFieldIdentifier;
 		} u;
-		
+
 		Value() {
 			source = INTEGER_LITERAL;
 			u.intValue = 0;
 		}
-		
+
 		Value(const Value &other) {
 			initializeFrom(other);
 		}
-		
+
 		Value(bool regexp, const StaticString &value, bool caseInsensitive = false) {
 			if (regexp) {
 				source = REGEXP_LITERAL;
@@ -859,32 +859,32 @@ private:
 					options);
 			}
 		}
-		
+
 		Value(int val) {
 			source = INTEGER_LITERAL;
 			u.intValue = val;
 		}
-		
+
 		Value(bool val) {
 			source = BOOLEAN_LITERAL;
 			u.boolValue = val;
 		}
-		
+
 		Value(Context::FieldIdentifier identifier) {
 			source = CONTEXT_FIELD_IDENTIFIER;
 			u.contextFieldIdentifier = identifier;
 		}
-		
+
 		~Value() {
 			freeStorage();
 		}
-		
+
 		Value &operator=(const Value &other) {
 			freeStorage();
 			initializeFrom(other);
 			return *this;
 		}
-		
+
 		regex_t *getRegexpValue(const Context &ctx) const {
 			if (source == REGEXP_LITERAL) {
 				return &storedRegexp();
@@ -892,7 +892,7 @@ private:
 				return NULL;
 			}
 		}
-		
+
 		string getStringValue(const Context &ctx) const {
 			switch (source) {
 			case REGEXP_LITERAL:
@@ -912,7 +912,7 @@ private:
 				return "";
 			}
 		}
-		
+
 		int getIntegerValue(const Context &ctx) const {
 			switch (source) {
 			case REGEXP_LITERAL:
@@ -929,7 +929,7 @@ private:
 				return 0;
 			}
 		}
-		
+
 		bool getBooleanValue(const Context &ctx) const {
 			switch (source) {
 			case REGEXP_LITERAL:
@@ -946,7 +946,7 @@ private:
 				return 0;
 			}
 		}
-		
+
 		ValueType getType() const {
 			switch (source) {
 			case REGEXP_LITERAL:
@@ -963,16 +963,16 @@ private:
 				return UNKNOWN_TYPE;
 			}
 		}
-	
+
 	private:
 		const string &storedString() const {
 			return *((string *) u.stringOrRegexpValue.stringStorage);
 		}
-		
+
 		regex_t &storedRegexp() const {
 			return (regex_t &) u.stringOrRegexpValue.regexp.regexp;
 		}
-		
+
 		void freeStorage() {
 			if (source == REGEXP_LITERAL || source == STRING_LITERAL) {
 				storedString().~string();
@@ -981,7 +981,7 @@ private:
 				}
 			}
 		}
-		
+
 		void initializeFrom(const Value &other) {
 			int options;
 			source = other.source;
@@ -1012,24 +1012,24 @@ private:
 			}
 		}
 	};
-	
+
 	struct SingleValueComponent: public BooleanComponent {
 		Value val;
-		
+
 		SingleValueComponent(const Value &v)
 			: val(v)
 			{ }
-		
+
 		virtual bool evaluate(const Context &ctx) {
 			return val.getBooleanValue(ctx);
 		}
 	};
-	
+
 	struct Comparison: public BooleanComponent {
 		Value subject;
 		Comparator comparator;
 		Value object;
-		
+
 		virtual bool evaluate(const Context &ctx) {
 			switch (subject.getType()) {
 			case STRING_TYPE:
@@ -1043,7 +1043,7 @@ private:
 				return false;
 			}
 		}
-	
+
 	private:
 		bool compareStringOrRegexp(const string &str, const Context &ctx) {
 			switch (comparator) {
@@ -1060,7 +1060,7 @@ private:
 				return false;
 			}
 		}
-		
+
 		bool compareInteger(int value, const Context &ctx) {
 			int value2 = object.getIntegerValue(ctx);
 			switch (comparator) {
@@ -1081,7 +1081,7 @@ private:
 				return false;
 			}
 		}
-		
+
 		bool compareBoolean(bool value, const Context &ctx) {
 			bool value2 = object.getBooleanValue(ctx);
 			switch (comparator) {
@@ -1095,45 +1095,45 @@ private:
 			}
 		}
 	};
-	
+
 	struct FunctionCall: public BooleanComponent {
 		vector<Value> arguments;
-		
+
 		virtual void checkArguments() const = 0;
 	};
-	
+
 	struct StartsWithFunctionCall: public FunctionCall {
 		virtual bool evaluate(const Context &ctx) {
 			return startsWith(arguments[0].getStringValue(ctx),
 				arguments[1].getStringValue(ctx));
 		}
-		
+
 		virtual void checkArguments() const {
 			if (arguments.size() != 2) {
-				throw SyntaxError("you passed " + toString(arguments.size()) + 
+				throw SyntaxError("you passed " + toString(arguments.size()) +
 					" argument(s) to starts_with(), but it accepts exactly 2 arguments");
 			}
 		}
 	};
-	
+
 	struct HasHintFunctionCall: public FunctionCall {
 		virtual bool evaluate(const Context &ctx) {
 			return ctx.hasHint(arguments[0].getStringValue(ctx));
 		}
-		
+
 		virtual void checkArguments() const {
 			if (arguments.size() != 1) {
-				throw SyntaxError("you passed " + toString(arguments.size()) + 
+				throw SyntaxError("you passed " + toString(arguments.size()) +
 					" argument(s) to has_hint(), but it accepts exactly 1 argument");
 			}
 		}
 	};
-	
+
 	Tokenizer tokenizer;
 	BooleanComponentPtr root;
 	Token lookahead;
 	bool debug;
-	
+
 	static bool isLiteralToken(const Token &token) {
 		return token.type == Tokenizer::REGEXP
 			|| token.type == Tokenizer::STRING
@@ -1141,16 +1141,16 @@ private:
 			|| token.type == Tokenizer::TRUE_LIT
 			|| token.type == Tokenizer::FALSE_LIT;
 	}
-	
+
 	static bool isValueToken(const Token &token) {
 		return isLiteralToken(token) || token.type == Tokenizer::IDENTIFIER;
 	}
-	
+
 	static bool isLogicalOperatorToken(const Token &token) {
 		return token.type == Tokenizer::AND
 			|| token.type == Tokenizer::OR;
 	}
-	
+
 	static Comparator determineComparator(Tokenizer::TokenType type) {
 		switch (type) {
 		case Tokenizer::MATCHES:
@@ -1173,7 +1173,7 @@ private:
 			return UNKNOWN_COMPARATOR;
 		}
 	}
-	
+
 	static bool comparatorAcceptsValueTypes(Comparator cmp, ValueType subjectType, ValueType objectType) {
 		switch (cmp) {
 		case MATCHES:
@@ -1193,11 +1193,11 @@ private:
 			return false; // Shut up compiler warning.
 		}
 	}
-	
+
 	static string unescapeCString(const StaticString &data) {
 		string result;
 		result.reserve(data.size());
-		
+
 		const char *current = data.data();
 		const char *end     = data.data() + data.size();
 		while (current < end) {
@@ -1227,10 +1227,10 @@ private:
 				current++;
 			}
 		}
-		
+
 		return result;
 	}
-	
+
 	void logMatch(int level, const char *name) const {
 		if (level > 100) {
 			// If level is too deep then it's probably a bug.
@@ -1243,15 +1243,15 @@ private:
 			printf("Matching: %s\n", name);
 		}
 	}
-	
+
 	Token peek() const {
 		return lookahead;
 	}
-	
+
 	bool peek(Tokenizer::TokenType type) const {
 		return lookahead.type == type;
 	}
-	
+
 	Token match(TokenType type) {
 		if (lookahead.type == type) {
 			return match();
@@ -1262,13 +1262,13 @@ private:
 			return Token(); // Shut up compiler warning.
 		}
 	}
-	
+
 	Token match() {
 		Token old = lookahead;
 		lookahead = tokenizer.getNext();
 		return old;
 	}
-	
+
 	void raiseSyntaxError(const string &msg = "", const Token &token = Token()) {
 		if (token.type != Tokenizer::NONE) {
 			string message = "at character " + toString(token.pos + 1);
@@ -1281,11 +1281,11 @@ private:
 			throw SyntaxError(msg);
 		}
 	}
-	
+
 	BooleanComponentPtr matchMultiExpression(int level) {
 		logMatch(level, "matchMultiExpression()");
 		MultiExpressionPtr result = make_shared<MultiExpression>();
-		
+
 		result->firstExpression = matchExpression(level + 1);
 		while (isLogicalOperatorToken(peek())) {
 			MultiExpression::Part part;
@@ -1293,19 +1293,19 @@ private:
 			part.expression  = matchExpression(level + 1);
 			result->rest.push_back(part);
 		}
-		
+
 		return result;
 	}
-	
+
 	BooleanComponentPtr matchExpression(int level) {
 		logMatch(level, "matchExpression()");
 		bool negate = false;
-		
+
 		if (peek(Tokenizer::NOT)) {
 			match();
 			negate = true;
 		}
-		
+
 		Token next = peek();
 		if (next.type == Tokenizer::LPARENTHESIS) {
 			match();
@@ -1320,7 +1320,7 @@ private:
 			BooleanComponentPtr component;
 			Token &current = next;
 			match();
-			
+
 			if (peek(Tokenizer::LPARENTHESIS)) {
 				component = matchFunctionCall(level + 1, current);
 			} else if (determineComparator(peek().type) != UNKNOWN_COMPARATOR) {
@@ -1330,7 +1330,7 @@ private:
 			} else {
 				raiseSyntaxError("expected a function call, comparison or boolean literal", current);
 			}
-			
+
 			if (negate) {
 				return make_shared<Negation>(component);
 			} else {
@@ -1341,12 +1341,12 @@ private:
 			return BooleanComponentPtr(); // Shut up compiler warning.
 		}
 	}
-	
+
 	BooleanComponentPtr matchSingleValueComponent(int level, const Token &token) {
 		logMatch(level, "matchSingleValueComponent()");
 		return make_shared<SingleValueComponent>(matchLiteral(level + 1, token));
 	}
-	
+
 	ComparisonPtr matchComparison(int level, const Token &subjectToken) {
 		logMatch(level, "matchComparison()");
 		ComparisonPtr comparison = make_shared<Comparison>();
@@ -1358,11 +1358,11 @@ private:
 		}
 		return comparison;
 	}
-	
+
 	FunctionCallPtr matchFunctionCall(int level, const Token &id) {
 		logMatch(level, "matchFunctionCall()");
 		FunctionCallPtr function;
-		
+
 		if (id.rawValue == "starts_with") {
 			function = make_shared<StartsWithFunctionCall>();
 		} else if (id.rawValue == "has_hint") {
@@ -1370,7 +1370,7 @@ private:
 		} else {
 			raiseSyntaxError("unknown function '" + id.rawValue + "'", id);
 		}
-		
+
 		match(Tokenizer::LPARENTHESIS);
 		if (isValueToken(peek())) {
 			function->arguments.push_back(matchValue(level + 1, match()));
@@ -1383,7 +1383,7 @@ private:
 		function->checkArguments();
 		return function;
 	}
-	
+
 	Value matchValue(int level, const Token &token) {
 		logMatch(level, "matchValue()");
 		if (isLiteralToken(token)) {
@@ -1396,7 +1396,7 @@ private:
 			return Value(); // Shut up compiler warning.
 		}
 	}
-	
+
 	LogicalOperator matchOperator(int level) {
 		logMatch(level, "matchOperator()");
 		if (peek(Tokenizer::AND)) {
@@ -1412,7 +1412,7 @@ private:
 			return AND; // Shut up compiler warning.
 		}
 	}
-	
+
 	Comparator matchComparator(int level) {
 		logMatch(level, "matchComparator()");
 		Comparator comparator = determineComparator(peek().type);
@@ -1425,7 +1425,7 @@ private:
 			return comparator;
 		}
 	}
-	
+
 	Value matchLiteral(int level, const Token &token) {
 		logMatch(level, "matchLiteral()");
 		if (token.type == Tokenizer::REGEXP) {
@@ -1449,7 +1449,7 @@ private:
 			return Value(); // Shut up compiler warning.
 		}
 	}
-	
+
 	Value matchContextFieldIdentifier(int level, const Token &token) {
 		logMatch(level, "matchContextFieldIdentifier()");
 		if (token.rawValue == "uri") {
@@ -1463,7 +1463,7 @@ private:
 			return Value(); // Shut up compiler warning.
 		}
 	}
-	
+
 public:
 	Filter(const StaticString &source, bool debug = false)
 		: tokenizer(source, debug)
@@ -1474,7 +1474,7 @@ public:
 		logMatch(0, "end of data");
 		match(Tokenizer::END_OF_DATA);
 	}
-	
+
 	bool run(const Context &ctx) {
 		return root->evaluate(ctx);
 	}

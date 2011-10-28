@@ -57,7 +57,7 @@ static LoggingServer *loggingServer;
 static struct ev_loop *
 createEventLoop() {
 	struct ev_loop *loop;
-	
+
 	// libev doesn't like choosing epoll and kqueue because the author thinks they're broken,
 	// so let's try to force it.
 	loop = ev_default_loop(EVBACKEND_EPOLL);
@@ -77,7 +77,7 @@ createEventLoop() {
 static void
 lowerPrivilege(const string &username, const struct passwd *user, const struct group *group) {
 	int e;
-	
+
 	if (initgroups(username.c_str(), group->gr_gid) != 0) {
 		e = errno;
 		P_WARN("WARNING: Unable to set supplementary groups for " <<
@@ -156,19 +156,19 @@ main(int argc, char *argv[]) {
 	int    unionStationGatewayPort = options.getInt("union_station_gateway_port",
 		false, DEFAULT_UNION_STATION_GATEWAY_PORT);
 	string unionStationGatewayCert = options.get("union_station_gateway_cert", false);
-	
+
 	curl_global_init(CURL_GLOBAL_ALL);
-	
+
 	try {
 		/********** Now begins the real initialization **********/
-		
+
 		/* Create all the necessary objects and sockets... */
 		AccountsDatabasePtr  accountsDatabase;
 		FileDescriptor       serverSocketFd;
 		struct passwd       *user;
 		struct group        *group;
 		int                  ret;
-		
+
 		eventLoop = createEventLoop();
 		accountsDatabase = ptr(new AccountsDatabase());
 		serverSocketFd = createServer(socketAddress.c_str());
@@ -181,9 +181,9 @@ main(int argc, char *argv[]) {
 					S_IROTH | S_IWOTH | S_IXOTH);
 			} while (ret == -1 && errno == EINTR);
 		}
-		
+
 		/* Sanity check user accounts. */
-		
+
 		user = getpwnam(username.c_str());
 		if (user == NULL) {
 			throw NonExistentUserException(string("The configuration option ") +
@@ -192,7 +192,7 @@ main(int argc, char *argv[]) {
 				username + "', but this user doesn't exist. Please fix " +
 				"the configuration option.");
 		}
-		
+
 		if (groupname.empty()) {
 			group = getgrgid(user->pw_gid);
 			if (group == NULL) {
@@ -222,7 +222,7 @@ main(int argc, char *argv[]) {
 					"the configuration option.");
 			}
 		}
-		
+
 		/* Create the logging directory if necessary. */
 		if (getFileType(loggingDir) == FT_NONEXISTANT) {
 			if (geteuid() == 0) {
@@ -231,12 +231,12 @@ main(int argc, char *argv[]) {
 				makeDirTree(loggingDir, permissions);
 			}
 		}
-		
+
 		/* Now's a good time to lower the privilege. */
 		if (geteuid() == 0) {
 			lowerPrivilege(username, user, group);
 		}
-		
+
 		/* Now setup the actual logging server. */
 		accountsDatabase->add("logging", password, false);
 		LoggingServer server(eventLoop, serverSocketFd,
@@ -246,13 +246,13 @@ main(int argc, char *argv[]) {
 			unionStationGatewayPort,
 			unionStationGatewayCert);
 		loggingServer = &server;
-		
-		
+
+
 		ev::io feedbackFdWatcher(eventLoop);
 		ev::sig sigintWatcher(eventLoop);
 		ev::sig sigtermWatcher(eventLoop);
 		ev::sig sigquitWatcher(eventLoop);
-		
+
 		if (feedbackFdAvailable()) {
 			MessageChannel feedbackChannel(FEEDBACK_FD);
 			feedbackFdWatcher.set<&feedbackFdBecameReadable>();
@@ -265,10 +265,10 @@ main(int argc, char *argv[]) {
 		sigtermWatcher.start(SIGTERM);
 		sigquitWatcher.set<&printInfo>();
 		sigquitWatcher.start(SIGQUIT);
-		
-		
+
+
 		/********** Initialized! Enter main loop... **********/
-		
+
 		ev_loop(eventLoop, 0);
 		return 0;
 	} catch (const tracable_exception &e) {

@@ -47,19 +47,19 @@ struct EventedMessageClientContext {
 		MS_READING_MESSAGE,
 		MS_PROCESSING_MESSAGE
 	};
-	
+
 	State state;
 	AccountPtr account;
-	
+
 	ev::timer authenticationTimer;
 	ScalarMessage scalarReader;
 	ArrayMessage arrayReader;
 	string username;
-	
+
 	EventedMessageClientContext() {
 		state = MS_READING_USERNAME;
 	}
-	
+
 	~EventedMessageClientContext() {
 		/* Its buffer might contain password data so make sure
 		 * it's properly zeroed out. */
@@ -70,26 +70,26 @@ struct EventedMessageClientContext {
 class EventedMessageClient: public EventedClient {
 public:
 	EventedMessageClientContext messageServer;
-	
+
 	EventedMessageClient(struct ev_loop *loop, const FileDescriptor &fd)
 		: EventedClient(loop, fd)
 	{
 		messageServer.authenticationTimer.set(loop);
 	}
-	
+
 	void writeArrayMessage(const char *name, ...) {
 		va_list ap;
 		unsigned int count = 0;
-		
+
 		va_start(ap, name);
 		while (va_arg(ap, const char *) != NULL) {
 			count++;
 		}
 		va_end(ap);
-		
+
 		StaticString args[count + 1];
 		unsigned int i = 1;
-		
+
 		args[0] = name;
 		va_start(ap, name);
 		while (true) {
@@ -102,15 +102,15 @@ public:
 			}
 		}
 		va_end(ap);
-		
+
 		writeArrayMessage(args, count + 1);
 	}
-	
+
 	void writeArrayMessage(StaticString args[], unsigned int count) {
 		char headerBuf[sizeof(uint16_t)];
 		unsigned int outSize = ArrayMessage::outputSize(count);
 		StaticString out[outSize];
-		
+
 		ArrayMessage::generate(args, count, headerBuf, out, outSize);
 		write(out, outSize);
 	}
@@ -124,40 +124,40 @@ public:
 class EventedMessageServer: public EventedServer {
 protected:
 	AccountsDatabasePtr accountsDatabase;
-	
-	
+
+
 	/******** Overrided hooks and methods ********/
-	
+
 	virtual EventedClient *createClient(const FileDescriptor &fd) {
 		return new EventedMessageClient(getLoop(), fd);
 	}
-	
+
 	virtual void onNewClient(EventedClient *_client) {
 		EventedMessageClient *client = (EventedMessageClient *) _client;
 		EventedMessageClientContext *context = &client->messageServer;
-		
+
 		context->authenticationTimer.set
 			<&EventedMessageServer::onAuthenticationTimeout>(client);
 		context->authenticationTimer.start(10);
-		
+
 		context->arrayReader.reserve(5);
 		context->scalarReader.setMaxSize(MESSAGE_SERVER_MAX_USERNAME_SIZE);
-		
+
 		client->writeArrayMessage("version", protocolVersion(), NULL);
 	}
-	
+
 	virtual void onClientReadable(EventedClient *_client) {
 		EventedMessageClient *client = (EventedMessageClient *) _client;
 		this_thread::disable_syscall_interruption dsi;
 		int i = 0;
 		bool done = false;
-		
+
 		// read() from the client at most 10 times on every read readiness event
 		// in order to give other events the chance to be processed.
 		while (i < 10 && !done) {
 			char buf[1024 * 8];
 			ssize_t ret;
-			
+
 			ret = syscalls::read(client->fd, buf, sizeof(buf));
 			if (ret == -1) {
 				if (errno != EAGAIN) {
@@ -178,53 +178,53 @@ protected:
 			done = done || !client->ioAllowed();
 		}
 	}
-	
-	
+
+
 	/******** New EventedMessageServer overridable hooks and API methods ********/
-	
+
 	virtual void onClientAuthenticated(EventedMessageClient *client) {
 		// Do nothing.
 	}
-	
+
 	virtual bool onMessageReceived(EventedMessageClient *client, const vector<StaticString> &args) {
 		return true;
 	}
-	
+
 	virtual void onEndOfStream(EventedMessageClient *client) {
 		// Do nothing.
 	}
-	
+
 	virtual pair<size_t, bool> onOtherDataReceived(EventedMessageClient *client,
 		const char *data, size_t size)
 	{
 		abort();
 	}
-	
+
 	virtual const char *protocolVersion() const {
 		return "1";
 	}
-	
+
 	void discardReadData() {
 		readDataDiscarded = true;
 	}
 
 private:
 	bool readDataDiscarded;
-	
+
 	static void onAuthenticationTimeout(ev::timer &t, int revents) {
 		EventedMessageClient *client = (EventedMessageClient *) t.data;
 		client->disconnect();
 	}
-	
+
 	void onDataReceived(EventedMessageClient *client, char *data, size_t size) {
 		EventedMessageClientContext *context = &client->messageServer;
 		size_t consumed = 0;
-		
+
 		readDataDiscarded = false;
 		while (consumed < size && client->ioAllowed() && !readDataDiscarded) {
 			char *current = data + consumed;
 			size_t rest = size - consumed;
-			
+
 			switch (context->state) {
 			case EventedMessageClientContext::MS_READING_USERNAME:
 				consumed += context->scalarReader.feed(current, rest);
@@ -240,17 +240,17 @@ private:
 					context->state = EventedMessageClientContext::MS_READING_PASSWORD;
 				}
 				break;
-				
+
 			case EventedMessageClientContext::MS_READING_PASSWORD: {
 				size_t locallyConsumed;
-				
+
 				locallyConsumed = context->scalarReader.feed(current, rest);
 				consumed += locallyConsumed;
-				
+
 				// The buffer contains password data so make sure we zero
 				// it out when we're done.
 				MemZeroGuard passwordGuard(current, locallyConsumed);
-				
+
 				if (context->scalarReader.hasError()) {
 					context->scalarReader.reset(true);
 					client->writeArrayMessage(
@@ -278,7 +278,7 @@ private:
 				}
 				break;
 			}
-			
+
 			case EventedMessageClientContext::MS_READING_MESSAGE:
 				consumed += context->arrayReader.feed(current, rest);
 				if (context->arrayReader.hasError()) {
@@ -295,7 +295,7 @@ private:
 					context->arrayReader.reset();
 				}
 				break;
-			
+
 			case EventedMessageClientContext::MS_PROCESSING_MESSAGE: {
 				pair<size_t, bool> ret = onOtherDataReceived(client, current, rest);
 				consumed += ret.first;
@@ -304,7 +304,7 @@ private:
 				}
 				break;
 			}
-			
+
 			default:
 				// Never reached.
 				abort();

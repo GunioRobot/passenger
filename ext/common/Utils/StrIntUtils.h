@@ -140,13 +140,13 @@ integerToOtherBase(IntegerType value, char *output) {
 	char buf[sizeof(value) * 2];
 	IntegerType remainder = value;
 	unsigned int size = 0;
-	
+
 	do {
 		buf[size] = hex_chars[remainder % radix];
 		remainder = remainder / radix;
 		size++;
 	} while (remainder != 0);
-	
+
 	for (unsigned int i = 0; i < size; i++) {
 		output[size - i - 1] = buf[i];
 	}

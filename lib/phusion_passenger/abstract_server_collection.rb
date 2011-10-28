@@ -38,16 +38,16 @@ module PhusionPassenger
 # This class is thread-safe as long as the specified thread-safety rules are followed.
 class AbstractServerCollection
 	attr_reader :next_cleaning_time
-	
+
 	include Utils
-	
+
 	def initialize
 		@collection = {}
 		@lock = Mutex.new
 		@cleanup_lock = Mutex.new
 		@cond = ConditionVariable.new
 		@done = false
-		
+
 		# The next time the cleaner thread should check for idle servers.
 		# The value may be nil, in which case the value will be calculated
 		# at the end of the #synchronized block.
@@ -60,7 +60,7 @@ class AbstractServerCollection
 		#             s.next_cleaning_time <= value
 		@next_cleaning_time = Time.now + 60 * 60
 		@next_cleaning_time_changed = false
-		
+
 		@cleaner_thread = Thread.new do
 			begin
 				@lock.synchronize do
@@ -71,7 +71,7 @@ class AbstractServerCollection
 			end
 		end
 	end
-	
+
 	# Acquire the lock for this AbstractServerCollection object, and run
 	# the code within the block. The entire block will be a single atomic
 	# operation.
@@ -104,7 +104,7 @@ class AbstractServerCollection
 			end
 		end
 	end
-	
+
 	# Lookup and returns an AbstractServer with the given key.
 	#
 	# If there is no AbstractSerer associated with the given key, then the given
@@ -144,7 +144,7 @@ class AbstractServerCollection
 			return server
 		end
 	end
-	
+
 	# Checks whether there's an AbstractServer object associated with the given key.
 	#
 	# Precondition: this method must be called within a #synchronize block.
@@ -152,7 +152,7 @@ class AbstractServerCollection
 		must_be_in_synchronize_block
 		return @collection.has_key?(key)
 	end
-	
+
 	# Checks whether the collection is empty.
 	#
 	# Precondition: this method must be called within a #synchronize block.
@@ -160,7 +160,7 @@ class AbstractServerCollection
 		must_be_in_synchronize_block
 		return @collection.empty?
 	end
-	
+
 	# Deletes from the collection the AbstractServer that's associated with the
 	# given key. If no such AbstractServer exists, nothing will happen.
 	#
@@ -181,7 +181,7 @@ class AbstractServerCollection
 			end
 		end
 	end
-	
+
 	# Notify this AbstractServerCollection that +server+ has performed an activity.
 	# This AbstractServerCollection will update the idle information associated with +server+
 	# accordingly.
@@ -200,7 +200,7 @@ class AbstractServerCollection
 			server.next_cleaning_time = Time.now + server.max_idle_time
 		end
 	end
-	
+
 	# Tell the cleaner thread to check the collection as soon as possible, instead
 	# of sleeping until the next scheduled cleaning time.
 	#
@@ -212,7 +212,7 @@ class AbstractServerCollection
 			@cond.signal
 		end
 	end
-	
+
 	# Iterate over all AbstractServer objects.
 	#
 	# Precondition: this method must be called within a #synchronize block.
@@ -222,7 +222,7 @@ class AbstractServerCollection
 			yield server
 		end
 	end
-	
+
 	# Iterate over all keys and associated AbstractServer objects.
 	#
 	# Precondition: this method must be called within a #synchronize block.
@@ -233,7 +233,7 @@ class AbstractServerCollection
 			yield(key, server)
 		end
 	end
-	
+
 	# Delete all AbstractServers from the collection. Each AbstractServer will be
 	# stopped, if necessary.
 	#
@@ -248,7 +248,7 @@ class AbstractServerCollection
 		@collection.clear
 		@next_cleaning_time = nil
 	end
-	
+
 	# Cleanup all resources used by this AbstractServerCollection. All AbstractServers
 	# from the collection will be deleted. Each AbstractServer will be stopped, if
 	# necessary. The background thread which removes idle AbstractServers will be stopped.
@@ -313,18 +313,18 @@ private
 			end
 		end
 	end
-	
+
 	# Checks whether the given server is eligible for being idle cleaned.
 	def eligable_for_cleanup?(server)
 		return server.max_idle_time && server.max_idle_time != 0
 	end
-	
+
 	def must_be_in_synchronize_block
 		if !@in_synchronize_block
 			raise RuntimeError, "This method may only be called within a #synchronize block!"
 		end
 	end
-	
+
 	def must_not_be_in_synchronize_block
 		if @in_synchronize_block
 			raise RuntimeError, "This method may NOT be called within a #synchronize block!"

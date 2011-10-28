@@ -21,7 +21,7 @@ namespace boost
     {
     private:
         pthread_cond_t cond;
-        
+
         condition_variable(condition_variable&);
         condition_variable& operator=(condition_variable&);
 

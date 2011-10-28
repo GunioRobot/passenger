@@ -41,13 +41,13 @@ module ClassicRailsExtensions
 module AnalyticsLogging
 	# Instantiated from prepare_app_process in utils.rb.
 	@@analytics_logger = nil
-	
+
 	def self.install!(options)
 		@@analytics_logger = options["analytics_logger"]
 		# If the Ruby interpreter supports GC statistics then turn it on
 		# so that the info can be logged.
 		GC.enable_stats if GC.respond_to?(:enable_stats)
-		
+
 		if defined?(ActionController)
 			require 'phusion_passenger/classic_rails_extensions/analytics_logging/ac_base_extension'
 			ActionController::Base.class_eval do
@@ -55,20 +55,20 @@ module AnalyticsLogging
 				alias_method_chain :perform_action, :passenger
 				alias_method_chain :render, :passenger
 			end
-			
+
 			require 'phusion_passenger/classic_rails_extensions/analytics_logging/ac_benchmarking_extension'
 			ActionController::Benchmarking::ClassMethods.class_eval do
 				include ACBenchmarkingExtension
 				alias_method_chain :benchmark, :passenger
 			end
-			
+
 			require 'phusion_passenger/classic_rails_extensions/analytics_logging/ac_rescue_extension'
 			ActionController::Rescue.class_eval do
 				include ACRescueExtension
 				alias_method_chain :rescue_action, :passenger
 			end
 		end
-		
+
 		if defined?(ActionView)
 			require 'phusion_passenger/classic_rails_extensions/analytics_logging/av_benchmark_helper_extension'
 			ActionView::Helpers::BenchmarkHelper.class_eval do
@@ -76,7 +76,7 @@ module AnalyticsLogging
 				alias_method_chain :benchmark, :passenger
 			end
 		end
-		
+
 		if defined?(ActiveRecord)
 			require 'phusion_passenger/classic_rails_extensions/analytics_logging/ar_abstract_adapter_extension'
 			ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval do
@@ -84,7 +84,7 @@ module AnalyticsLogging
 				alias_method_chain :log, :passenger
 			end
 		end
-		
+
 		if defined?(ActiveSupport::Cache::Store) && Rails.cache
 			require 'phusion_passenger/classic_rails_extensions/analytics_logging/as_cache_extension'
 			ActiveSupport::Cache::Store.class_eval do
@@ -104,7 +104,7 @@ module AnalyticsLogging
 			Rails.cache.extend(ConcreteCacheStoreExtension)
 		end
 	end
-	
+
 	def self.new_transaction_log(env, category = :requests)
 		if env[PASSENGER_TXN_ID]
 			group_name = env[PASSENGER_GROUP_NAME]

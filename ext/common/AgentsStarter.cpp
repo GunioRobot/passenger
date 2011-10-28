@@ -72,7 +72,7 @@ agents_starter_start(AgentsStarter *as,
 		function<void ()> afterForkFunctionObject;
 		set<string> setOfprestartURLs;
 		unsigned int i;
-		
+
 		if (afterFork != NULL) {
 			afterForkFunctionObject = boost::bind(afterFork, callbackArgument);
 		}

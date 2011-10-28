@@ -3,7 +3,7 @@
 
 //  once.hpp
 //
-//  (C) Copyright 2007-8 Anthony Williams 
+//  (C) Copyright 2007-8 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -35,7 +35,7 @@ namespace boost
         BOOST_THREAD_DECL extern pthread_mutex_t once_epoch_mutex;
         BOOST_THREAD_DECL extern pthread_cond_t once_epoch_cv;
     }
-    
+
 #define BOOST_ONCE_INITIAL_FLAG_VALUE 0
 #define BOOST_ONCE_INIT {BOOST_ONCE_INITIAL_FLAG_VALUE}
 
@@ -49,7 +49,7 @@ namespace boost
         static boost::uintmax_t const being_initialized=uninitialized_flag+1;
         boost::uintmax_t const epoch=flag.epoch;
         boost::uintmax_t& this_thread_epoch=detail::get_once_per_thread_epoch();
-        
+
         if(epoch<this_thread_epoch)
         {
             pthread::pthread_mutex_scoped_lock lk(&detail::once_epoch_mutex);

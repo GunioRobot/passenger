@@ -16,20 +16,20 @@ module PhusionPassenger
 
 describe ClassicRails::FrameworkSpawner do
 	include SpawnerSpecHelper
-	
+
 	after :each do
 		@spawner.stop if @spawner && @spawner.started?
 	end
-	
+
 	def server
 		return spawner
 	end
-	
+
 	def spawner
 		@spawner ||= begin
 			stub = register_stub(RailsStub.new("#{rails_version}/empty"))
 			yield stub if block_given?
-			
+
 			framework_version = AppProcess.detect_framework_version(stub.app_root)
 			spawner = ClassicRails::ApplicationSpawner.new(
 				"framework_version" => framework_version,
@@ -38,7 +38,7 @@ describe ClassicRails::FrameworkSpawner do
 			spawner
 		end
 	end
-	
+
 	def spawn_stub_application(stub, extra_options = {})
 		framework_version = AppProcess.detect_framework_version(stub.app_root)
 		default_options = {
@@ -55,19 +55,19 @@ describe ClassicRails::FrameworkSpawner do
 		app = @spawner.spawn_application(options)
 		return register_app(app)
 	end
-	
+
 	def spawn_some_application(extra_options = {})
 		stub = register_stub(RailsStub.new("#{rails_version}/empty"))
 		yield stub if block_given?
 		return spawn_stub_application(stub, extra_options)
 	end
-	
+
 	def use_some_stub
 		RailsStub.use("#{rails_version}/empty") do |stub|
 			yield stub
 		end
 	end
-	
+
 	def load_nonexistant_framework(options = {})
 		spawner = ClassicRails::FrameworkSpawner.new(options.merge(
 			"framework_version" => "1.9.827"))
@@ -77,7 +77,7 @@ describe ClassicRails::FrameworkSpawner do
 			spawner.stop rescue nil
 		end
 	end
-	
+
 	describe_rails_versions('<= 2.3') do
 		it_should_behave_like "an AbstractServer"
 		it_should_behave_like "a spawn server"

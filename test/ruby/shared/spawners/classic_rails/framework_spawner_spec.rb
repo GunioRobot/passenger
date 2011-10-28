@@ -9,19 +9,19 @@ shared_examples_for "a ClassicRails::FrameworkSpawner" do
 		end
 		block.should raise_error(FrameworkInitError)
 	end
-	
+
 	it "prints the exception to STDERR if the framework could not be loaded" do
 		old_stderr = STDERR
 		file = File.new('output.tmp', 'w+')
 		begin
 			Object.send(:remove_const, "STDERR") rescue nil
 			Object.const_set("STDERR", file)
-			
+
 			block = lambda do
 				load_nonexistant_framework.close
 			end
 			block.should raise_error(FrameworkInitError)
-			
+
 			file.rewind
 			data = file.read
 			data.should =~ /load_nonexistant_framework/

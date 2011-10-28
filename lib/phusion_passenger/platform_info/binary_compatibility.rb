@@ -76,7 +76,7 @@ module PlatformInfo
 		return [ruby_engine, ruby_ext_version, ruby_arch, os_name]
 	end
 	memoize :ruby_extension_binary_compatibility_ids
-	
+
 	# Returns an identifier string that describes the current
 	# platform's binary compatibility with regard to Phusion Passenger
 	# binaries, both the Ruby extension and the C++ binaries. Two
@@ -103,7 +103,7 @@ module PlatformInfo
 	def self.passenger_binary_compatibility_id
 		ruby_engine, ruby_ext_version, ruby_arch, os_name =
 			ruby_extension_binary_compatibility_ids
-		
+
 		if os_name == "macosx"
 			# RUBY_PLATFORM gives us the kernel version, but we want
 			# the OS X version.
@@ -115,7 +115,7 @@ module PlatformInfo
 			components = os_version_string.split(".")
 			os_version = "#{components[0]}.#{components[1]}"
 			os_runtime = os_version
-			
+
 			os_arch = cpu_architectures[0]
 			if os_version >= "10.5" && os_arch =~ /^i.86$/
 				# On Snow Leopard, 'uname -m' returns i386 but
@@ -124,24 +124,24 @@ module PlatformInfo
 			end
 		else
 			os_arch = cpu_architectures[0]
-			
+
 			cpp = find_command('cpp')
 			if cpp
 				macros = `#{cpp} -dM < /dev/null`
-				
+
 				# Can be something like "4.3.2"
 				# or "4.2.1 20070719 (FreeBSD)"
 				macros =~ /__VERSION__ "(.+)"/
 				compiler_version = $1
 				compiler_version.gsub!(/ .*/, '') if compiler_version
-				
+
 				macros =~ /__GXX_ABI_VERSION (.+)$/
 				cxx_abi_version = $1
 			else
 				compiler_version = nil
 				cxx_abi_version = nil
 			end
-			
+
 			if compiler_version && cxx_abi_version
 				os_runtime = "gcc#{compiler_version}-#{cxx_abi_version}"
 			else
@@ -151,7 +151,7 @@ module PlatformInfo
 				end
 			end
 		end
-		
+
 		if ruby_engine == "jruby"
 			# For JRuby it's kinda useless to prepend "java" as extension
 			# architecture because JRuby doesn't allow any other extension

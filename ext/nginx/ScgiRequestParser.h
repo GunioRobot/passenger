@@ -49,20 +49,20 @@ using namespace google;
  *    char buf[1024 * 16];
  *    ssize_t size;
  *    unsigned in bytesAccepted;
- *    
+ *
  *    do {
  *        size = read(fd, buf, sizeof(buf));
  *        bytesAccepted = parser.feed(buf, size);
  *    } while (parser.acceptingInput());
  *    // Parser is done when its return value isn't equal to the input size.
- *    
+ *
  *    // Check whether a parse error occured.
  *    if (parser.getState() == ScgiRequestParser::ERROR) {
  *        bailOut();
  *    } else {
  *        // All good! Do something with the SCGI header that the parser parsed.
  *        processHeader(parser.getHeaderData());
- *        
+ *
  *        // If the last buffer passed to the parser also contains body data,
  *        // then the body data starts at 'buf + bytesAccepted'.
  *        if (bytesAccepted < size) {
@@ -94,32 +94,32 @@ public:
 		DONE,
 		ERROR
 	};
-	
+
 	enum ErrorReason {
 		NONE,
-		
+
 		/** The length string is too large. */
 		LENGTH_STRING_TOO_LARGE,
-		
+
 		/** The header is larger than the maxSize value provided to the constructor. */
 		LIMIT_REACHED,
-		
+
 		/** The length string contains an invalid character. */
 		INVALID_LENGTH_STRING,
-		
+
 		/** A header terminator character (",") was expected, but some else
 		 * was encountered instead. */
 		HEADER_TERMINATOR_EXPECTED,
-		
+
 		/** The header data itself contains errors. */
 		INVALID_HEADER_DATA
 	};
-	
+
 private:
 	typedef dense_hash_map<StaticString, StaticString, StaticString::Hash> HeaderMap;
-	
+
 	unsigned long maxSize;
-	
+
 	State state;
 	ErrorReason errorReason;
 	char lengthStringBuffer[sizeof("4294967296")];
@@ -127,11 +127,11 @@ private:
 	unsigned long headerSize;
 	string headerBuffer;
 	HeaderMap headers;
-	
+
 	static inline bool isDigit(char byte) {
 		return byte >= '0' && byte <= '9';
 	}
-	
+
 	/**
 	 * Parse the given header data into key-value pairs.
 	 */
@@ -139,18 +139,18 @@ private:
 		bool isName = true; // Whether we're currently expecting a name or a value.
 		const char *startOfString, *current, *end;
 		StaticString key, value;
-		
+
 		if (data.size() == 0) {
 			return true;
 		}
-		
+
 		startOfString = data.c_str();
 		end           = data.c_str() + data.size();
-		
+
 		if (*(end - 1) != '\0') {
 			return false;
 		}
-		
+
 		for (current = data.c_str(); current != end; current++) {
 			if (isName && *current == '\0') {
 				key = StaticString(startOfString, current - startOfString);
@@ -163,23 +163,23 @@ private:
 				value = StaticString(startOfString, current - startOfString);
 				startOfString = current + 1;
 				isName = true;
-				
+
 				output[key] = value;
 				key   = StaticString();
 				value = StaticString();
 			}
 		}
-		
+
 		return isName;
 	}
-	
+
 	/**
 	 * Process the given data, which contains header data and possibly
 	 * some body data as well.
 	 */
 	unsigned int readHeaderData(const char *data, unsigned int size) {
 		unsigned int bytesToRead;
-		
+
 		// Calculate how many bytes of header data is left to be read.
 		// Do not read past the header data.
 		if (size < headerSize - headerBuffer.size()) {
@@ -189,7 +189,7 @@ private:
 		}
 		// Append the newly received header data to the header data buffer.
 		headerBuffer.append(data, bytesToRead);
-		
+
 		if (headerBuffer.size() == headerSize) {
 			// We've received all header data. Now attempt to parse this.
 			if (bytesToRead < size) {
@@ -221,7 +221,7 @@ private:
 			return bytesToRead;
 		}
 	}
-	
+
 public:
 	/**
 	 * Create a new ScgiRequestParser, ready to parse a request.
@@ -237,7 +237,7 @@ public:
 		headerSize = 0;
 		headers.set_empty_key("");
 	}
-	
+
 	/**
 	 * Feed SCGI request data to the parser.
 	 *
@@ -255,13 +255,13 @@ public:
 	 */
 	unsigned int feed(const char *data, unsigned int size) {
 		unsigned int i;
-		
+
 		switch (state) {
 		case READING_LENGTH_STRING:
 			// Keep processing length string data...
 			for (i = 0; i < size; i++) {
 				char byte = data[i];
-				
+
 				if (lengthStringBufferSize == sizeof(lengthStringBuffer) - 1) {
 					// ...and abort if the length string is too long.
 					state = ERROR;
@@ -294,10 +294,10 @@ public:
 				}
 			}
 			return i;
-		
+
 		case READING_HEADER_DATA:
 			return readHeaderData(data, size);
-		
+
 		case EXPECTING_COMMA:
 			if (data[0] == ',') {
 				state = DONE;
@@ -307,19 +307,19 @@ public:
 				errorReason = HEADER_TERMINATOR_EXPECTED;
 				return 0;
 			}
-		
+
 		default:
 			return 0;
 		}
 	}
-	
+
 	/**
 	 * Get the raw header data that has been processed so far.
 	 */
 	string getHeaderData() const {
 		return headerBuffer;
 	}
-	
+
 	/**
 	 * Get the value of the header with the given name.
 	 * Lookup is case-sensitive.
@@ -336,7 +336,7 @@ public:
 			return it->second;
 		}
 	}
-	
+
 	/**
 	 * Checks whether there is a header with the given name.
 	 * Lookup is case-sensitive.
@@ -346,14 +346,14 @@ public:
 	bool hasHeader(const StaticString &name) const {
 		return headers.find(name) != headers.end();
 	}
-	
+
 	/**
 	 * Get the parser's current state.
 	 */
 	State getState() const {
 		return state;
 	}
-	
+
 	/**
 	 * Returns the reason why the parser entered the error state.
 	 *
@@ -362,7 +362,7 @@ public:
 	ErrorReason getErrorReason() const {
 		return errorReason;
 	}
-	
+
 	/**
 	 * Checks whether this parser is still capable of accepting input (that
 	 * is, that this parser is not in a final state).

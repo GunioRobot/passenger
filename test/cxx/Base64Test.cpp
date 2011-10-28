@@ -7,7 +7,7 @@ using namespace std;
 namespace tut {
 	struct Base64Test {
 	};
-	
+
 	DEFINE_TEST_GROUP(Base64Test);
 
 	TEST_METHOD(1) {
@@ -26,10 +26,10 @@ namespace tut {
 			"IGV4cGxvc2lvbiBmcm9tIGEgZHlpbmcgc3Rhciwgd2FzIGRldGVjdGVkIGJ5"
 			"IHRoZSBTd2lmdCBzYXRlbGxpdGUgdXNpbmcgb24tYm9hcmQgZ2FtbWEtcmF5"
 			"IGFuZCBYLXJheSBpbnN0cnVtZW50cy4=");
-		
+
 		ensure_equals(Base64::encodeForUrl("\003\340\177X"), "A-B_WA");
 	}
-	
+
 	TEST_METHOD(2) {
 		// Test decoding.
 		ensure_equals(Base64::decode(""), "");

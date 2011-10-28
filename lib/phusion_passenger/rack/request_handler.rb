@@ -73,7 +73,7 @@ protected
 			env[RACK_MULTITHREAD]  = false
 			env[RACK_MULTIPROCESS] = true
 			env[RACK_RUN_ONCE]     = false
-			
+
 			if env[HTTP_CONTENT_LENGTH] && env[CONTENT_LENGTH]
 				env.delete(HTTP_CONTENT_LENGTH)
 			elsif env[HTTP_CONTENT_LENGTH] && !env[CONTENT_LENGTH]
@@ -86,13 +86,13 @@ protected
 				env[CONTENT_TYPE] = env[HTTP_CONTENT_TYPE]
 				env.delete(HTTP_CONTENT_TYPE)
 			end
-			
+
 			if env[HTTPS] == YES || env[HTTPS] == ON || env[HTTPS] == ONE
 				env[RACK_URL_SCHEME] = HTTPS_DOWNCASE
 			else
 				env[RACK_URL_SCHEME] = HTTP
 			end
-			
+
 			status, headers, body = @app.call(env)
 			begin
 				if full_http_response
@@ -115,7 +115,7 @@ protected
 					end
 				end
 				headers_output << CRLF
-				
+
 				if body.is_a?(Array)
 					# The body may be an ActionController::StringCoercion::UglyBody
 					# object instead of a real Array, even when #is_a? claims so.

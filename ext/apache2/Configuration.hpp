@@ -57,7 +57,7 @@ namespace Passenger {
 
 using namespace std;
 
-	
+
 /**
  * Per-directory configuration information.
  *
@@ -67,143 +67,143 @@ using namespace std;
 struct DirConfig {
 	enum Threeway { ENABLED, DISABLED, UNSET };
 	enum SpawnMethod { SM_UNSET, SM_SMART, SM_SMART_LV2, SM_CONSERVATIVE };
-	
+
 	Threeway enabled;
-	
+
 	std::set<std::string> railsBaseURIs;
 	std::set<std::string> rackBaseURIs;
-	
+
 	/** Whether to autodetect Rails applications. */
 	Threeway autoDetectRails;
-	
+
 	/** Whether to autodetect Rack applications. */
 	Threeway autoDetectRack;
-	
+
 	/** Whether to autodetect WSGI applications. */
 	Threeway autoDetectWSGI;
-	
+
 	/** The environment (RAILS_ENV/RACK_ENV/WSGI_ENV) under which
 	 * applications should operate. */
 	const char *environment;
-	
+
 	/** The path to the application's root (for example: RAILS_ROOT
 	 * for Rails applications, directory containing 'config.ru'
 	 * for Rack applications). If this value is NULL, the default
 	 * autodetected path will be used.
 	 */
 	const char *appRoot;
-	
+
 	/** The environment (i.e. value for RACK_ENV) under which
 	 * Rack applications should operate. */
 	const char *rackEnv;
-	
+
 	string appGroupName;
-	
+
 	/** The spawn method to use. */
 	SpawnMethod spawnMethod;
-	
+
 	/** See PoolOptions for more info. */
 	const char *user;
 	/** See PoolOptions for more info. */
 	const char *group;
-	
+
 	/**
 	 * The idle timeout, in seconds, of Rails framework spawners.
 	 * May also be 0 (which indicates that the framework spawner should
 	 * never idle timeout) or -1 (which means that the value is not specified).
 	 */
 	long frameworkSpawnerTimeout;
-	
+
 	/**
 	 * The idle timeout, in seconds, of Rails application spawners.
 	 * May also be 0 (which indicates that the application spawner should
 	 * never idle timeout) or -1 (which means that the value is not specified).
 	 */
 	long appSpawnerTimeout;
-	
+
 	/**
 	 * The maximum number of requests that the spawned application may process
 	 * before exiting. A value of 0 means unlimited.
 	 */
 	unsigned long maxRequests;
-	
+
 	/** Indicates whether the maxRequests option was explicitly specified
 	 * in the directory configuration. */
 	bool maxRequestsSpecified;
-	
+
 	/**
 	 * The minimum number of processes for a group that should be kept in
 	 * the pool when cleaning idle processes. Defaults to 0.
 	 */
 	unsigned long minInstances;
-	
+
 	/**
 	 * Indicates whether the minInstances option was explicitly specified
 	 * in the directory configuration. */
 	bool minInstancesSpecified;
-	
+
 	/** Whether symlinks in the document root path should be resolved.
 	 * The implication of this is documented in the users guide, section
 	 * "How Phusion Passenger detects whether a virtual host is a web application".
 	 */
 	Threeway resolveSymlinksInDocRoot;
-	
+
 	/** Whether high performance mode should be turned on. */
 	Threeway highPerformance;
-	
+
 	/** Whether global queuing should be used. */
 	Threeway useGlobalQueue;
-	
+
 	/**
 	 * Whether encoded slashes in URLs should be supported. This however conflicts
 	 * with mod_rewrite support because of a bug/limitation in Apache, so it's one
 	 * or the other.
 	 */
 	Threeway allowEncodedSlashes;
-	
+
 	/**
 	 * Throttle the number of stat() calls on files like
 	 * restart.txt to the once per given number of seconds.
 	 */
 	unsigned long statThrottleRate;
-	
+
 	/** Indicates whether the statThrottleRate option was
 	 * explicitly specified in the directory configuration. */
 	bool statThrottleRateSpecified;
-	
+
 	/** The directory in which Passenger should look for
 	 * restart.txt. NULL means that the default directory
 	 * should be used.
 	 */
 	const char *restartDir;
-	
+
 	/**
 	 * The directory in which Passenger should place upload buffer
 	 * files. NULL means that the default directory should be used.
 	 */
 	const char *uploadBufferDir;
-	
+
 	string unionStationKey;
-	
+
 	vector<string> unionStationFilters;
-	
+
 	/**
 	 * Whether Phusion Passenger should show friendly error pages.
 	 */
 	Threeway friendlyErrorPages;
-	
+
 	/**
 	 * Whether analytics logging should be enabled.
 	 */
 	Threeway unionStationSupport;
-	
+
 	/*************************************/
 	/*************************************/
-	
+
 	bool isEnabled() const {
 		return enabled != DISABLED;
 	}
-	
+
 	string getAppRoot(const char *documentRoot) const {
 		if (appRoot == NULL) {
 			if (resolveSymlinksInDocRoot == DirConfig::ENABLED) {
@@ -215,7 +215,7 @@ struct DirConfig {
 			return appRoot;
 		}
 	}
-	
+
 	string getAppRoot(const string &documentRoot) const {
 		if (appRoot == NULL) {
 			if (resolveSymlinksInDocRoot == DirConfig::ENABLED) {
@@ -227,7 +227,7 @@ struct DirConfig {
 			return appRoot;
 		}
 	}
-	
+
 	const char *getUser() const {
 		if (user != NULL) {
 			return user;
@@ -235,7 +235,7 @@ struct DirConfig {
 			return "";
 		}
 	}
-	
+
 	const char *getGroup() const {
 		if (group != NULL) {
 			return group;
@@ -243,7 +243,7 @@ struct DirConfig {
 			return "";
 		}
 	}
-	
+
 	const char *getEnvironment() const {
 		if (environment != NULL) {
 			return environment;
@@ -251,7 +251,7 @@ struct DirConfig {
 			return "production";
 		}
 	}
-	
+
 	string getAppGroupName(const string &appRoot) const {
 		if (appGroupName.empty()) {
 			return appRoot;
@@ -259,7 +259,7 @@ struct DirConfig {
 			return appGroupName;
 		}
 	}
-	
+
 	const char *getSpawnMethodString() const {
 		switch (spawnMethod) {
 		case SM_SMART:
@@ -272,7 +272,7 @@ struct DirConfig {
 			return "smart-lv2";
 		}
 	}
-	
+
 	unsigned long getMaxRequests() const {
 		if (maxRequestsSpecified) {
 			return maxRequests;
@@ -280,7 +280,7 @@ struct DirConfig {
 			return 0;
 		}
 	}
-	
+
 	unsigned long getMinInstances() const {
 		if (minInstancesSpecified) {
 			return minInstances;
@@ -288,19 +288,19 @@ struct DirConfig {
 			return 1;
 		}
 	}
-	
+
 	bool highPerformanceMode() const {
 		return highPerformance == ENABLED;
 	}
-	
+
 	bool usingGlobalQueue() const {
 		return useGlobalQueue != DISABLED;
 	}
-	
+
 	bool allowsEncodedSlashes() const {
 		return allowEncodedSlashes == ENABLED;
 	}
-	
+
 	unsigned long getStatThrottleRate() const {
 		if (statThrottleRateSpecified) {
 			return statThrottleRate;
@@ -308,7 +308,7 @@ struct DirConfig {
 			return 0;
 		}
 	}
-	
+
 	const char *getRestartDir() const {
 		if (restartDir != NULL) {
 			return restartDir;
@@ -316,7 +316,7 @@ struct DirConfig {
 			return "";
 		}
 	}
-	
+
 	string getUploadBufferDir(const ServerInstanceDir::GenerationPtr &generation) const {
 		if (uploadBufferDir != NULL) {
 			return uploadBufferDir;
@@ -324,22 +324,22 @@ struct DirConfig {
 			return generation->getPath() + "/buffered_uploads";
 		}
 	}
-	
+
 	bool showFriendlyErrorPages() const {
 		return friendlyErrorPages != DISABLED;
 	}
-	
+
 	bool useUnionStation() const {
 		return unionStationSupport == ENABLED;
 	}
-	
+
 	string getUnionStationFilterString() const {
 		if (unionStationFilters.empty()) {
 			return string();
 		} else {
 			string result;
 			vector<string>::const_iterator it;
-			
+
 			for (it = unionStationFilters.begin(); it != unionStationFilters.end(); it++) {
 				if (it != unionStationFilters.begin()) {
 					result.append(1, '\1');
@@ -349,7 +349,7 @@ struct DirConfig {
 			return result;
 		}
 	}
-	
+
 	/*************************************/
 };
 
@@ -363,51 +363,51 @@ struct DirConfig {
 struct ServerConfig {
 	/** The filename of the Ruby interpreter to use. */
 	const char *ruby;
-	
+
 	/** The Passenger root folder. */
 	const char *root;
-	
+
 	/** The log verbosity. */
 	int logLevel;
-	
+
 	/** A file to print debug messages to, or NULL to just use STDERR. */
 	const char *debugLogFile;
-	
+
 	/** The maximum number of simultaneously alive application
 	 * instances. */
 	unsigned int maxPoolSize;
-	
+
 	/** The maximum number of simultaneously alive Rails application
 	 * that a single Rails application may occupy. */
 	unsigned int maxInstancesPerApp;
-	
+
 	/** The maximum number of seconds that an application may be
 	 * idle before it gets terminated. */
 	unsigned int poolIdleTime;
-	
+
 	/** Whether user switching support is enabled. */
 	bool userSwitching;
-	
+
 	/** See PoolOptions for more info. */
 	string defaultUser;
 	/** See PoolOptions for more info. */
 	string defaultGroup;
-	
+
 	/** The temp directory that Passenger should use. */
 	string tempDir;
-	
+
 	string unionStationGatewayAddress;
 	int unionStationGatewayPort;
 	string unionStationGatewayCert;
-	
+
 	/** Directory in which analytics logs should be saved. */
 	string analyticsLogDir;
 	string analyticsLogUser;
 	string analyticsLogGroup;
 	string analyticsLogPermissions;
-	
+
 	set<string> prestartURLs;
-	
+
 	ServerConfig() {
 		ruby               = "ruby";
 		root               = NULL;
@@ -426,7 +426,7 @@ struct ServerConfig {
 		analyticsLogGroup  = DEFAULT_ANALYTICS_LOG_GROUP;
 		analyticsLogPermissions = DEFAULT_ANALYTICS_LOG_PERMISSIONS;
 	}
-	
+
 	/** Called after the configuration files have been loaded, inside
 	 * the control process.
 	 */
@@ -438,7 +438,7 @@ struct ServerConfig {
 					string("The user that PassengerDefaultUser refers to, '") +
 					defaultUser + "', does not exist.");
 			}
-			
+
 			struct group *groupEntry = getgrgid(userEntry->pw_gid);
 			if (groupEntry == NULL) {
 				throw ConfigurationException(
@@ -447,16 +447,16 @@ struct ServerConfig {
 					"In other words, your system's user account database "
 					"is broken. Please fix it."));
 			}
-			
+
 			defaultGroup = groupEntry->gr_name;
 		}
-		
+
 		if (analyticsLogDir.empty() && geteuid() == 0) {
 			analyticsLogDir = "/var/log/passenger-analytics";
 		} else if (analyticsLogDir.empty()) {
 			struct passwd *user = getpwuid(geteuid());
 			string username;
-			
+
 			if (user == NULL) {
 				username = user->pw_name;
 			} else {

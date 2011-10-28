@@ -48,7 +48,7 @@ AccountsDatabase::createDefault(const ServerInstanceDir::GenerationPtr &generati
 	gid_t defaultGid;
 	RandomGenerator random;
 	string passengerStatusPassword = random.generateByteString(MESSAGE_SERVER_MAX_PASSWORD_SIZE);
-	
+
 	defaultUserEntry = getpwnam(defaultUser.c_str());
 	if (defaultUserEntry == NULL) {
 		throw NonExistentUserException("Default user '" + defaultUser +
@@ -61,7 +61,7 @@ AccountsDatabase::createDefault(const ServerInstanceDir::GenerationPtr &generati
 			"' does not exist.");
 	}
 	defaultGid = defaultGroupEntry->gr_gid;
-	
+
 	// An account for the 'passenger-status' command. Its password is only readable by
 	// root, or (if user switching is turned off) only by the web server's user.
 	database->add("_passenger-status", passengerStatusPassword, false,
@@ -74,7 +74,7 @@ AccountsDatabase::createDefault(const ServerInstanceDir::GenerationPtr &generati
 		createFile(generation->getPath() + "/passenger-status-password.txt",
 			passengerStatusPassword, S_IRUSR | S_IWUSR);
 	}
-	
+
 	return database;
 }
 

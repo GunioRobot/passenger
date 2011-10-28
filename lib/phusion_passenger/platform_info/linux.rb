@@ -35,7 +35,7 @@ module PlatformInfo
 			return nil
 		end
 	end
-	
+
 	# Autodetects the current Linux distribution and return a number of identifier tags.
 	# The first tag identifies the distribution while the other tags indicate which
 	# distributions it is likely compatible with.

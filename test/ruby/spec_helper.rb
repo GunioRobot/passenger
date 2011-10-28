@@ -42,11 +42,11 @@ Spec::Runner.configure do |config|
 		PhusionPassenger::DebugLogging.log_level = -1
 		PhusionPassenger::DebugLogging.log_file = nil
 		PhusionPassenger::DebugLogging.stderr_evaluator = nil
-		
+
 		# Create the temp directory.
 		PhusionPassenger::Utils.passenger_tmpdir
 	end
-	
+
 	config.append_after do
 		tmpdir = PhusionPassenger::Utils.passenger_tmpdir(false)
 		if File.exist?(tmpdir)
@@ -61,7 +61,7 @@ module SpawnerSpecHelper
 			@stubs = []
 			@apps = []
 		end
-		
+
 		klass.after(:each) do
 			begin
 				@apps.each do |app|
@@ -81,22 +81,22 @@ module SpawnerSpecHelper
 			end
 		end
 	end
-	
+
 	def before_start(code)
 		@before_start = code
 	end
-	
+
 	def after_start(code)
 		@after_start = code
 	end
-	
+
 	def register_stub(stub)
 		@stubs << stub
 		File.prepend(stub.startup_file, "#{@before_start}\n")
 		File.append(stub.startup_file, "\n#{@after_start}")
 		return stub
 	end
-	
+
 	def register_app(app)
 		@apps << app
 		return app

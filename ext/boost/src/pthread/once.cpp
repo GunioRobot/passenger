@@ -1,6 +1,6 @@
 // Copyright (C) 2007 Anthony Williams
 //
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying 
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #define __STDC_CONSTANT_MACROS
@@ -21,7 +21,7 @@ namespace boost
         {
             pthread_key_t epoch_tss_key;
             pthread_once_t epoch_tss_key_flag=PTHREAD_ONCE_INIT;
-            
+
             extern "C" void delete_epoch_tss_data(void* data)
             {
                 free(data);
@@ -31,9 +31,9 @@ namespace boost
             {
                 BOOST_VERIFY(!pthread_key_create(&epoch_tss_key,delete_epoch_tss_data));
             }
-            
+
         }
-        
+
         boost::uintmax_t& get_once_per_thread_epoch()
         {
             BOOST_VERIFY(!pthread_once(&epoch_tss_key_flag,create_epoch_tss_key));
@@ -47,5 +47,5 @@ namespace boost
             return *static_cast<boost::uintmax_t*>(data);
         }
     }
-    
+
 }

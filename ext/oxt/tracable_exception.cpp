@@ -40,7 +40,7 @@ tracable_exception::tracable_exception() {
 	if (OXT_LIKELY(_get_backtrace_list_and_its_lock(&backtrace_list, &lock))) {
 		spin_lock::scoped_lock l(*lock);
 		vector<trace_point *>::const_iterator it;
-		
+
 		for (it = backtrace_list->begin(); it != backtrace_list->end(); it++) {
 			trace_point *p = new trace_point(
 				(*it)->function,

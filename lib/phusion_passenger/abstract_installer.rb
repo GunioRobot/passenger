@@ -56,7 +56,7 @@ class AbstractInstaller
 			instance_variable_set(:"@#{key}", value)
 		end
 	end
-	
+
 	# Start the installation by calling the #install! method.
 	def start
 		before_install
@@ -69,36 +69,36 @@ private
 	def before_install
 		# Hook for subclasses.
 	end
-	
+
 	def after_install
 		# Reset terminal colors.
 		STDOUT.write("\e[0m")
 		STDOUT.flush
 	end
-	
+
 	def color_print(text)
 		STDOUT.write(ConsoleTextTemplate.new(:text => text).result)
 		STDOUT.flush
 	end
-	
+
 	def color_puts(text)
 		color_print("#{text}\n")
 	end
-	
+
 	def render_template(name, options = {})
 		puts ConsoleTextTemplate.new({ :file => name }, options).result
 	end
-	
+
 	def new_screen
 		puts
 		line
 		puts
 	end
-	
+
 	def line
 		puts "--------------------------------------------"
 	end
-	
+
 	def prompt(message)
 		done = false
 		while !done
@@ -115,7 +115,7 @@ private
 	rescue Interrupt
 		exit 2
 	end
-	
+
 	def wait(timeout = nil)
 		return if @auto
 		begin
@@ -135,7 +135,7 @@ private
 			exit 2
 		end
 	end
-	
+
 	def sh(*args)
 		puts "# #{args.join(' ')}"
 		result = system(*args)
@@ -147,11 +147,11 @@ private
 			return false
 		end
 	end
-	
+
 	def dependencies
 		return []
 	end
-	
+
 	def check_dependencies(show_new_screen = true)
 		new_screen if show_new_screen
 		missing_dependencies = []
@@ -171,7 +171,7 @@ private
 				missing_dependencies << dep
 			end
 		end
-		
+
 		if missing_dependencies.empty?
 			return true
 		else
@@ -184,7 +184,7 @@ private
 			else
 				wait
 			end
-			
+
 			line
 			puts
 			color_puts "<banner>Installation instructions for required software</banner>"
@@ -202,7 +202,7 @@ private
 			return false
 		end
 	end
-	
+
 	def print_dependency_installation_instructions(dep)
 		color_puts " * To install <yellow>#{dep.name}</yellow>:"
 		if dep.install_comments
@@ -221,7 +221,7 @@ private
 			color_puts "   Search Google."
 		end
 	end
-	
+
 	def download(url, output)
 		if PlatformInfo.find_command("wget")
 			return sh("wget", "-O", output, url)

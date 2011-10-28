@@ -42,7 +42,7 @@ protected
 				message.gsub!("\n", "")
 				backtrace_string = [exception.backtrace.join("\n")].pack('m')
 				backtrace_string.gsub!("\n", "")
-				
+
 				log.message("Request transaction ID: #{request_txn_id}")
 				log.message("Message: #{message}")
 				log.message("Class: #{exception.class.name}")

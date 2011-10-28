@@ -65,17 +65,17 @@ public:
 		APACHE,
 		NGINX
 	};
-	
+
 private:
 	/** The watchdog's PID. Equals 0 if the watchdog hasn't been started yet
 	 * or if detach() is called. */
 	pid_t pid;
-	
+
 	Type type;
-	
+
 	/** The watchdog's feedback file descriptor. Only valid if pid != 0. */
 	FileDescriptor feedbackFd;
-	
+
 	/**
 	 * The helper agent's request socket filename. This socket only exists
 	 * for the Nginx helper agent, and it's for serving SCGI requests.
@@ -83,12 +83,12 @@ private:
 	 * Only valid if pid != 0.
 	 */
 	string requestSocketFilename;
-	
+
 	/**
 	 * A password for connecting to the request socket. Only valid if pid != 0.
 	 */
 	string requestSocketPassword;
-	
+
 	/**
 	 * The helper agent's message server socket filename, on which e.g. the
 	 * application pool server is listening. Only valid if pid != 0.
@@ -96,28 +96,28 @@ private:
 	 * The application pool server is available through the account "_web_server".
 	 */
 	string messageSocketFilename;
-	
+
 	/**
 	 * A password for the message server socket. The associated username is "_web_server".
 	 *
 	 * Only valid if pid != 0.
 	 */
 	string messageSocketPassword;
-	
+
 	bool loggingAgentRunningLocally;
 	string loggingSocketAddress;
 	string loggingSocketPassword;
-	
+
 	/**
 	 * The server instance dir of the agents. Only valid if pid != 0.
 	 */
 	ServerInstanceDirPtr serverInstanceDir;
-	
+
 	/**
 	 * The generation dir of the agents. Only valid if pid != 0.
 	 */
 	ServerInstanceDir::GenerationPtr generation;
-	
+
 	/**
 	 * Safely dup2() the given file descriptor to 3 (FEEDBACK_FD).
 	 */
@@ -139,7 +139,7 @@ private:
 			}
 		}
 	}
-	
+
 	/**
 	 * Call this if the watchdog seems to have crashed. This function will try
 	 * to determine whether the watchdog is still running, whether it crashed
@@ -150,7 +150,7 @@ private:
 		this_thread::disable_interruption di;
 		this_thread::disable_syscall_interruption dsi;
 		int ret, status;
-		
+
 		/* Upon noticing that something went wrong, the watchdog
 		 * or its subprocesses might still be writing out an error
 		 * report, so we wait a while before killing the watchdog.
@@ -183,7 +183,7 @@ private:
 				"with exit code " + toString(WEXITSTATUS(status)));
 		}
 	}
-	
+
 	static void killProcessGroupAndWait(pid_t *pid, unsigned long long timeout = 0) {
 		if (*pid != -1 && (timeout == 0 || timedWaitPid(*pid, NULL, timeout) <= 0)) {
 			this_thread::disable_syscall_interruption dsi;
@@ -192,7 +192,7 @@ private:
 			*pid = -1;
 		}
 	}
-	
+
 	/**
 	 * Behaves like <tt>waitpid(pid, status, WNOHANG)</tt>, but waits at most
 	 * <em>timeout</em> miliseconds for the process to exit.
@@ -200,7 +200,7 @@ private:
 	static int timedWaitPid(pid_t pid, int *status, unsigned long long timeout) {
 		Timer timer;
 		int ret;
-		
+
 		do {
 			ret = syscalls::waitpid(pid, status, WNOHANG);
 			if (ret > 0 || ret == -1) {
@@ -211,7 +211,7 @@ private:
 		} while (timer.elapsed() < timeout);
 		return 0; // timed out
 	}
-	
+
 	/**
 	 * Gracefully shutdown an agent process by sending an exit command to its socket.
 	 * Returns whether the agent has successfully processed the exit command.
@@ -223,7 +223,7 @@ private:
 		try {
 			MessageClient client;
 			vector<string> args;
-			
+
 			client.connect("unix:" + socketFilename, username, password);
 			client.write("exit", NULL);
 			return client.read(args) && args[0] == "Passed security" &&
@@ -234,18 +234,18 @@ private:
 		}
 		return false;
 	}
-	
+
 	string serializePrestartURLs(const set<string> &prestartURLs) const {
 		set<string>::const_iterator it;
 		string result;
-		
+
 		for (it = prestartURLs.begin(); it != prestartURLs.end(); it++) {
 			result.append(*it);
 			result.append(1, '\0');
 		}
 		return Base64::encode(result);
 	}
-	
+
 public:
 	/**
 	 * Construct a AgentsStarter object. The watchdog and the agents
@@ -258,7 +258,7 @@ public:
 		loggingAgentRunningLocally = false;
 		this->type = type;
 	}
-	
+
 	~AgentsStarter() {
 		if (pid != 0) {
 			this_thread::disable_syscall_interruption dsi;
@@ -270,7 +270,7 @@ public:
 					gracefullyShutdownAgent(filename,
 						"logging", loggingSocketPassword);
 			}
-			
+
 			/* Send a message down the feedback fd to tell the watchdog
 			 * Whether this is a clean shutdown. Closing the fd without
 			 * sending anything also indicates an unclean shutdown,
@@ -282,26 +282,26 @@ public:
 			} else {
 				syscalls::write(feedbackFd, "u", 1);
 			}
-			
+
 			/* If we failed to send an exit command to one of the agents then we have
 			 * to forcefully kill all agents now because otherwise one of them might
 			 * never exit. We do this by closing the feedback fd without sending a
 			 * random byte, to indicate that this is an abnormal shutdown. The watchdog
 			 * will then kill all agents.
 			 */
-			
+
 			feedbackFd.close();
 			syscalls::waitpid(pid, NULL, 0);
 		}
 	}
-	
+
 	/**
 	 * Returns the type as was passed to the constructor.
 	 */
 	Type getType() const {
 		return type;
 	}
-	
+
 	/**
 	 * Returns the watchdog's PID. Equals 0 if the watchdog hasn't been started yet
 	 * or if detach() is called.
@@ -309,7 +309,7 @@ public:
 	pid_t getPid() const {
 		return pid;
 	}
-	
+
 	/**
 	 * The helper agent's request socket filename, on which it's listening
 	 * for SCGI requests.
@@ -319,7 +319,7 @@ public:
 	string getRequestSocketFilename() const {
 		return requestSocketFilename;
 	}
-	
+
 	/**
 	 * Returns the password for connecting to the request socket.
 	 *
@@ -328,23 +328,23 @@ public:
 	string getRequestSocketPassword() const {
 		return requestSocketPassword;
 	}
-	
+
 	string getMessageSocketFilename() const {
 		return messageSocketFilename;
 	}
-	
+
 	string getMessageSocketPassword() const {
 		return messageSocketPassword;
 	}
-	
+
 	string getLoggingSocketAddress() const {
 		return loggingSocketAddress;
 	}
-	
+
 	string getLoggingSocketPassword() const {
 		return loggingSocketPassword;
 	}
-	
+
 	/**
 	 * Returns the server instance dir of the agents.
 	 *
@@ -353,7 +353,7 @@ public:
 	ServerInstanceDirPtr getServerInstanceDir() const {
 		return serverInstanceDir;
 	}
-	
+
 	/**
 	 * Returns the generation dir of the agents.
 	 *
@@ -362,7 +362,7 @@ public:
 	ServerInstanceDir::GenerationPtr getGeneration() const {
 		return generation;
 	}
-	
+
 	/**
 	 * Start the agents through the watchdog, with the given parameters.
 	 *
@@ -391,7 +391,7 @@ public:
 		this_thread::disable_interruption di;
 		this_thread::disable_syscall_interruption dsi;
 		ResourceLocator locator(passengerRoot);
-		
+
 		string realUnionStationGatewayCert;
 		if (unionStationGatewayCert.empty()) {
 			realUnionStationGatewayCert = locator.getResourcesDir() + "/union_station_gateway.crt";
@@ -399,7 +399,7 @@ public:
 			realUnionStationGatewayCert = unionStationGatewayCert;
 		}
 		string watchdogFilename = locator.getAgentsDir() + "/PassengerWatchdog";
-		
+
 		VariantMap watchdogArgs;
 		watchdogArgs
 			.set    ("web_server_type", type == APACHE ? "apache" : "nginx")
@@ -426,39 +426,39 @@ public:
 			.setInt ("union_station_gateway_port", unionStationGatewayPort)
 			.set    ("union_station_gateway_cert", realUnionStationGatewayCert)
 			.set    ("prestart_urls",   serializePrestartURLs(prestartURLs));
-		
+
 		SocketPair fds;
 		int e;
 		pid_t pid;
-		
+
 		fds = createUnixSocketPair();
 		pid = syscalls::fork();
 		if (pid == 0) {
 			// Child
-			
+
 			/* Become the session leader so that Apache can't kill the
 			 * watchdog with killpg() during shutdown, so that a
 			 * Ctrl-C only affects the web server, and so that
 			 * we can kill all of our subprocesses in a single killpg().
 			 */
 			setsid();
-			
+
 			// Make sure the feedback fd is 3 and close all file descriptors
 			// except stdin, stdout, stderr and 3.
 			syscalls::close(fds[0]);
 			installFeedbackFd(fds[1]);
 			closeAllFileDescriptors(FEEDBACK_FD);
-			
+
 			/* We don't know how the web server or the environment affect
 			 * signal handlers and the signal mask, so reset this stuff
 			 * just in case.
 			 */
 			resetSignalHandlersAndMask();
-			
+
 			if (afterFork) {
 				afterFork();
 			}
-			
+
 			execl(watchdogFilename.c_str(), "PassengerWatchdog", (char *) 0);
 			e = errno;
 			try {
@@ -482,15 +482,15 @@ public:
 			MessageChannel feedbackChannel(fds[0]);
 			vector<string> args;
 			bool result, allAgentsStarted;
-			
+
 			ServerInstanceDirPtr serverInstanceDir;
 			ServerInstanceDir::GenerationPtr generation;
 			ScopeGuard guard(boost::bind(&AgentsStarter::killProcessGroupAndWait, &pid, 0));
 			fds[1].close();
-			
-			
+
+
 			/****** Send arguments to watchdog through the feedback channel ******/
-			
+
 			UPDATE_TRACE_POINT();
 			/* Here we don't care about EPIPE and ECONNRESET errors. The watchdog
 			 * could have sent an error message over the feedback fd without
@@ -503,14 +503,14 @@ public:
 					inspectWatchdogCrashReason(pid);
 				}
 			}
-			
-			
+
+
 			/****** Read basic startup information ******/
-			
+
 			this_thread::restore_interruption ri(di);
 			this_thread::restore_syscall_interruption rsi(dsi);
 			UPDATE_TRACE_POINT();
-			
+
 			try {
 				result = feedbackChannel.read(args);
 			} catch (const SystemException &ex) {
@@ -528,7 +528,7 @@ public:
 				UPDATE_TRACE_POINT();
 				inspectWatchdogCrashReason(pid);
 			}
-			
+
 			UPDATE_TRACE_POINT();
 			if (args[0] == "Basic startup info") {
 				if (args.size() == 3) {
@@ -571,13 +571,13 @@ public:
 						watchdogFilename + ")", e);
 				}
 			}
-			
-			
+
+
 			/****** Read agents startup information ******/
-			
+
 			UPDATE_TRACE_POINT();
 			allAgentsStarted = false;
-			
+
 			while (!allAgentsStarted) {
 				try {
 					UPDATE_TRACE_POINT();
@@ -593,7 +593,7 @@ public:
 					UPDATE_TRACE_POINT();
 					inspectWatchdogCrashReason(pid);
 				}
-				
+
 				if (args[0] == "HelperAgent info") {
 					UPDATE_TRACE_POINT();
 					if (args.size() == 5) {
@@ -632,11 +632,11 @@ public:
 					throw RuntimeException("One of the Passenger agents sent an unknown feedback message '" + args[0] + "'");
 				}
 			}
-			
+
 			guard.clear();
 		}
 	}
-	
+
 	/**
 	 * Close any file descriptors that this object has, and make it so that the destructor
 	 * doesn't try to shut down the agents.

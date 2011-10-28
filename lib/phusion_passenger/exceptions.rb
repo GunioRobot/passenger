@@ -27,7 +27,7 @@ module PhusionPassenger
 # a given Ruby on Rails Gem version specification.
 class VersionNotFound < StandardError
 	attr_reader :gem_version_spec
-	
+
 	# - +message+: The exception message.
 	# - +gem_version_spec+: The Ruby on Rails Gem version specification that caused this error.
 	def initialize(message, gem_version_spec)
@@ -62,7 +62,7 @@ class AppInitError < InitializationError
 	attr_accessor :app_type
 	# Any messages printed to stderr before the failure. May be nil.
 	attr_accessor :stderr
-	
+
 	def initialize(message, child_exception = nil, app_type = "rails", stderr = nil)
 		super(message, child_exception)
 		@app_type = app_type
@@ -76,7 +76,7 @@ end
 class FrameworkInitError < InitializationError
 	attr_reader :vendor
 	attr_reader :version
-	
+
 	def initialize(message, child_exception, options)
 		super(message, child_exception)
 		if options[:vendor]
@@ -89,7 +89,7 @@ end
 
 class UnknownError < StandardError
 	attr_accessor :real_class_name
-	
+
 	def initialize(message, class_name, backtrace)
 		super("#{message} (#{class_name})")
 		set_backtrace(backtrace)

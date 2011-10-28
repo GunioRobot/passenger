@@ -26,11 +26,11 @@ module PhusionPassenger
 module Utils
 protected
 	@@passenger_tmpdir = nil
-	
+
 	def passenger_tmpdir(create = true)
 		PhusionPassenger::Utils.passenger_tmpdir(create)
 	end
-	
+
 	# Returns the directory in which to store Phusion Passenger-specific
 	# temporary files. If +create+ is true, then this method creates the
 	# directory if it doesn't exist.
@@ -61,7 +61,7 @@ protected
 		end
 		return dir
 	end
-	
+
 	def self.passenger_tmpdir=(dir)
 		@@passenger_tmpdir = dir
 	end

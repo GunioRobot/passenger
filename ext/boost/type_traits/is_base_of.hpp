@@ -5,7 +5,7 @@
 //  http://www.boost.org/LICENSE_1_0.txt).
 //
 //  See http://www.boost.org/libs/type_traits for most recent version including documentation.
- 
+
 #ifndef BOOST_TT_IS_BASE_OF_HPP_INCLUDED
 #define BOOST_TT_IS_BASE_OF_HPP_INCLUDED
 
@@ -26,7 +26,7 @@ namespace boost {
       {
           typedef typename remove_cv<B>::type ncvB;
           typedef typename remove_cv<D>::type ncvD;
-          BOOST_STATIC_CONSTANT(bool, value = (::boost::type_traits::ice_or<      
+          BOOST_STATIC_CONSTANT(bool, value = (::boost::type_traits::ice_or<
             (::boost::detail::is_base_and_derived_impl<ncvB,ncvD>::value),
             (::boost::type_traits::ice_and< ::boost::is_same<ncvB,ncvD>::value, ::boost::is_class<ncvB>::value>::value)>::value));
       };

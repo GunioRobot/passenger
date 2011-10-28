@@ -44,7 +44,7 @@ class UnseekableSocket
 	def self.wrap(socket)
 		return new.wrap(socket)
 	end
-	
+
 	def wrap(socket)
 		# Some people report that sometimes their Ruby (MRI/REE)
 		# processes get stuck with 100% CPU usage. Upon further
@@ -66,121 +66,121 @@ class UnseekableSocket
 		# 'sync' to true in the hope that this will work around
 		# the problem.
 		socket.sync = true
-		
+
 		# There's no need to set the encoding for Ruby 1.9 because
 		# abstract_request_handler.rb is tagged with 'encoding: binary'.
-		
+
 		@socket = socket
-		
+
 		return self
 	end
-	
+
 	# Don't allow disabling of sync.
 	def sync=(value)
 	end
-	
+
 	# Socket is sync'ed so flushing shouldn't do anything.
 	def flush
 	end
-	
+
 	# Already set to binary mode.
 	def binmode
 	end
-	
+
 	def to_io
 		self
 	end
-	
+
 	def addr
 		@socket.addr
 	rescue => e
 		raise annotate(e)
 	end
-	
+
 	def write(string)
 		@socket.write(string)
 	rescue => e
 		raise annotate(e)
 	end
-	
+
 	def writev(components)
 		@socket.writev(components)
 	rescue => e
 		raise annotate(e)
 	end if IO.method_defined?(:writev)
-	
+
 	def writev2(components, components2)
 		@socket.writev2(components, components2)
 	rescue => e
 		raise annotate(e)
 	end if IO.method_defined?(:writev2)
-	
+
 	def writev3(components, components2, components3)
 		@socket.writev3(components, components2, components3)
 	rescue => e
 		raise annotate(e)
 	end if IO.method_defined?(:writev3)
-	
+
 	def puts(*args)
 		@socket.puts(*args)
 	rescue => e
 		raise annotate(e)
 	end
-	
+
 	def gets
 		@socket.gets
 	rescue => e
 		raise annotate(e)
 	end
-	
+
 	def read(*args)
 		@socket.read(*args)
 	rescue => e
 		raise annotate(e)
 	end
-	
+
 	def readpartial(*args)
 		@socket.readpartial(*args)
 	rescue => e
 		raise annotate(e)
 	end
-	
+
 	def readline
 		@socket.readline
 	rescue => e
 		raise annotate(e)
 	end
-	
+
 	def each(&block)
 		@socket.each(&block)
 	rescue => e
 		raise annotate(e)
 	end
-	
+
 	def closed?
 		@socket.closed?
 	rescue => e
 		raise annotate(e)
 	end
-	
+
 	def close
 		@socket.close
 	rescue => e
 		raise annotate(e)
 	end
-	
+
 	def close_read
 		@socket.close_read
 	rescue => e
 		raise annotate(e)
 	end
-	
+
 	def close_write
 		@socket.close_write
 	rescue => e
 		raise annotate(e)
 	end
-	
+
 	def source_of_exception?(exception)
 		return exception.instance_variable_get(:"@from_unseekable_socket") == @socket.object_id
 	end

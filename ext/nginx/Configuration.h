@@ -38,7 +38,7 @@ typedef struct {
     ngx_array_t *vars_len;
     ngx_array_t *vars;
     ngx_array_t *vars_source;
-    
+
     ngx_flag_t   enabled;
     ngx_flag_t   use_global_queue;
     ngx_flag_t   friendly_error_pages;

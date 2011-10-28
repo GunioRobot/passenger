@@ -55,14 +55,14 @@ class ApplicationSpawner < AbstractServer
 	include Utils
 	extend Utils
 	include DebugLogging
-	
+
 	# This exception means that the ApplicationSpawner server process exited unexpectedly.
 	class Error < AbstractServer::ServerError
 	end
-	
+
 	# The application root of this spawner.
 	attr_reader :app_root
-	
+
 	# Spawns an instance of a Rails application. When successful, an AppProcess object
 	# will be returned, which represents the spawned Rails application.
 	#
@@ -79,15 +79,15 @@ class ApplicationSpawner < AbstractServer
 	# - SystemCallError, IOError, SocketError: Something went wrong.
 	def self.spawn_application(options)
 		options = sanitize_spawn_options(options)
-		
+
 		a, b = UNIXSocket.pair
 		pid = safe_fork('application', true) do
 			a.close
-			
+
 			file_descriptors_to_leave_open = [0, 1, 2, b.fileno]
 			NativeSupport.close_all_file_descriptors(file_descriptors_to_leave_open)
 			close_all_io_objects_for_fds(file_descriptors_to_leave_open)
-			
+
 			channel = MessageChannel.new(b)
 			success = report_app_init_status(channel) do
 				prepare_app_process('config/environment.rb', options)
@@ -101,14 +101,14 @@ class ApplicationSpawner < AbstractServer
 		end
 		b.close
 		Process.waitpid(pid) rescue nil
-		
+
 		channel = MessageChannel.new(a)
 		unmarshal_and_raise_errors(channel, options["print_exceptions"])
-		
+
 		# No exception was raised, so spawning succeeded.
 		return AppProcess.read_from_channel(channel)
 	end
-	
+
 	# The following options are accepted:
 	# - 'app_root'
 	#
@@ -121,7 +121,7 @@ class ApplicationSpawner < AbstractServer
 		self.max_idle_time = DEFAULT_APP_SPAWNER_MAX_IDLE_TIME
 		define_message_handler(:spawn_application, :handle_spawn_application)
 	end
-	
+
 	# Spawns an instance of the Rails application. When successful, an AppProcess object
 	# will be returned, which represents the spawned Rails application.
 	#
@@ -138,7 +138,7 @@ class ApplicationSpawner < AbstractServer
 	rescue SystemCallError, IOError, SocketError => e
 		raise Error, "The application spawner server exited unexpectedly: #{e}"
 	end
-	
+
 	# Overrided from AbstractServer#start.
 	#
 	# May raise these additional exceptions:
@@ -168,7 +168,7 @@ protected
 			GC.start
 		end
 	end
-	
+
 	# Overrided method.
 	def initialize_server # :nodoc:
 		report_app_init_status(MessageChannel.new(@owner_socket)) do
@@ -182,13 +182,13 @@ protected
 			after_loading_app_code(@options)
 		end
 	end
-	
+
 private
 	def preload_application
 		Object.const_set(:RAILS_ROOT, @canonicalized_app_root)
 		if defined?(::Rails::Initializer)
 			::Rails::Initializer.run(:set_load_path)
-			
+
 			# The Rails framework is loaded at the moment.
 			# environment.rb may set ENV['RAILS_ENV']. So we re-initialize
 			# RAILS_ENV in Rails::Initializer.load_environment.
@@ -197,21 +197,21 @@ private
 					using_default_log_path =
 						configuration.log_path ==
 						configuration.send(:default_log_path)
-					
+
 					if defined?(::RAILS_ENV)
 						Object.send(:remove_const, :RAILS_ENV)
 					end
 					Object.const_set(:RAILS_ENV, (ENV['RAILS_ENV'] || 'development').dup)
-					
+
 					if using_default_log_path
 						# We've changed the environment, so open the
 						# correct log file.
 						configuration.log_path = configuration.send(:default_log_path)
 					end
-					
+
 					load_environment_without_passenger
 				end
-				
+
 				alias_method :load_environment_without_passenger, :load_environment
 				alias_method :load_environment, :load_environment_with_passenger
 			end
@@ -227,7 +227,7 @@ private
 		   && ActionController::Dispatcher.respond_to?(:error_file_path)
 			ActionController::Dispatcher.error_file_path = "#{RAILS_ROOT}/public"
 		end
-		
+
 		require 'rails/version' if !defined?(::Rails::VERSION)
 		if !defined?(Dispatcher)
 			begin
@@ -239,7 +239,7 @@ private
 				raise if Rails::VERSION::MAJOR < 3
 			end
 		end
-		
+
 		# - No point in preloading the application sources if the garbage collector
 		#   isn't copy-on-write friendly.
 		# - Rails >= 2.2 already preloads application sources by default, so no need
@@ -255,7 +255,7 @@ private
 			end
 		end
 	end
-	
+
 	def rails_will_preload_app_code?
 		if defined?(Rails::Initializer)
 			return ::Rails::Initializer.method_defined?(:load_application_classes)
@@ -281,7 +281,7 @@ private
 				end
 			end
 		end
-		
+
 		b.close
 		worker_channel = MessageChannel.new(a)
 		app_process = AppProcess.read_from_channel(worker_channel)
@@ -291,7 +291,7 @@ private
 		b.close if b && !b.closed?
 		app_process.close if app_process
 	end
-	
+
 	# Initialize the request handler and enter its main loop.
 	# Spawn information will be sent back via +channel+.
 	# The +forked+ argument indicates whether a new process was forked off
@@ -303,20 +303,20 @@ private
 		reader, writer = IO.pipe
 		begin
 			reader.close_on_exec!
-			
+
 			if Rails::VERSION::STRING >= '2.3.0'
 				rack_app = find_rack_app
 				handler = Rack::RequestHandler.new(reader, rack_app, options)
 			else
 				handler = RequestHandler.new(reader, options)
 			end
-			
+
 			app_process = AppProcess.new(app_root, Process.pid, writer,
 				handler.server_sockets)
 			app_process.write_to_channel(channel)
 			writer.close
 			channel.close
-			
+
 			before_handling_requests(forked, options)
 			handler.main_loop
 		ensure
@@ -327,7 +327,7 @@ private
 		end
 	end
 	private_class_method :start_request_handler
-	
+
 	def self.find_rack_app
 		if Rails::VERSION::MAJOR >= 3
 			File.read("config/application.rb") =~ /^module (.+)$/

@@ -52,13 +52,13 @@ private:
 		string key;
 		T value;
 	};
-	
+
 	typedef map<StaticString, Entry> InternalMap;
 	typedef typename InternalMap::iterator Iterator;
 	typedef typename InternalMap::const_iterator ConstIterator;
 	typedef typename InternalMap::value_type ValueType;
 	InternalMap store;
-	
+
 public:
 	T get(const StaticString &key) const {
 		ConstIterator it = store.find(key);
@@ -68,7 +68,7 @@ public:
 			return it->second.value;
 		}
 	}
-	
+
 	bool set(const StaticString &key, const T &value) {
 		pair<Iterator, bool> result = store.insert(make_pair(key, Entry()));
 		if (result.second) {
@@ -88,7 +88,7 @@ public:
 			return false;
 		}
 	}
-	
+
 	bool remove(const StaticString &key) {
 		return store.erase(key) > 0;
 	}

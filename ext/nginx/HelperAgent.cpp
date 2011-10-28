@@ -72,12 +72,12 @@ struct ClientDisconnectedException { };
 class ExitHandler: public MessageServer::Handler {
 private:
 	EventFd &exitEvent;
-	
+
 public:
 	ExitHandler(EventFd &_exitEvent)
 		: exitEvent(_exitEvent)
 	{ }
-	
+
 	virtual bool processMessage(MessageServer::CommonClientContext &commonContext,
 	                            MessageServer::ClientContextPtr &handlerSpecificContext,
 	                            const vector<string> &args)
@@ -123,33 +123,33 @@ private:
 		#endif
 		// and some more stack space for storing the session header.
 		+ MAX_HEADER_SIZE + 1024;
-	
+
 	/** The client number for this Client object, assigned by Server. */
 	unsigned int number;
-	
+
 	/** The application pool to which this Client object belongs to. */
 	ApplicationPool::Ptr pool;
-	
+
 	/** This client's password. */
 	string password;
-	
+
 	string defaultUser;
 	string defaultGroup;
-	
+
 	/** The server socket file descriptor. */
 	int serverSocket;
-	
+
 	/** The analytics logger to use. */
 	AnalyticsLoggerPtr analyticsLogger;
-	
+
 	/** This client's thread. */
 	oxt::thread *thr;
-	
+
 	/** A timer for measuring how long this worker thread has been doing
 	 * nothing (i.e. waiting for a connection).
 	 */
 	Timer inactivityTimer;
-	
+
 	/**
 	 * Attempts to accept a connection made by the client.
 	 *
@@ -169,7 +169,7 @@ private:
 			return FileDescriptor(fd);
 		}
 	}
-	
+
 	/**
 	 * Reads and checks the password of a client message channel identified by the given file descriptor.
 	 * The HelperAgent makes extensive use of Unix Sockets that would normally allow other processes to
@@ -177,7 +177,7 @@ private:
 	 * that we've secured communication channels between this server and its clients with passwords.
 	 * This method indicates whether or not the password of this client channel matches the one known to
 	 * the server.
-	 * 
+	 *
 	 * @param fd The file descriptor identifying the client message channel.
 	 * @return True if the password of the client channel indicated by the given file descriptor
 	 *   matches the password known to the server. False will be returned if either the
@@ -187,20 +187,20 @@ private:
 		TRACE_POINT();
 		MessageChannel channel(fd);
 		char buf[REQUEST_SOCKET_PASSWORD_SIZE];
-		
+
 		if (channel.readRaw(buf, sizeof(buf))) {
 			const char *password_data;
-			
+
 			password_data = const_cast<const string &>(password).c_str();
 			return memcmp(password_data, buf, sizeof(buf)) == 0;
 		} else {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Reads and parses the request headers from the given file descriptor with the given SCGI request parser
-	 * and if succesful, assigns the remainder of the request (i.e. non SCGI header data) to the given 
+	 * and if succesful, assigns the remainder of the request (i.e. non SCGI header data) to the given
 	 * requestBody.
 	 *
 	 * @param fd The file descriptor to read and parse from.
@@ -215,7 +215,7 @@ private:
 		char buf[1024 * 16];
 		ssize_t size;
 		unsigned int accepted = 0;
-		
+
 		do {
 			size = syscalls::read(fd, buf, sizeof(buf));
 			if (size == -1) {
@@ -244,7 +244,7 @@ private:
 			return true;
 		}
 	}
-	
+
 	/**
 	 * Sends a request body to this client. The <tt>partialRequestBody</tt> will first be
 	 * sent to the specified <tt>session</tt>, but if the specified <tt>contentLength</tt>
@@ -269,24 +269,24 @@ private:
 		ssize_t size;
 		size_t bytesToRead;
 		unsigned long bytesForwarded = 0;
-		
+
 		if (partialRequestBody.size() > 0) {
 			UPDATE_TRACE_POINT();
 			session->sendBodyBlock(partialRequestBody.c_str(),
 				partialRequestBody.size());
 			bytesForwarded = partialRequestBody.size();
 		}
-		
+
 		bool done = bytesForwarded == contentLength;
 		while (!done) {
 			UPDATE_TRACE_POINT();
-			
+
 			bytesToRead = contentLength - bytesForwarded;
 			if (bytesToRead > sizeof(buf)) {
 				bytesToRead = sizeof(buf);
 			}
 			size = syscalls::read(clientFd, buf, bytesToRead);
-			
+
 			if (size == 0) {
 				done = true;
 			} else if (size == -1) {
@@ -299,11 +299,11 @@ private:
 			}
 		}
 	}
-	
+
 	/**
 	 * Forwards an HTTP response from the given (Rails) <tt>session</tt> to the
 	 * given <tt>clientFd</tt>.
-	 * 
+	 *
 	 * @param session The Ruby on Rails session to read the response from.
 	 * @param clientFd The client file descriptor to write the response to.
 	 * @throws SystemException Something went wrong while reading the response
@@ -320,7 +320,7 @@ private:
 		int eof = false;
 		char buf[1024 * 32];
 		ssize_t size;
-		
+
 		/* Read data from the backend process until we're able to
 		 * extract the HTTP status line from it.
 		 */
@@ -355,7 +355,7 @@ private:
 				}
 			}
 		}
-		
+
 		UPDATE_TRACE_POINT();
 		while (!eof) {
 			UPDATE_TRACE_POINT();
@@ -378,7 +378,7 @@ private:
 			}
 		}
 	}
-	
+
 	/**
 	 * Handles a spawn related exception by writing an appropriate HTTP error response (500)
 	 * for the given spawn exception <tt>e</ee> to given file descriptor <tt>fd</tt>'s message
@@ -395,7 +395,7 @@ private:
 		writeExact(fd, "Status: 500 Internal Server Error\x0D\x0A");
 		writeExact(fd, "Connection: close\x0D\x0A");
 		writeExact(fd, "Content-Type: text/html; charset=utf-8\x0D\x0A");
-		
+
 		if (friendly) {
 			if (e.hasErrorPage()) {
 				writeExact(fd, "Content-Length: " +
@@ -417,7 +417,7 @@ private:
 			writeExact(fd, body);
 		}
 	}
-	
+
 	/**
 	 * Handles an SCGI request from a client whose identity is derived by the given <tt>clientFd</tt>.
 	 *
@@ -427,7 +427,7 @@ private:
 		TRACE_POINT();
 		ScgiRequestParser parser(MAX_HEADER_SIZE);
 		string partialRequestBody;
-		
+
 		if (!readAndCheckPassword(clientFd)) {
 			P_ERROR("Client did not send a correct password.");
 			return;
@@ -435,12 +435,12 @@ private:
 		if (!readAndParseRequestHeaders(clientFd, parser, partialRequestBody)) {
 			return;
 		}
-		
+
 		try {
 			bool useUnionStation = parser.getHeader("UNION_STATION_SUPPORT") == "true";
 			StaticString appGroupName = parser.getHeader("PASSENGER_APP_GROUP_NAME");
 			PoolOptions options;
-			
+
 			if (parser.getHeader("SCRIPT_NAME").empty()) {
 				options.appRoot = extractDirName(parser.getHeader("DOCUMENT_ROOT"));
 			} else {
@@ -468,7 +468,7 @@ private:
 			options.appSpawnerTimeout       = atol(parser.getHeader("PASSENGER_APP_SPAWNER_IDLE_TIME"));
 			options.debugger       = parser.getHeader("PASSENGER_DEBUGGER") == "true";
 			options.showVersionInHeader = parser.getHeader("PASSENGER_SHOW_VERSION_IN_HEADER") == "true";
-			
+
 			UPDATE_TRACE_POINT();
 			AnalyticsLogPtr log;
 			if (useUnionStation) {
@@ -482,16 +482,16 @@ private:
 			} else {
 				log.reset(new AnalyticsLog());
 			}
-			
+
 			AnalyticsScopeLog requestProcessingScope(log, "request processing");
 			log->message("URI: " + parser.getHeader("REQUEST_URI"));
-			
+
 			/***********************/
 			/***********************/
-			
+
 			try {
 				SessionPtr session;
-				
+
 				{
 					AnalyticsScopeLog scope(log, "get from pool");
 					session = pool->get(options);
@@ -499,10 +499,10 @@ private:
 					log->message("Application PID: " + toString(session->getPid()) +
 						" (GUPID: " + session->getGupid() + ")");
 				}
-				
+
 				UPDATE_TRACE_POINT();
 				AnalyticsScopeLog requestProxyingScope(log, "request proxying");
-				
+
 				char headers[parser.getHeaderData().size() +
 					sizeof("PASSENGER_CONNECT_PASSWORD") +
 					session->getConnectPassword().size() + 1 +
@@ -511,33 +511,33 @@ private:
 					sizeof("PASSENGER_TXN_ID") +
 					log->getTxnId().size() + 1];
 				char *end = headers;
-				
+
 				memcpy(end, parser.getHeaderData().c_str(), parser.getHeaderData().size());
 				end += parser.getHeaderData().size();
-				
+
 				memcpy(end, "PASSENGER_CONNECT_PASSWORD", sizeof("PASSENGER_CONNECT_PASSWORD"));
 				end += sizeof("PASSENGER_CONNECT_PASSWORD");
-				
+
 				memcpy(end, session->getConnectPassword().c_str(),
 					session->getConnectPassword().size() + 1);
 				end += session->getConnectPassword().size() + 1;
-				
+
 				if (useUnionStation) {
 					memcpy(end, "PASSENGER_GROUP_NAME", sizeof("PASSENGER_GROUP_NAME"));
 					end += sizeof("PASSENGER_GROUP_NAME");
-					
+
 					memcpy(end, options.getAppGroupName().c_str(),
 						options.getAppGroupName().size() + 1);
 					end += options.getAppGroupName().size() + 1;
-					
+
 					memcpy(end, "PASSENGER_TXN_ID", sizeof("PASSENGER_TXN_ID"));
 					end += sizeof("PASSENGER_TXN_ID");
-					
+
 					memcpy(end, log->getTxnId().c_str(),
 						log->getTxnId().size() + 1);
 					end += log->getTxnId().size() + 1;
 				}
-				
+
 				{
 					AnalyticsScopeLog scope(log, "send request headers");
 					session->sendHeaders(headers, end - headers);
@@ -554,9 +554,9 @@ private:
 					session->shutdownWriter();
 					scope.success();
 				}
-				
+
 				forwardResponse(session, clientFd);
-				
+
 				requestProxyingScope.success();
 			} catch (const SpawnException &e) {
 				handleSpawnException(clientFd, e,
@@ -566,7 +566,7 @@ private:
 					"It seems the user clicked on the 'Stop' button in his "
 					"browser.");
 			}
-			
+
 			requestProcessingScope.success();
 			clientFd.close();
 		} catch (const boost::thread_interrupted &) {
@@ -581,7 +581,7 @@ private:
 				<< "   backtrace: not available");
 		}
 	}
-	
+
 	/**
 	 * This client's main thread, responsible for accepting connections made by a client
 	 * to the server and to handle its request.
@@ -612,7 +612,7 @@ private:
 				<< "   backtrace: not available");
 		}
 	}
-	
+
 public:
 	/**
 	 * Constructs a client handler for the server with the given arguments and runs
@@ -643,7 +643,7 @@ public:
 			CLIENT_THREAD_STACK_SIZE
 		);
 	}
-	
+
 	/**
 	 * Destroys this client and its thread.
 	 */
@@ -651,21 +651,21 @@ public:
 		TRACE_POINT();
 		this_thread::disable_syscall_interruption dsi;
 		this_thread::disable_interruption di;
-		
+
 		if (thr->joinable()) {
 			thr->interrupt_and_join();
 		}
 		delete thr;
 	}
-	
+
 	oxt::thread *getThread() const {
 		return thr;
 	}
-	
+
 	unsigned long long inactivityTime() const {
 		return inactivityTimer.elapsed();
 	}
-	
+
 	void resetInactivityTimer() {
 		inactivityTimer.start();
 	}
@@ -681,7 +681,7 @@ typedef shared_ptr<Client> ClientPtr;
 class Server {
 private:
 	static const int MESSAGE_SERVER_THREAD_STACK_SIZE = 64 * 128;
-	
+
 	FileDescriptor feedbackFd;
 	bool userSwitching;
 	string defaultUser;
@@ -701,11 +701,11 @@ private:
 	shared_ptr<oxt::thread> prestarterThread;
 	shared_ptr<oxt::thread> messageServerThread;
 	EventFd exitEvent;
-	
+
 	string getRequestSocketFilename() const {
 		return generation->getPath() + "/request.socket";
 	}
-	
+
 	/**
 	 * Starts listening for client connections on this server's request socket.
 	 *
@@ -715,7 +715,7 @@ private:
 	void startListening() {
 		this_thread::disable_syscall_interruption dsi;
 		requestSocket = createUnixServer(getRequestSocketFilename().c_str());
-		
+
 		int ret;
 		do {
 			ret = chmod(getRequestSocketFilename().c_str(), S_ISVTX |
@@ -724,7 +724,7 @@ private:
 				S_IROTH | S_IWOTH | S_IXOTH);
 		} while (ret == -1 && errno == EINTR);
 	}
-	
+
 	/**
 	 * Starts the client handler threads that are responsible for handling the communication
 	 * between the client and this Server.
@@ -739,7 +739,7 @@ private:
 			clients.insert(client);
 		}
 	}
-	
+
 	/**
 	 * Lowers this process's privilege to that of <em>username</em> and <em>groupname</em>.
 	 */
@@ -747,7 +747,7 @@ private:
 		struct passwd *userEntry;
 		struct group  *groupEntry;
 		int            e;
-		
+
 		userEntry = getpwnam(username.c_str());
 		if (userEntry == NULL) {
 			throw NonExistentUserException(string("Unable to lower Passenger "
@@ -760,7 +760,7 @@ private:
 				"HelperAgent's privilege to that of user '") + username +
 				"': user does not exist.");
 		}
-		
+
 		if (initgroups(username.c_str(), userEntry->pw_gid) != 0) {
 			e = errno;
 			throw SystemException(string("Unable to lower Passenger HelperAgent's "
@@ -780,20 +780,20 @@ private:
 				"': cannot set user ID", e);
 		}
 	}
-	
+
 	void resetWorkerThreadInactivityTimers() {
 		set<ClientPtr>::iterator it;
-		
+
 		for (it = clients.begin(); it != clients.end(); it++) {
 			ClientPtr client = *it;
 			client->resetInactivityTimer();
 		}
 	}
-	
+
 	unsigned long long minWorkerThreadInactivityTime() const {
 		set<ClientPtr>::const_iterator it;
 		unsigned long long result = 0;
-		
+
 		for (it = clients.begin(); it != clients.end(); it++) {
 			ClientPtr client = *it;
 			unsigned long long inactivityTime = client->inactivityTime();
@@ -803,7 +803,7 @@ private:
 		}
 		return result;
 	}
-	
+
 public:
 	Server(FileDescriptor feedbackFd, pid_t webServerPid, const string &tempDir,
 		bool userSwitching, const string &defaultUser, const string &defaultGroup,
@@ -815,7 +815,7 @@ public:
 	{
 		string messageSocketPassword;
 		string loggingAgentPassword;
-		
+
 		TRACE_POINT();
 		this->feedbackFd    = feedbackFd;
 		this->userSwitching = userSwitching;
@@ -823,7 +823,7 @@ public:
 		this->defaultGroup  = defaultGroup;
 		feedbackChannel     = MessageChannel(feedbackFd);
 		numberOfThreads     = maxPoolSize * 4;
-		
+
 		UPDATE_TRACE_POINT();
 		requestSocketPassword = Base64::decode(options.get("request_socket_password"));
 		messageSocketPassword = Base64::decode(options.get("message_socket_password"));
@@ -834,15 +834,15 @@ public:
 			userSwitching, defaultUser, defaultGroup);
 		accountsDatabase->add("_web_server", messageSocketPassword, false, Account::EXIT);
 		messageServer = ptr(new MessageServer(generation->getPath() + "/socket", accountsDatabase));
-		
+
 		if (geteuid() == 0 && !userSwitching) {
 			lowerPrivilege(defaultUser, defaultGroup);
 		}
-		
+
 		UPDATE_TRACE_POINT();
 		analyticsLogger = ptr(new AnalyticsLogger(options.get("logging_agent_address"),
 			"logging", loggingAgentPassword));
-		
+
 		pool = ptr(new ApplicationPool::Pool(
 			resourceLocator.getSpawnServerFilename(), generation,
 			accountsDatabase, rubyCommand,
@@ -853,22 +853,22 @@ public:
 		pool->setMax(maxPoolSize);
 		pool->setMaxPerApp(maxInstancesPerApp);
 		pool->setMaxIdleTime(poolIdleTime);
-		
+
 		messageServer->addHandler(ptr(new ApplicationPool::Server(pool)));
 		messageServer->addHandler(ptr(new BacktracesServer()));
 		messageServer->addHandler(ptr(new ExitHandler(exitEvent)));
-		
+
 		UPDATE_TRACE_POINT();
 		feedbackChannel.write("initialized",
 			getRequestSocketFilename().c_str(),
 			messageServer->getSocketFilename().c_str(),
 			NULL);
-		
+
 		prestarterThread = ptr(new oxt::thread(
 			boost::bind(prestartWebApps, resourceLocator, options.get("prestart_urls"))
 		));
 	}
-	
+
 	~Server() {
 		TRACE_POINT();
 		this_thread::disable_syscall_interruption dsi;
@@ -876,39 +876,39 @@ public:
 		oxt::thread *threads[clients.size()];
 		set<ClientPtr>::iterator it;
 		unsigned int i = 0;
-		
+
 		P_DEBUG("Shutting down helper agent...");
 		prestarterThread->interrupt_and_join();
 		if (messageServerThread != NULL) {
 			messageServerThread->interrupt_and_join();
 		}
-		
+
 		for (it = clients.begin(); it != clients.end(); it++, i++) {
 			ClientPtr client = *it;
 			threads[i] = client->getThread();
 		}
 		oxt::thread::interrupt_and_join_multiple(threads, clients.size());
 		clients.clear();
-		
+
 		P_TRACE(2, "All threads have been shut down.");
 	}
-	
+
 	void mainLoop() {
 		TRACE_POINT();
-		
+
 		startClientHandlerThreads();
 		messageServerThread = ptr(new oxt::thread(
 			boost::bind(&MessageServer::mainLoop, messageServer.get()),
 			"MessageServer thread", MESSAGE_SERVER_THREAD_STACK_SIZE
 		));
-		
+
 		/* Wait until the watchdog closes the feedback fd (meaning it
 		 * was killed) or until we receive an exit message.
 		 */
 		this_thread::disable_syscall_interruption dsi;
 		fd_set fds;
 		int largestFd;
-		
+
 		FD_ZERO(&fds);
 		FD_SET(feedbackFd, &fds);
 		FD_SET(exitEvent.fd(), &fds);
@@ -918,7 +918,7 @@ public:
 			int e = errno;
 			throw SystemException("select() failed", e);
 		}
-		
+
 		if (FD_ISSET(feedbackFd, &fds)) {
 			/* If the watchdog has been killed then we'll kill all descendant
 			 * processes and exit. There's no point in keeping this helper
@@ -964,7 +964,7 @@ main(int argc, char *argv[]) {
 	unsigned int maxPoolSize        = options.getInt("max_pool_size");
 	unsigned int maxInstancesPerApp = options.getInt("max_instances_per_app");
 	unsigned int poolIdleTime       = options.getInt("pool_idle_time");
-	
+
 	try {
 		UPDATE_TRACE_POINT();
 		Server server(FEEDBACK_FD, webServerPid, tempDir,
@@ -973,7 +973,7 @@ main(int argc, char *argv[]) {
 			maxPoolSize, maxInstancesPerApp, poolIdleTime,
 			options);
 		P_DEBUG("Passenger helper agent started on PID " << getpid());
-		
+
 		UPDATE_TRACE_POINT();
 		server.mainLoop();
 	} catch (const tracable_exception &e) {
@@ -983,7 +983,7 @@ main(int argc, char *argv[]) {
 		P_ERROR(e.what());
 		return 1;
 	}
-	
+
 	P_TRACE(2, "Helper agent exited.");
 	return 0;
 }

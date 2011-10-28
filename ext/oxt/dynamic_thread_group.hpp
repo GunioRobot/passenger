@@ -55,7 +55,7 @@ class dynamic_thread_group {
 private:
 	struct thread_handle;
 	typedef shared_ptr<thread_handle> thread_handle_ptr;
-	
+
 	/** A container which aggregates a thread object
 	 * as well as the its own iterator in the 'thread_handles'
 	 * member. The latter is used for removing itself from
@@ -65,33 +65,33 @@ private:
 		list<thread_handle_ptr>::iterator iterator;
 		thread *thr;
 		bool removed_from_list;
-		
+
 		thread_handle() {
 			thr = NULL;
 			removed_from_list = false;
 		}
-		
+
 		~thread_handle() {
 			delete thr;
 		}
 	};
-	
+
 	/** A mutex which protects thread_handles and nthreads. */
 	mutable boost::mutex lock;
 	/** The internal list of threads. */
 	list<thread_handle_ptr> thread_handles;
 	/** The number of threads in this thread group. */
 	unsigned int nthreads;
-	
+
 	struct thread_cleanup {
 		dynamic_thread_group *thread_group;
 		thread_handle *handle;
-		
+
 		thread_cleanup(dynamic_thread_group *g, thread_handle *h) {
 			thread_group = g;
 			handle = h;
 		}
-		
+
 		~thread_cleanup() {
 			this_thread::disable_interruption di;
 			this_thread::disable_syscall_interruption dsi;
@@ -102,21 +102,21 @@ private:
 			}
 		}
 	};
-	
+
 	void thread_main(boost::function<void ()> &func, thread_handle *handle) {
 		thread_cleanup c(this, handle);
 		func();
 	}
-	
+
 public:
 	dynamic_thread_group() {
 		nthreads = 0;
 	}
-	
+
 	~dynamic_thread_group() {
 		interrupt_and_join_all();
 	}
-	
+
 	/**
 	 * Create a new thread that belongs to this thread group.
 	 *
@@ -146,7 +146,7 @@ public:
 			throw;
 		}
 	}
-	
+
 	/**
 	 * Interrupt and join all threads in this group.
 	 *
@@ -166,7 +166,7 @@ public:
 		unsigned int nthreads_copy = nthreads;
 		thread *threads[nthreads];
 		unsigned int i = 0;
-		
+
 		// We make a copy so that the handles aren't destroyed prematurely.
 		thread_handles_copy = thread_handles;
 		for (it = thread_handles.begin(); it != thread_handles.end(); it++, i++) {
@@ -176,11 +176,11 @@ public:
 		}
 		thread_handles.clear();
 		nthreads = 0;
-		
+
 		l.unlock();
 		thread::interrupt_and_join_multiple(threads, nthreads_copy);
 	}
-	
+
 	/**
 	 * Returns the number of threads currently in this thread group.
 	 */

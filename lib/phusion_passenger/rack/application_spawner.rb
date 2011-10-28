@@ -41,11 +41,11 @@ class ApplicationSpawner < AbstractServer
 	include Utils
 	extend Utils
 	include DebugLogging
-	
+
 	# This exception means that the ApplicationSpawner server process exited unexpectedly.
 	class Error < AbstractServer::ServerError
 	end
-	
+
 	# Spawn an instance of the given Rack application. When successful, an
 	# AppProcess object will be returned, which represents the spawned
 	# application.
@@ -58,15 +58,15 @@ class ApplicationSpawner < AbstractServer
 	# - SystemCallError, IOError, SocketError: Something went wrong.
 	def self.spawn_application(options = {})
 		options = sanitize_spawn_options(options)
-		
+
 		a, b = UNIXSocket.pair
 		pid = safe_fork(self.class.to_s, true) do
 			a.close
-			
+
 			file_descriptors_to_leave_open = [0, 1, 2, b.fileno]
 			NativeSupport.close_all_file_descriptors(file_descriptors_to_leave_open)
 			close_all_io_objects_for_fds(file_descriptors_to_leave_open)
-			
+
 			channel = MessageChannel.new(b)
 			app = nil
 			success = report_app_init_status(channel) do
@@ -80,14 +80,14 @@ class ApplicationSpawner < AbstractServer
 		end
 		b.close
 		Process.waitpid(pid) rescue nil
-		
+
 		channel = MessageChannel.new(a)
 		unmarshal_and_raise_errors(channel, options["print_exceptions"], "rack")
-		
+
 		# No exception was raised, so spawning succeeded.
 		return AppProcess.read_from_channel(channel)
 	end
-	
+
 	# The following options are accepted:
 	# - 'app_root'
 	#
@@ -100,7 +100,7 @@ class ApplicationSpawner < AbstractServer
 		self.max_idle_time = DEFAULT_APP_SPAWNER_MAX_IDLE_TIME
 		define_message_handler(:spawn_application, :handle_spawn_application)
 	end
-	
+
 	# Spawns an instance of the Rack application. When successful, an AppProcess object
 	# will be returned, which represents the spawned Rack application.
 	#
@@ -117,7 +117,7 @@ class ApplicationSpawner < AbstractServer
 	rescue SystemCallError, IOError, SocketError => e
 		raise Error, "The application spawner server exited unexpectedly: #{e}"
 	end
-	
+
 	# Overrided from AbstractServer#start.
 	#
 	# May raise these additional exceptions:
@@ -176,7 +176,7 @@ private
 				end
 			end
 		end
-		
+
 		b.close
 		worker_channel = MessageChannel.new(a)
 		app_process = AppProcess.read_from_channel(worker_channel)
@@ -193,14 +193,14 @@ private
 		reader, writer = IO.pipe
 		begin
 			reader.close_on_exec!
-			
+
 			handler = RequestHandler.new(reader, app, options)
 			app_process = AppProcess.new(app_root, Process.pid, writer,
 				handler.server_sockets)
 			app_process.write_to_channel(channel)
 			writer.close
 			channel.close
-			
+
 			before_handling_requests(forked, options)
 			handler.main_loop
 		ensure
@@ -211,7 +211,7 @@ private
 		end
 	end
 	private_class_method :start_request_handler
-	
+
 	def self.load_rack_app
 		# Load Rack inside the spawned child process so that the spawn manager
 		# itself doesn't preload Rack. This is necessary because some broken

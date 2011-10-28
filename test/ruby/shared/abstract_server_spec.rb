@@ -14,7 +14,7 @@ shared_examples_for "an AbstractServer" do
 			server.start
 		end
 	end
-	
+
 	it "raises a ServerAlreadyStarted if the server is already started" do
 		lambda { server.start }.should raise_error(AbstractServer::ServerAlreadyStarted)
 	end

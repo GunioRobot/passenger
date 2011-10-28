@@ -72,7 +72,7 @@ namespace boost
         {
             return heap_new_impl<T,A1&>(a1);
         }
-        
+
         template<typename T,typename A1,typename A2>
         inline T* heap_new(A1 const& a1,A2 const& a2)
         {
@@ -218,8 +218,8 @@ namespace boost
         {
             return heap_new_impl<T,A1&,A2&,A3&,A4&>(a1,a2,a3,a4);
         }
-        
-#endif        
+
+#endif
         template<typename T>
         inline void heap_delete(T* data)
         {

@@ -23,19 +23,19 @@
 	</ul>
 	Further information about the error may have been written to the
 	application's log file. Please check it in order to analyse the problem.
-	
+
 	<dl>
 	<dt>Error message:</dt>
 	<dd><%=h @error.child_exception.message %></dd>
-	
+
 	<dt>Exception class:</dt>
 	<dd><%=h @error.child_exception.class %></dd>
-	
+
 	<dt>Application root:</dt>
 	<dd>
 		<tt class="filename"><%=h @app_root %></tt>
 	</dd>
-	
+
 	<dt>Backtrace:</dt>
 	<dd>
 		<%= backtrace_html_for(@error.child_exception) %>

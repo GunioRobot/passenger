@@ -47,7 +47,7 @@ private:
 	string rubyLibDir;
 	string compilableSourceDir;
 	string apache2Module;
-	
+
 	string getOption(const string &file, const IniFileSectionPtr &section, const string &key) const {
 		if (section->hasKey(key)) {
 			return section->get(key);
@@ -55,7 +55,7 @@ private:
 			throw RuntimeException("Option '" + key + "' missing in file " + file);
 		}
 	}
-	
+
 public:
 	ResourceLocator(const string &rootOrFile) {
 		FileType rootOrFileType = getFileType(rootOrFile);
@@ -63,7 +63,7 @@ public:
 			string root = rootOrFile;
 			bool nativelyPackaged = !fileExists(root + "/Rakefile") ||
 				!fileExists(root + "/DEVELOPERS.TXT");
-			
+
 			if (nativelyPackaged) {
 				agentsDir           = "/usr/lib/phusion-passenger/agents";
 				helperScriptsDir    = "/usr/share/phusion-passenger/helper-scripts";
@@ -81,7 +81,7 @@ public:
 				compilableSourceDir = root;
 				apache2Module       = root + "ext/apache2/mod_passenger.so";
 			}
-			
+
 		} else {
 			string file = rootOrFile;
 			IniFileSectionPtr options = IniFile(file).section("locations");
@@ -94,36 +94,36 @@ public:
 			apache2Module       = getOption(file, options, "apache2_module");
 		}
 	}
-	
+
 	string getAgentsDir() const {
 		return agentsDir;
 	}
-	
+
 	string getHelperScriptsDir() const {
 		return helperScriptsDir;
 	}
-	
+
 	string getSpawnServerFilename() const {
 		return getHelperScriptsDir() + "/passenger-spawn-server";
 	}
-	
+
 	string getResourcesDir() const {
 		return resourcesDir;
 	}
-	
+
 	string getDocDir() const {
 		return docDir;
 	}
-	
+
 	// Can be empty.
 	string getRubyLibDir() const {
 		return rubyLibDir;
 	}
-	
+
 	string getCompilableSourceDir() const {
 		return compilableSourceDir;
 	}
-	
+
 	string getApache2ModuleFilename() const {
 		return apache2Module;
 	}

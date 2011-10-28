@@ -57,6 +57,6 @@ module Multipart
       query = fp.collect {|p| "--" + BOUNDARY + "\r\n" + p.to_multipart }.join("") + "--" + BOUNDARY + "--"
       return query, HEADER
     end
-  end  
+  end
 end
 

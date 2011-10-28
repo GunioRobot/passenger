@@ -2,7 +2,7 @@
 #define DATE_TIME_DATE_DURATION__
 
 /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
- * Use, modification and distribution is subject to the 
+ * Use, modification and distribution is subject to the
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
@@ -26,14 +26,14 @@ namespace date_time {
             , boost::subtractable1< date_duration< duration_rep_traits >
             , boost::dividable2< date_duration< duration_rep_traits >, int
             > > > > >
-  { 
+  {
   public:
     typedef typename duration_rep_traits::int_type duration_rep_type;
     typedef typename duration_rep_traits::impl_type duration_rep;
-    
+
     //! Construct from a day count
     explicit date_duration(duration_rep day_count) : days_(day_count) {};
-    
+
     /*! construct from special_values - only works when
      * instantiated with duration_traits_adapted */
     date_duration(special_values sv) :
@@ -137,7 +137,7 @@ namespace date_time {
     typedef boost::date_time::int_adapter<long> impl_type;
     static int_type as_number(impl_type i) { return i.as_number(); };
   };
-  
+
 
 } } //namspace date_time
 

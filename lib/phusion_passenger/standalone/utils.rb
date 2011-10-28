@@ -31,7 +31,7 @@ private
 			require 'phusion_passenger/platform_info/binary_compatibility'
 		end
 	end
-	
+
 	def runtime_version_string
 		if PhusionPassenger.natively_packaged?
 			return "natively-packaged"

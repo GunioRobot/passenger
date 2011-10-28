@@ -426,7 +426,7 @@ For example:
     <Directory /websites/phusion>
         Allow from all
     </Directory>
-    
+
     RailsBaseURI /rails                   # <-- These lines have
     <Directory /websites/phusion/rails>   # <-- been added.
         Options -MultiViews               # <--
@@ -1110,7 +1110,7 @@ Rails/Rack web page. We recommend a value of `2 * x`, where `x` is the average
 number of seconds that a visitor spends on a single Rails/Rack web page. But your
 mileage may vary.
 
-When this value is set to '0', application instances will not be shutdown unless 
+When this value is set to '0', application instances will not be shutdown unless
 it's really necessary, i.e. when Phusion Passenger is out of worker processes
 for a given application and one of the inactive application instances needs to
 make place for another application instance. Setting the value to 0 is
@@ -1434,7 +1434,7 @@ then you can enable high performance mode for a certain URL only. For example:
     ServerName www.foo.com
     DocumentRoot /apps/foo/public
     .... mod_rewrite rules or options for other Apache modules here ...
-    
+
     <Location /chatroom/ajax_update_poll>
         PassengerHighPerformance on
     </Location>
@@ -1497,15 +1497,15 @@ virtual hosts or URLs that need it:
     DocumentRoot /webapps/example/public
     AllowEncodedSlashes on
     RewriteEngine on
-    
+
     # Check for maintenance file and redirect all requests
     RewriteCond %{DOCUMENT_ROOT}/system/maintenance.html -f
     RewriteCond %{SCRIPT_FILENAME} !maintenance.html
     RewriteRule ^.*$ /system/maintenance.html [L]
-    
+
     # Make /about an alias for /info/about.
     RewriteRule ^/about$ /info/about [PT,L]
-    
+
     <Location ~ "^/users/">
         # In a location block so that it doesn't interfere with the
         # above /about mod_rewrite rule.

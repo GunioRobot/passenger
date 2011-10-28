@@ -67,11 +67,11 @@ private:
 	unsigned int searchStart;
 	bool fullHeaderReceived;
 	string statusLine;
-	
+
 	bool extractStatusLine() {
 		static const char statusHeaderName[] = "Status: ";
 		string::size_type start_pos, newline_pos;
-		
+
 		if (buffer.size() > sizeof(statusHeaderName) - 1
 		 && memcmp(buffer.c_str(), statusHeaderName, sizeof(statusHeaderName) - 1) == 0) {
 			// Status line starts at beginning of the header.
@@ -97,7 +97,7 @@ private:
 			return false;
 		}
 	}
-	
+
 	void addStatusTextIfNecessary() {
 		if (statusLine.find(' ') == string::npos) {
 			// The status line doesn't contain a status text, so add it.
@@ -279,14 +279,14 @@ private:
 			}
 		}
 	}
-	
+
 public:
 	HttpStatusExtractor() {
 		searchStart = 0;
 		fullHeaderReceived = false;
 		statusLine = "200 OK\r\n";
 	}
-	
+
 	/**
 	 * Feed HTTP response data to this HttpStatusExtractor.
 	 *
@@ -326,7 +326,7 @@ public:
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Returns the HTTP status line that has been determined.
 	 *
@@ -339,7 +339,7 @@ public:
 	string getStatusLine() const {
 		return statusLine;
 	}
-	
+
 	/**
 	 * Get the data that has been fed so far.
 	 */

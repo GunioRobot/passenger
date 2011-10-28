@@ -34,11 +34,11 @@ class Main
 		['version', 'VersionCommand'],
 		['help',    'HelpCommand']
 	]
-	
+
 	def self.run!(argv)
 		new.run!(argv)
 	end
-	
+
 	def self.each_command
 		COMMANDS.each do |command_spec|
 			command_name = command_spec[0]
@@ -48,7 +48,7 @@ class Main
 			yield(command_name, command_class)
 		end
 	end
-	
+
 	def run!(argv)
 		command = argv[0]
 		if command.nil? || command == '-h' || command == '--help'
@@ -86,7 +86,7 @@ private
 			element[0] == name
 		end
 	end
-	
+
 	def run_command(name, args = [])
 		Main.each_command do |command_name, command_class|
 			if command_name == name

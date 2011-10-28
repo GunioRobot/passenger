@@ -96,14 +96,14 @@ module PhusionPassenger
 # and sends it to the request handler.
 class AbstractRequestHandler
 	include DebugLogging
-	
+
 	# Signal which will cause the Rails application to exit immediately.
 	HARD_TERMINATION_SIGNAL = "SIGTERM"
 	# Signal which will cause the Rails application to exit as soon as it's done processing a request.
 	SOFT_TERMINATION_SIGNAL = "SIGUSR1"
 	BACKLOG_SIZE    = 500
 	MAX_HEADER_SIZE = 128 * 1024
-	
+
 	# String constants which exist to relieve Ruby's garbage collector.
 	IGNORE              = 'IGNORE'              # :nodoc:
 	DEFAULT             = 'DEFAULT'             # :nodoc:
@@ -111,13 +111,13 @@ class AbstractRequestHandler
 	REQUEST_METHOD      = 'REQUEST_METHOD'      # :nodoc:
 	PING                = 'PING'                # :nodoc:
 	PASSENGER_CONNECT_PASSWORD  = "PASSENGER_CONNECT_PASSWORD"   # :nodoc:
-	
+
 	OBJECT_SPACE_SUPPORTS_LIVE_OBJECTS = ObjectSpace.respond_to?(:live_objects)
 	OBJECT_SPACE_SUPPORTS_ALLOCATED_OBJECTS = ObjectSpace.respond_to?(:allocated_objects)
 	OBJECT_SPACE_SUPPORTS_COUNT_OBJECTS = ObjectSpace.respond_to?(:count_objects)
 	GC_SUPPORTS_TIME = GC.respond_to?(:time)
 	GC_SUPPORTS_CLEAR_STATS = GC.respond_to?(:clear_stats)
-	
+
 	# A hash containing all server sockets that this request handler listens on.
 	# The hash is in the form of:
 	#
@@ -133,7 +133,7 @@ class AbstractRequestHandler
 	# There's guaranteed to be at least one server socket, namely one with the
 	# name +:main+.
 	attr_reader :server_sockets
-	
+
 	# Specifies the maximum allowed memory usage, in MB. If after having processed
 	# a request AbstractRequestHandler detects that memory usage has risen above
 	# this limit, then it will gracefully exit (that is, exit after having processed
@@ -141,23 +141,23 @@ class AbstractRequestHandler
 	#
 	# A value of 0 (the default) indicates that there's no limit.
 	attr_accessor :memory_limit
-	
+
 	# The number of times the main loop has iterated so far. Mostly useful
 	# for unit test assertions.
 	attr_reader :iterations
-	
+
 	# Number of requests processed so far. This includes requests that raised
 	# exceptions.
 	attr_reader :processed_requests
-	
+
 	# If a soft termination signal was received, then the main loop will quit
 	# the given amount of seconds after the last time a connection was accepted.
 	# Defaults to 3 seconds.
 	attr_accessor :soft_termination_linger_time
-	
+
 	# A password with which clients must authenticate. Default is unauthenticated.
 	attr_accessor :connect_password
-	
+
 	# Create a new RequestHandler with the given owner pipe.
 	# +owner_pipe+ must be the readable part of a pipe IO object.
 	#
@@ -169,7 +169,7 @@ class AbstractRequestHandler
 	# - pool_account_password_base64
 	def initialize(owner_pipe, options = {})
 		@server_sockets = {}
-		
+
 		if should_use_unix_sockets?
 			@main_socket_address, @main_socket = create_unix_socket_on_filesystem
 			@server_sockets[:main] = [@main_socket_address, 'unix', @main_socket]
@@ -177,10 +177,10 @@ class AbstractRequestHandler
 			@main_socket_address, @main_socket = create_tcp_socket
 			@server_sockets[:main] = [@main_socket_address, 'tcp', @main_socket]
 		end
-		
+
 		@http_socket_address, @http_socket = create_tcp_socket
 		@server_sockets[:http] = [@http_socket_address, 'tcp', @http_socket]
-		
+
 		@owner_pipe = owner_pipe
 		@options = options
 		@previous_signal_handlers = {}
@@ -200,16 +200,16 @@ class AbstractRequestHandler
 		@soft_termination_linger_time = 3
 		@main_loop_running  = false
 		@passenger_header   = determine_passenger_header
-		
+
 		@debugger = @options["debugger"]
 		if @debugger
 			@server_sockets[:ruby_debug_cmd] = ["127.0.0.1:#{Debugger.cmd_port}", 'tcp']
 			@server_sockets[:ruby_debug_ctrl] = ["127.0.0.1:#{Debugger.ctrl_port}", 'tcp']
 		end
-		
+
 		#############
 	end
-	
+
 	# Clean up temporary stuff created by the request handler.
 	#
 	# If the main loop was started by #main_loop, then this method may only
@@ -233,12 +233,12 @@ class AbstractRequestHandler
 		end
 		@owner_pipe.close rescue nil
 	end
-	
+
 	# Check whether the main loop's currently running.
 	def main_loop_running?
 		return @main_loop_running
 	end
-	
+
 	# Enter the request handler's main loop.
 	def main_loop
 		debug("Entering request handler main loop")
@@ -247,14 +247,14 @@ class AbstractRequestHandler
 			@graceful_termination_pipe = IO.pipe
 			@graceful_termination_pipe[0].close_on_exec!
 			@graceful_termination_pipe[1].close_on_exec!
-			
+
 			@main_loop_thread_lock.synchronize do
 				@main_loop_generation += 1
 				@main_loop_running = true
 				@main_loop_thread_cond.broadcast
-				
+
 				@select_timeout = nil
-				
+
 				@selectable_sockets = []
 				@server_sockets.each_value do |value|
 					socket = value[2]
@@ -263,12 +263,12 @@ class AbstractRequestHandler
 				@selectable_sockets << @owner_pipe
 				@selectable_sockets << @graceful_termination_pipe[0]
 			end
-			
+
 			install_useful_signal_handlers
 			socket_wrapper = Utils::UnseekableSocket.new
 			channel        = MessageChannel.new
 			buffer         = ''
-			
+
 			while true
 				@iterations += 1
 				if !accept_and_process_next_request(socket_wrapper, channel, buffer)
@@ -305,7 +305,7 @@ class AbstractRequestHandler
 			end
 		end
 	end
-	
+
 	# Start the main loop in a new thread. This thread will be stopped by #cleanup.
 	def start_main_loop_thread
 		current_generation = @main_loop_generation
@@ -322,7 +322,7 @@ class AbstractRequestHandler
 			end
 		end
 	end
-	
+
 	# Remove this request handler from the application pool so that no
 	# new connections will come in. Then make the main loop quit a few
 	# seconds after the last time a connection came in. This all is to
@@ -345,7 +345,7 @@ class AbstractRequestHandler
 
 private
 	include Utils
-	
+
 	def should_use_unix_sockets?
 		# Historical note:
 		# There seems to be a bug in MacOS X Leopard w.r.t. Unix server
@@ -371,7 +371,7 @@ private
 		# if something like this ever happens again, we know why, and we
 		# can easily reactivate the workaround. Or maybe if we just need
 		# TCP sockets for some other reason.
-		
+
 		#return RUBY_PLATFORM !~ /darwin/
 		return true
 	end
@@ -396,7 +396,7 @@ private
 			end
 		end
 	end
-	
+
 	def create_tcp_socket
 		# We use "127.0.0.1" as address in order to force
 		# TCPv4 instead of TCPv6.
@@ -424,10 +424,10 @@ private
 		trap('HUP', IGNORE)
 		PhusionPassenger.call_event(:after_installing_signal_handlers)
 	end
-	
+
 	def install_useful_signal_handlers
 		trappable_signals = Signal.list_trappable
-		
+
 		trap(SOFT_TERMINATION_SIGNAL) do
 			begin
 				soft_shutdown
@@ -435,22 +435,22 @@ private
 				print_exception("Passenger RequestHandler soft shutdown routine", e)
 			end
 		end if trappable_signals.has_key?(SOFT_TERMINATION_SIGNAL.sub(/^SIG/, ''))
-		
+
 		trap('ABRT') do
 			raise SignalException, "SIGABRT"
 		end if trappable_signals.has_key?('ABRT')
-		
+
 		trap('QUIT') do
 			warn(global_backtrace_report)
 		end if trappable_signals.has_key?('QUIT')
 	end
-	
+
 	def revert_signal_handlers
 		@previous_signal_handlers.each_pair do |signal, handler|
 			trap(signal, handler)
 		end
 	end
-	
+
 	def accept_and_process_next_request(socket_wrapper, channel, buffer)
 		select_result = select(@selectable_sockets, nil, nil, @select_timeout)
 		if select_result.nil?
@@ -460,7 +460,7 @@ private
 			trace(2, "Soft termination timeout")
 			return false
 		end
-		
+
 		ios = select_result.first
 		if ios.include?(@main_socket)
 			trace(3, "Accepting new request on main socket")
@@ -503,7 +503,7 @@ private
 				return false
 			end
 		end
-		
+
 		if headers
 			prepare_request(headers)
 			begin
@@ -553,7 +553,7 @@ private
 			input_stream.close rescue nil
 		end
 	end
-	
+
 	# Read the next request from the given socket, and return
 	# a pair [headers, input_stream]. _headers_ is a Hash containing
 	# the request headers, while _input_stream_ is an IO object for
@@ -578,13 +578,13 @@ private
 			"HTTP header size exceeded maximum.")
 		return nil
 	end
-	
+
 	# Like parse_native_request, but parses an HTTP request. This is a very minimalistic
 	# HTTP parser and is not intended to be complete, fast or secure, since the HTTP server
 	# socket is intended to be used for debugging purposes only.
 	def parse_http_request(socket)
 		headers = {}
-		
+
 		data = ""
 		while data !~ /\r\n\r\n/ && data.size < MAX_HEADER_SIZE
 			data << socket.readpartial(16 * 1024)
@@ -594,7 +594,7 @@ private
 				"HTTP header size exceeded maximum.")
 			return nil
 		end
-		
+
 		data.gsub!(/\r\n\r\n.*/, '')
 		data.split("\r\n").each_with_index do |line, i|
 			if i == 0
@@ -623,7 +623,7 @@ private
 				end
 			end
 		end
-		
+
 		if @connect_password && headers["HTTP_X_PASSENGER_CONNECT_PASSWORD"] != @connect_password
 			warn "*** Passenger RequestHandler warning: " <<
 				"someone tried to connect with an invalid connect password."
@@ -634,11 +634,11 @@ private
 	rescue EOFError
 		return nil
 	end
-	
+
 	def process_ping(env, input, output)
 		output.write("pong")
 	end
-	
+
 	def determine_passenger_header
 		header = "Phusion Passenger (mod_rails/mod_rack)"
 		if @options["show_version_in_header"]
@@ -650,7 +650,7 @@ private
 		end
 		return header
 	end
-	
+
 	def prepare_request(headers)
 		if @analytics_logger && headers[PASSENGER_TXN_ID]
 			txn_id = headers[PASSENGER_TXN_ID]
@@ -677,10 +677,10 @@ private
 			end
 			log.begin_measure("app request handler processing")
 		end
-		
+
 		#################
 	end
-	
+
 	def finalize_request(headers, has_error)
 		log = headers[PASSENGER_ANALYTICS_WEB_LOG]
 		if log
@@ -715,10 +715,10 @@ private
 				end
 			end
 		end
-		
+
 		#################
 	end
-	
+
 	def log_analytics_exception(env, exception)
 		log = @analytics_logger.new_transaction(
 			env[PASSENGER_GROUP_NAME],

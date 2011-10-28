@@ -32,7 +32,7 @@ class Object # :nodoc:
 			time2 = Time.now
 			@@benchmark_results[name] = 0 unless @@benchmark_results.has_key?(name)
 			@@benchmark_results[name] += time2 - time1
-		end 
+		end
 	end
 
 	def benchmark_report(main = nil)

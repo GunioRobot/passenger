@@ -45,13 +45,13 @@ typedef struct {
     ngx_uint_t  status_count;
     u_char     *status_start;
     u_char     *status_end;
-    
+
     /** The backend application's 'public' directory. */
     ngx_str_t   public_dir;
-    
+
     /** The application's base URI. Points to an empty string if none. */
     ngx_str_t   base_uri;
-    
+
     /** The backend application's type. */
     passenger_app_type_t app_type;
 } passenger_context_t;

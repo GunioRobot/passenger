@@ -33,27 +33,27 @@ namespace boost
         //////////////////////////////////////////////////////////////////////////
         // default
         //////////////////////////////////////////////////////////////////////////
-    
+
         template< typename C >
         struct range_size
         {
             typedef BOOST_DEDUCED_TYPENAME C::size_type type;
         };
-    
+
         //////////////////////////////////////////////////////////////////////////
         // pair
         //////////////////////////////////////////////////////////////////////////
-    
+
         template< typename Iterator >
         struct range_size< std::pair<Iterator,Iterator> >
         {
             typedef std::size_t type;
         };
-    
+
         //////////////////////////////////////////////////////////////////////////
         // array
         //////////////////////////////////////////////////////////////////////////
-    
+
         template< typename T, std::size_t sz >
         struct range_size< T[sz] >
         {
@@ -62,7 +62,7 @@ namespace boost
     }
 
     template< class T >
-    struct range_size : 
+    struct range_size :
         detail::range_size<T>
     { };
 
@@ -70,7 +70,7 @@ namespace boost
     struct range_size<const T >
         : detail::range_size<T>
     { };
-    
+
 } // namespace boost
 
 #endif // BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION

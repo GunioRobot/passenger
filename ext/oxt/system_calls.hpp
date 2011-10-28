@@ -101,7 +101,7 @@
 
 namespace oxt {
 	static const int INTERRUPTION_SIGNAL = SIGUSR1; // SIGUSR2 is reserved by Valgrind...
-	
+
 	/**
 	 * Setup system call interruption support.
 	 * This function may only be called once. It installs a signal handler
@@ -117,7 +117,7 @@ namespace oxt {
 	 * take care of EINTR errors.
 	 */
 	void setup_syscall_interruption_support();
-	
+
 	/**
 	 * System call and C library call wrappers with interruption support.
 	 * These functions are interruption points, i.e. they throw
@@ -133,7 +133,7 @@ namespace oxt {
 		int close(int fd);
 		int pipe(int filedes[2]);
 		int dup2(int filedes, int filedes2);
-		
+
 		int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 		int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 		int connect(int sockfd, const struct sockaddr *serv_addr, socklen_t addrlen);
@@ -145,22 +145,22 @@ namespace oxt {
 		int setsockopt(int s, int level, int optname, const void *optval,
 			socklen_t optlen);
 		int shutdown(int s, int how);
-		
+
 		int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds,
 		           struct timeval *timeout);
 		int poll(struct pollfd fds[], nfds_t nfds, int timeout);
-		
+
 		FILE *fopen(const char *path, const char *mode);
 		size_t fread(void *ptr, size_t size, size_t nitems, FILE *stream);
 		int fclose(FILE *fp);
 		int unlink(const char *pathname);
 		int stat(const char *path, struct stat *buf);
-		
+
 		time_t time(time_t *t);
 		unsigned int sleep(unsigned int seconds);
 		int usleep(useconds_t usec);
 		int nanosleep(const struct timespec *req, struct timespec *rem);
-		
+
 		pid_t fork();
 		int kill(pid_t pid, int sig);
 		int killpg(pid_t pgrp, int sig);
@@ -176,13 +176,13 @@ namespace this_thread {
 	 * @intern
 	 */
 	extern thread_specific_ptr<bool> _syscalls_interruptable;
-	
+
 	/**
 	 * Check whether system calls should be interruptable in
 	 * the calling thread.
 	 */
 	bool syscalls_interruptable();
-	
+
 	class restore_syscall_interruption;
 
 	/**
@@ -202,12 +202,12 @@ namespace this_thread {
 				*_syscalls_interruptable = true;
 			}
 		}
-		
+
 		~enable_syscall_interruption() {
 			*_syscalls_interruptable = last_value;
 		}
 	};
-	
+
 	/**
 	 * Create this struct on the stack to temporarily disable system
 	 * call interruption, until the object goes out of scope.
@@ -228,12 +228,12 @@ namespace this_thread {
 				*_syscalls_interruptable = false;
 			}
 		}
-		
+
 		~disable_syscall_interruption() {
 			*_syscalls_interruptable = last_value;
 		}
 	};
-	
+
 	/**
 	 * Creating an object of this class on the stack will restore the
 	 * system call interruption state to what it was before.
@@ -247,7 +247,7 @@ namespace this_thread {
 			last_value = *_syscalls_interruptable;
 			*_syscalls_interruptable = intr.last_value;
 		}
-		
+
 		~restore_syscall_interruption() {
 			*_syscalls_interruptable = last_value;
 		}

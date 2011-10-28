@@ -15,18 +15,18 @@ namespace tut {
 		SpawnManagerPtr manager;
 		AccountsDatabasePtr accountsDatabase;
 		PoolOptions rackOptions;
-		
+
 		SpawnManagerTest() {
 			createServerInstanceDirAndGeneration(serverInstanceDir, generation);
 			rackOptions.appRoot = "stub/rack";
 			rackOptions.appType = "rack";
 		}
-		
+
 		void initialize() {
 			manager = ptr(new SpawnManager("../helper-scripts/passenger-spawn-server", generation,
 				accountsDatabase));
 		}
-		
+
 		void sendTestRequest(SessionPtr &session, bool authenticate = true, const char *uri = "/foo/new") {
 			string headers;
 			#define ADD_HEADER(name, value) \
@@ -60,7 +60,7 @@ namespace tut {
 		string result = readAll(session->getStream());
 		ensure(result.find("hello <b>world</b>") != string::npos);
 	}
-	
+
 	TEST_METHOD(2) {
 		// If something goes wrong during spawning, the spawn manager
 		// should be restarted and another (successful) spawn should be attempted.
@@ -69,21 +69,21 @@ namespace tut {
 		manager->killSpawnServer();
 		// Give the spawn server the time to properly terminate.
 		usleep(500000);
-		
+
 		ProcessPtr process = manager->spawn(rackOptions);
 		SessionPtr session = process->newSession();
 		sendTestRequest(session);
 		session->shutdownWriter();
 		string result = readAll(session->getStream());
 		ensure(result.find("hello <b>world</b>") != string::npos);
-		
+
 		// The following test will fail if we're inside Valgrind, but that's normal.
 		// Killing the spawn server doesn't work there.
 		if (!RUNNING_ON_VALGRIND) {
 			ensure("The spawn server was restarted", manager->getServerPid() != old_pid);
 		}
 	}
-	
+
 	class BuggySpawnManager: public SpawnManager {
 	protected:
 		virtual void spawnServerStarted() {
@@ -93,20 +93,20 @@ namespace tut {
 				usleep(25000);
 			}
 		}
-		
+
 	public:
 		bool nextRestartShouldFail;
-		
+
 		BuggySpawnManager(const ServerInstanceDir::GenerationPtr &generation)
 			: SpawnManager("stub/spawn_server.rb", generation)
 		{
 			nextRestartShouldFail = false;
 		}
 	};
-	
+
 	TEST_METHOD(3) {
 		// If the spawn server dies after a restart, a SpawnException should be thrown.
-		
+
 		// This test fails in Valgrind, but that's normal.
 		// Killing the spawn server doesn't work there.
 		if (!RUNNING_ON_VALGRIND) {
@@ -114,7 +114,7 @@ namespace tut {
 			manager.killSpawnServer();
 			// Give the spawn server the time to properly terminate.
 			usleep(250000);
-			
+
 			try {
 				manager.nextRestartShouldFail = true;
 				ProcessPtr process = manager.spawn(rackOptions);
@@ -124,7 +124,7 @@ namespace tut {
 			}
 		}
 	}
-	
+
 	TEST_METHOD(4) {
 		// The connect password is passed to the spawned application, which rejects
 		// sessions that aren't authenticated with the right password.
@@ -136,25 +136,25 @@ namespace tut {
 		string result = readAll(session->getStream());
 		ensure_equals(result, "");
 	}
-	
+
 	TEST_METHOD(5) {
 		// It automatically creates a unique account for the application,
 		// which is deleted when no longer needed.
 		accountsDatabase = ptr(new AccountsDatabase());
 		initialize();
-		
+
 		ProcessPtr process1 = manager->spawn(rackOptions);
 		vector<string> usernames1 = accountsDatabase->listUsernames();
 		ensure_equals(accountsDatabase->size(), 1u);
-		
+
 		ProcessPtr process2 = manager->spawn(rackOptions);
 		vector<string> usernames2 = accountsDatabase->listUsernames();
 		ensure_equals(accountsDatabase->size(), 2u);
-		
+
 		process1.reset();
 		ensure_equals(accountsDatabase->size(), 1u);
 		ensure_equals(accountsDatabase->get(usernames1[0]), AccountPtr());
-		
+
 		process2.reset();
 		ensure_equals(accountsDatabase->size(), 0u);
 	}

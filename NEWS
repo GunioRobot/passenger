@@ -150,9 +150,9 @@ Release 2.2.15
  * [Apache] Fixed incorrect temp dir cleanup by passenger-status
    On some systems, running passenger-status could print the following
    message:
-   
+
       *** Cleaning stale folder /tmp/passenger.1234
-   
+
    ...after which Phusion Passenger breaks because that directory is
    necessary for it to function properly. The cause of this problem
    has been found and has been fixed.
@@ -229,10 +229,10 @@ Release 2.2.11
    affects Apache. When under high load, Apache might freeze and stop
    responding to requests. It is caused by a race condition which is
    why it escaped our last release testing.
-   
+
    This problem does not affect Nginx; you only have to upgrade if
    you're using Apache.
-   
+
    http://groups.google.com/group/phusion-passenger/t/d5bb2f17c8446ea0
 
 
@@ -254,20 +254,20 @@ Release 2.2.9
    Actually, previous Phusion Passenger releases were already compatible
    with Rails 3, depending on the spawn method that would be invoked. Here's
    the story:
-   
+
    Since Phusion Passenger 2.2.8, when the file config.ru exists, Phusion
    Passenger will treat the app as a Rack app, not as a Rails app. This is
    in contrast to earlier versions which gave Rails detection more priority
    than Rack detection. Phusion Passenger loads Rack apps and Rails apps in
    different ways. The Rails loader was not compatible with Rails 3, which
    is what we've fixed in this release.
-   
+
    That said, a Rails 3 app would have worked out-of-the-box on Phusion
    Passenger 2.2.8 as well because Rails 3 apps include a config.ru file
    by default, causing Phusion Passenger 2.2.8 to use the Rack loader.
    Earlier versions of Phusion Passenger would just completely bail out
    because they'd use the Rails loader.
-   
+
    That said, with 2.2.9 there are still some caveats:
    - Smart spawning (the mechanism with which REE's 33% memory reduction
      is implemented) is *not* supported for Rack apps. This means that if
@@ -276,7 +276,7 @@ Release 2.2.9
    - Rails 3 depends on Rack 1.1.0. You must have Rack 1.1.0 installed as
      a gem, even if you've bundled it with the gem bundler. This is because
      Phusion Passenger itself depends on Rack.
-   
+
    Both of these caveats are temporary. We have plans to solve both of these
    properly in the future.
  * What's up with the Gem Bundler?
@@ -286,9 +286,9 @@ Release 2.2.9
    version seems to work fine. Please note that you need to insert the
    following snippet in config/preinitializer.rb, as instructed by the gem
    bundler's README:
-   
+
      require "#{RAILS_ROOT}/vendor/gems/environment"
-   
+
    The Rails::Boot monkey patching code as posted at
    http://yehudakatz.com/2009/11/03/using-the-new-gem-bundler-today/
    does not seem to be required anymore.
@@ -337,7 +337,7 @@ Release 2.2.8
    seen an error message along the lines of
 
       *** Exception IOError in Passenger RequestHandler (closed stream)
-   
+
    then this is a Ruby bug at work. This bug has been fixed in Ruby 1.9.2,
    but Ruby 1.9.1 still contains this bug. We've added a workaround so that
    the bug is not triggered with this Ruby version. Issue #432.
@@ -428,7 +428,7 @@ Release 2.2.5
    headers. It turns out that some people relied on the old behavior, we so now
    environment variables set with mod_env are set in both ENV and in the CGI
    environment.
-   
+
    Fixes bug #335.
 
  * [Apache] Fixed compilation problems on some Linux systems with older versions of Apache
@@ -496,7 +496,7 @@ Release 2.2.5
    order: first models, then controllers, then helpers.
 
    Bug #359.
- 
+
  * Fixed a few bugs in WSGI compliance
    PATH_INFO is supposed to be set to the request URI, but without the query
    string and without the base URI. This has been fixed: bug #360.

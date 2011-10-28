@@ -88,7 +88,7 @@ public:
         BOOST_ASSERT(i >= 0);
         return px[i];
     }
-    
+
     T * get() const // never throws
     {
         return px;

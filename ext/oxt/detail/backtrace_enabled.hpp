@@ -70,13 +70,13 @@ struct trace_point {
 	const char *source;
 	unsigned int line;
 	bool m_detached;
-	
+
 	trace_point(const char *function, const char *source, unsigned int line) {
 		this->function = function;
 		this->source = source;
 		this->line = line;
 		m_detached = false;
-		
+
 		vector<trace_point *> *backtrace_list;
 		spin_lock *lock;
 		if (OXT_LIKELY(_get_backtrace_list_and_its_lock(&backtrace_list, &lock))) {
@@ -84,7 +84,7 @@ struct trace_point {
 			backtrace_list->push_back(this);
 		}
 	}
-	
+
 	trace_point(const char *function, const char *source, unsigned int line, bool detached) {
 		this->function = function;
 		this->source = source;
@@ -128,20 +128,20 @@ struct thread_registration {
 struct initialize_backtrace_support_for_this_thread {
 	thread_registration *registration;
 	list<thread_registration *>::iterator it;
-	
+
 	initialize_backtrace_support_for_this_thread(const string &name) {
 		_init_backtrace_tls();
 		registration = new thread_registration();
 		registration->name = name;
 		_get_backtrace_list_and_its_lock(&registration->backtrace,
 			&registration->backtrace_lock);
-		
+
 		boost::mutex::scoped_lock l(_thread_registration_mutex);
 		_registered_threads.push_back(registration);
 		it = _registered_threads.end();
 		it--;
 	}
-	
+
 	~initialize_backtrace_support_for_this_thread() {
 		{
 			boost::mutex::scoped_lock l(_thread_registration_mutex);

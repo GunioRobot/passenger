@@ -29,7 +29,7 @@ class PackageRuntimeCommand < Command
 	def self.description
 		return "Package the Phusion Passenger Standalone runtime."
 	end
-	
+
 	def run
 		destdir = File.expand_path("passenger-standalone")
 		description =
@@ -45,15 +45,15 @@ class PackageRuntimeCommand < Command
 				@options[:nginx_tarball] = value
 			end
 		end
-		
+
 		destdir     = File.expand_path(@args[0]) if @args[0]
 		runtime_dir = "#{destdir}/#{runtime_version_string}"
 		support_dir = "#{runtime_dir}/support"
 		nginx_dir   = "#{runtime_dir}/nginx-#{@options[:nginx_version]}"
-		
+
 		sh "rm", "-rf", support_dir
 		sh "rm", "-rf", nginx_dir
-		
+
 		require 'phusion_passenger/standalone/runtime_installer'
 		installer = RuntimeInstaller.new(
 			:source_root => SOURCE_ROOT,
@@ -63,7 +63,7 @@ class PackageRuntimeCommand < Command
 			:tarball     => @options[:nginx_tarball],
 			:download_binaries => false)
 		installer.start
-		
+
 		Dir.chdir(support_dir) do
 			support_dir_name = File.basename(support_dir)
 			puts "cd #{support_dir}"
